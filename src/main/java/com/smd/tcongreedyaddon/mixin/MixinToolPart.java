@@ -3,6 +3,7 @@ package com.smd.tcongreedyaddon.mixin;
 import com.smd.tcongreedyaddon.config.MaterialShaderFixConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Overwrite;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tinkering.PartMaterialType;
 import slimeknights.tconstruct.library.tools.IToolPart;
@@ -14,12 +15,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Mixin to fix material rendering for custom part types from PlusTiC and Tinkers-Evolution.
+ * Mixin to fix material rendering for custom part types from PlusTiC, Tinkers-Evolution, and Moar-TCon.
  * 
  * <h2>The Problem:</h2>
  * When CraftTweaker or other mods register materials, they typically only add vanilla TConstruct 
  * stat types (head, handle, extra, etc.) and don't add custom stat types like "laser_medium", 
- * "battery_cell", or "tconevo.magic".
+ * "battery_cell", "tconevo.magic", or "moretcon.explosive_charge".
  * 
  * <p>This causes {@link slimeknights.tconstruct.library.tools.ToolPart#canUseMaterial(Material)} 
  * to return false for these materials when checking custom parts, which prevents 
@@ -27,9 +28,9 @@ import java.util.Set;
  * colored textures for those materials on custom part types.</p>
  * 
  * <h2>The Solution:</h2>
- * We add a concrete implementation of canUseMaterialForRendering to the ToolPart class,
- * overriding the default interface implementation. This allows materials with standard stats 
- * to be used for rendering on custom parts even if they don't have the exact stat type required.
+ * We override canUseMaterialForRendering() in the ToolPart class using @Overwrite.
+ * This allows materials with standard stats to be used for rendering on custom parts 
+ * even if they don't have the exact stat type required.
  * 
  * <p>This allows materials registered via CraftTweaker with standard stats to display properly 
  * colored textures on custom parts, even though they can't actually be used to craft tools 
@@ -74,12 +75,12 @@ public abstract class MixinToolPart implements IToolPart {
     
     /**
      * Override canUseMaterialForRendering from the IToolPart interface.
-     * By implementing this method in the Mixin, it will override the default interface implementation
-     * for all ToolPart instances, allowing materials with standard stats to be used for rendering
-     * on custom parts even if they don't have the exact stat type required.
      * 
-     * Note: This is NOT using @Overwrite because the method doesn't exist in ToolPart class itself.
-     * Instead, we're providing a concrete implementation that takes precedence over the interface default.
+     * By implementing this method in the Mixin class, it provides a concrete implementation
+     * that takes precedence over the interface's default implementation when ToolPart is loaded.
+     * 
+     * This method is called by CustomTextureCreator to determine which materials should have
+     * colored textures generated for this tool part.
      * 
      * @param mat the material to check
      * @return true if the material can be used for rendering this part
@@ -92,14 +93,30 @@ public abstract class MixinToolPart implements IToolPart {
         }
         
         // First, check if the material can be used normally (has the required custom stats)
-        if (this.canUseMaterial(mat)) {
+        boolean canUse = this.canUseMaterial(mat);
+        if (canUse) {
             return true;
         }
         
         // For parts that use custom stat types, allow rendering with any material that has
         // standard stats. This enables shader generation for CraftTweaker materials.
-        if (this.usesCustomStatType()) {
-            return this.hasAnyStandardStat(mat);
+        boolean usesCustom = this.usesCustomStatType();
+        boolean hasStandard = this.hasAnyStandardStat(mat);
+        
+        // DEBUG logging if enabled
+        if (MaterialShaderFixConfig.enableDebugLogging) {
+            IToolPart thisPart = (IToolPart)(Object)this;
+            String unlocalizedName = thisPart.toString();
+            
+            // Log for all custom stat type parts
+            if (usesCustom && hasStandard && !canUse) {
+                System.out.println("[MaterialShaderFix] Enabling " + mat.identifier + 
+                    " rendering for custom part: " + unlocalizedName);
+            }
+        }
+        
+        if (usesCustom) {
+            return hasStandard;
         }
         
         // For standard parts, use the original behavior
@@ -110,24 +127,52 @@ public abstract class MixinToolPart implements IToolPart {
      * Determines if this tool part requires any custom (non-vanilla) stat type.
      * Uses the custom stat types defined in the config.
      * 
-     * @return true if this part is used in any tool that requires a custom stat type
+     * IMPORTANT: This method checks if the part's unlocalized name contains any custom stat type identifier.
+     * This is more reliable than checking registered tools because some tools may not be registered
+     * depending on config settings (e.g., Moar-TCon's Bomb tool depends on enableBomb config).
+     * 
+     * @return true if this part is likely used for a custom stat type
      */
     private boolean usesCustomStatType() {
         Set<String> customTypes = getCustomStatTypes();
+        IToolPart thisPart = (IToolPart)(Object)this;
         
+        // Get the part's unlocalized name (e.g., "item.moretcon.explosive_charge.name")
+        String unlocalizedName = thisPart.toString();
+        
+        // Check if the unlocalized name contains any custom stat type identifier
+        // This handles cases where the stat type is part of the item name
+        for (String customType : customTypes) {
+            // Remove namespace prefix (e.g., "moretcon.explosive_charge" -> "explosive_charge")
+            String simpleType = customType.contains(".") ? 
+                customType.substring(customType.lastIndexOf('.') + 1) : customType;
+            
+            if (unlocalizedName.contains(simpleType)) {
+                if (MaterialShaderFixConfig.enableDebugLogging) {
+                    System.out.println("[MaterialShaderFix] Part " + unlocalizedName + 
+                        " identified as custom stat type: " + customType);
+                }
+                return true;
+            }
+        }
+        
+        // Fallback: Check registered tools (for parts that don't have the stat type in their name)
         for (ToolCore tool : TinkerRegistry.getTools()) {
             for (PartMaterialType pmt : tool.getRequiredComponents()) {
-                // Check if this part material type includes this part
-                if (pmt.isValidItem((IToolPart)(Object)this)) {
-                    // Check if this PMT requires any custom stat types
+                if (pmt.isValidItem(thisPart)) {
                     for (String customType : customTypes) {
                         if (pmt.usesStat(customType)) {
+                            if (MaterialShaderFixConfig.enableDebugLogging) {
+                                System.out.println("[MaterialShaderFix] Part " + unlocalizedName + 
+                                    " found in tool " + tool.getIdentifier() + " using custom stat: " + customType);
+                            }
                             return true;
                         }
                     }
                 }
             }
         }
+        
         return false;
     }
     
