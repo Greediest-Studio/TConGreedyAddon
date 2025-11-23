@@ -44,7 +44,8 @@ public class MaterialShaderFixConfig {
     public static String[] customStatTypes = {
         "laser_medium",
         "battery_cell",
-        "tconevo.magic"
+        "tconevo.magic",
+        "moretcon.explosive_charge"
     };
     
     @Mod.EventBusSubscriber(modid = Tags.MOD_ID)

@@ -21,7 +21,7 @@ public class MaterialRenderingDebugHelper {
     private static final Logger LOGGER = LogManager.getLogger("TConGreedyAddon/MaterialShaderFix");
     
     private static final Set<String> CUSTOM_STAT_TYPES = new HashSet<>(Arrays.asList(
-        "laser_medium", "battery_cell", "tconevo.magic"
+        "laser_medium", "battery_cell", "tconevo.magic", "moretcon.explosive_charge"
     ));
     
     private static final Set<String> STANDARD_STAT_TYPES = new HashSet<>(Arrays.asList(
