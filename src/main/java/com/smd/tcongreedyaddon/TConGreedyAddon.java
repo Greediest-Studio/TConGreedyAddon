@@ -1,5 +1,6 @@
 package com.smd.tcongreedyaddon;
 
+import com.smd.tcongreedyaddon.init.SoundsHandler;
 import com.smd.tcongreedyaddon.init.TraitRegistry;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.AbyssalCraft.AbyssalCraft;
@@ -11,7 +12,12 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import slimeknights.tconstruct.library.TinkerRegistry;
+
 import com.smd.tcongreedyaddon.proxy.CommonProxy;
+import com.smd.tcongreedyaddon.traits.TraitCiallo;
+import com.smd.tcongreedyaddon.traits.TraitsSoundEffects;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,6 +48,9 @@ public class TConGreedyAddon {
         ModuleManager.preInitActiveModules();
 
         proxy.registerSubscriptions();
+
+        TinkerRegistry.addTrait(new TraitCiallo());
+        TinkerRegistry.addTrait(new TraitsSoundEffects());
     }
 
     @Mod.EventHandler
@@ -61,5 +70,10 @@ public class TConGreedyAddon {
         
         // Log material shader fix summary
         MaterialRenderingDebugHelper.logMaterialShaderFixSummary();
+    }
+
+    @SubscribeEvent
+    public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
+        SoundsHandler.register(event.getRegistry());
     }
 }

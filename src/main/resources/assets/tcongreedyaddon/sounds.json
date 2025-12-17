@@ -1,0 +1,84 @@
+{
+  "player.ciallo": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/ciallo",
+        "stream": false
+      }
+    ]
+  },
+  "player.man": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/man",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_1": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_1",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_2": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_2",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_3": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_3",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_4": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_4",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_5": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_5",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_6": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_6",
+        "stream": false
+      }
+    ]
+  },
+  "player.sucai_7": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "tcongreedyaddon:player/sucai_7",
+        "stream": false
+      }
+    ]
+  }
+}
+

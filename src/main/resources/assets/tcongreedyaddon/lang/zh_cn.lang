@@ -21,7 +21,10 @@ modifier.test.name=测试用强化
 material.abyssalnite.name=渊素
 material.refined_coralium.name=精炼珊瑚
 material.dreadium.name=惧质
-
+modifier.ciallo.name=Ciallo～(∠・ω< )⌒★
+modifier.ciallo.desc=你说的对但这就是Ciallo～(∠・ω< )⌒★
+modifier.soundeffects.name=音效库限时免费
+modifier.soundeffects.desc=人声鼎沸啊
 modifier.dreadplague.name=恐惧疫染
 modifier.dreadplague.desc=§o向查伽洛斯臣服！§r\n在暴击时附加恐惧瘟疫效果。
 modifier.coraliumplague.name=珊瑚疫染

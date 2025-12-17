@@ -24,6 +24,10 @@ item.explosive_arrow.desc=Special heavy tipped arrows designed to be shot from a
 
 modifier.explosive_range.name=Catalyzing
 modifier.explosive_range.desc=Explosions have additional range due to additional catalyzation efficiency
+modifier.ciallo.name=Ciallo～(∠・ω< )⌒★
+modifier.ciallo.desc=You're right, but this is Ciallo～(∠・ω< )⌒★
+modifier.soundeffects.name=Sound Effects Library - Limited Time Free
+modifier.soundeffects.desc=What a bustling crowd!
 
 stat.tcongreedyaddon.explosive.radius.name=Explosion Radius
 stat.explosivecore.name=Explosion Catalyzer
