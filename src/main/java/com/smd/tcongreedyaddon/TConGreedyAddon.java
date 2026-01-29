@@ -1,22 +1,22 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
-import com.smd.tcongreedyaddon.init.TraitRegistry;
+import com.smd.tcongreedyaddon.plugin.something.something;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.AbyssalCraft.AbyssalCraft;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
+import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import slimeknights.tconstruct.library.TinkerRegistry;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import com.smd.tcongreedyaddon.proxy.CommonProxy;
-import com.smd.tcongreedyaddon.traits.TraitCiallo;
-import com.smd.tcongreedyaddon.traits.TraitsSoundEffects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,13 +44,11 @@ public class TConGreedyAddon {
 
         ModuleManager.registerModule(new OldWeapons());
         ModuleManager.registerModule(new AbyssalCraft());
+        ModuleManager.registerModule(new something());
 
         ModuleManager.preInitActiveModules();
 
         proxy.registerSubscriptions();
-
-        TinkerRegistry.addTrait(new TraitCiallo());
-        TinkerRegistry.addTrait(new TraitsSoundEffects());
     }
 
     @Mod.EventHandler

@@ -1,4 +1,4 @@
-package com.smd.tcongreedyaddon.traits;
+package com.smd.tcongreedyaddon.traits.something;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
 import net.minecraft.entity.EntityLivingBase;

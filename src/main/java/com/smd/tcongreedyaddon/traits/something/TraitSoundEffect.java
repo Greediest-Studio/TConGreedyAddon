@@ -1,4 +1,4 @@
-package com.smd.tcongreedyaddon.traits;
+package com.smd.tcongreedyaddon.traits.something;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
 import net.minecraft.entity.EntityLivingBase;
@@ -9,8 +9,8 @@ import net.minecraft.util.SoundEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
 
-public class TraitsSoundEffects extends AbstractTrait {
-    public TraitsSoundEffects() {
+public class TraitSoundEffect extends AbstractTrait {
+    public TraitSoundEffect() {
         super("soundeffects", 0xffffff);
     }
 

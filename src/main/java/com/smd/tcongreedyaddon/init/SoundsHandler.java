@@ -1,6 +1,6 @@
 package com.smd.tcongreedyaddon.init;
 
-import com.smd.tcongreedyaddon.TConGreedyAddon;
+import com.smd.tcongreedyaddon.Tags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -26,7 +26,7 @@ public class SoundsHandler {
     }
 
     public static SoundEvent registerSound(IForgeRegistry<SoundEvent> registry, String soundName) {
-        ResourceLocation soundID = new ResourceLocation(TConGreedyAddon.MOD_ID, soundName);
+        ResourceLocation soundID = new ResourceLocation(Tags.MOD_ID, soundName);
         SoundEvent event = new SoundEvent(soundID).setRegistryName(soundID);
         registry.register(event);
         return event;

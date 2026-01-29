@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.util;
 
-import net.minecraft.util.text.TextFormatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import slimeknights.tconstruct.library.TinkerRegistry;
