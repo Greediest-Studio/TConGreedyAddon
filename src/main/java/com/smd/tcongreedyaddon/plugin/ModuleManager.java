@@ -12,6 +12,7 @@ import java.util.Set;
 
 public class ModuleManager {
     private static final Map<String, IModule> modules = new HashMap<>();
+    private static final Map<String, ModuleConfig> moduleConfigs = new HashMap<>();
     private static final Set<String> activeModules = new HashSet<>();
     private static Configuration config;
 
@@ -22,9 +23,9 @@ public class ModuleManager {
     public static void setupConfig(Configuration config) {
         ModuleManager.config = config;
         config.addCustomCategoryComment("modules", "Enable/disable integration modules");
-    }
 
-    public static void initActiveModules() {
+        config.load();
+
         for (IModule module : modules.values()) {
             Property prop = config.get(
                     "modules",
@@ -32,53 +33,79 @@ public class ModuleManager {
                     module.isEnabledByDefault(),
                     "Enable " + module.getModuleName() + " integration"
             );
+            prop.setComment("Enable " + module.getModuleName() + " integration");
+        }
 
-            if (prop.getBoolean() && module.isModAvailable()) {
-                module.init();
-                activeModules.add(module.getModuleName());
+        for (IModule module : modules.values()) {
+            if (module.hasDetailedConfig()) {
+                module.setupModuleConfig(config);
             }
         }
 
-        if (config.hasChanged()) config.save();
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     public static void preInitActiveModules() {
         for (IModule module : modules.values()) {
-            Property prop = config.get(
+            // 检查模块是否启用
+            boolean enabled = config.get(
                     "modules",
                     module.getModuleName(),
-                    module.isEnabledByDefault(),
-                    "Enable " + module.getModuleName() + " integration"
-            );
+                    module.isEnabledByDefault()
+            ).getBoolean() && module.isModAvailable();
 
-            if (prop.getBoolean() && module.isModAvailable()) {
+            if (enabled) {
+                if (module.hasDetailedConfig()) {
+                    module.loadModuleConfig(config);
+                }
+
                 module.preInit();
                 activeModules.add(module.getModuleName());
             }
         }
+    }
 
-        if (config.hasChanged()) config.save();
+    public static void initActiveModules() {
+        for (IModule module : modules.values()) {
+            boolean enabled = config.get(
+                    "modules",
+                    module.getModuleName(),
+                    module.isEnabledByDefault()
+            ).getBoolean() && module.isModAvailable();
+
+            if (enabled) {
+
+                if (module.hasDetailedConfig()) {
+                    module.loadModuleConfig(config);
+                }
+
+                module.init();
+            }
+        }
+
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     public static void postInitActiveModules() {
         for (IModule module : modules.values()) {
-            Property prop = config.get(
+            boolean enabled = config.get(
                     "modules",
                     module.getModuleName(),
-                    module.isEnabledByDefault(),
-                    "Enable " + module.getModuleName() + " integration"
-            );
+                    module.isEnabledByDefault()
+            ).getBoolean() && module.isModAvailable();
 
-            if (prop.getBoolean() && module.isModAvailable()) {
+            if (enabled) {
                 module.postInit();
-                activeModules.add(module.getModuleName());
             }
         }
-        if (config.hasChanged()) config.save();
-    }
 
-    public static boolean isModuleActive(String name) {
-        return activeModules.contains(name);
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     public static void initItems(RegistryEvent.Register<Item> event) {
@@ -86,19 +113,30 @@ public class ModuleManager {
             boolean enabled = config.get(
                     "modules",
                     module.getModuleName(),
-                    module.isEnabledByDefault(),
-                    "Enable " + module.getModuleName() + " integration"
-            ).getBoolean();
+                    module.isEnabledByDefault()
+            ).getBoolean() && module.isModAvailable();
 
-            if (enabled && module.isModAvailable()) {
-                if (module instanceof IModule) {
-                    module.initItems(event);
-                }
+            if (enabled) {
+                module.initItems(event);
             }
         }
+    }
 
-        if (config.hasChanged()) config.save();
+    public static boolean isModuleActive(String name) {
+        return activeModules.contains(name);
+    }
+
+    public static ModuleConfig getModuleConfig(String moduleName) {
+        return moduleConfigs.get(moduleName);
+    }
+
+    public static void saveAllConfigs() {
+        if (config.hasChanged()) {
+            config.save();
+        }
+    }
+
+    public static Configuration getConfig() {
+        return config;
     }
 }
-
-

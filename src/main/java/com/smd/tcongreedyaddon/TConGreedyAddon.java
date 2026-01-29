@@ -40,11 +40,13 @@ public class TConGreedyAddon {
         LOGGER.info("Material Shader Fix Mixin is active!");
         
         config = new Configuration(event.getSuggestedConfigurationFile());
-        ModuleManager.setupConfig(config);
+
 
         ModuleManager.registerModule(new OldWeapons());
         ModuleManager.registerModule(new AbyssalCraft());
         ModuleManager.registerModule(new something());
+
+        ModuleManager.setupConfig(config);
 
         ModuleManager.preInitActiveModules();
 
