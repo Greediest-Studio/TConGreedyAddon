@@ -35,6 +35,7 @@ public class TraitCleverTranslation extends AbstractTrait {
     private static final String NBT_LAST_TICK = "CleverTranslationLastTick";
     private static final String NBT_LAST_SOURCE = "CleverTranslationSource";
     private static final String NBT_LAST_TARGET = "CleverTranslationTarget";
+    private static final String NBT_LAST_DISPLAY_NAME = "CleverTranslationDisplayName";
 
     private static final int TRANSLATION_INTERVAL_TICKS = 20 * 60;
     private static final float MAX_X = 15.0F;
@@ -73,14 +74,20 @@ public class TraitCleverTranslation extends AbstractTrait {
             tool.setTagCompound(tag);
         }
 
+        String source = tool.getDisplayName();
+        if (source == null || source.trim().isEmpty()) {
+            return;
+        }
+
         long currentTick = world.getTotalWorldTime();
         long lastTick = tag.getLong(NBT_LAST_TICK);
         if (currentTick - lastTick < TRANSLATION_INTERVAL_TICKS) {
             return;
         }
 
-        String source = tool.getDisplayName();
-        if (source == null || source.trim().isEmpty()) {
+        String lastDisplayName = tag.getString(NBT_LAST_DISPLAY_NAME);
+        boolean hasMarker = tag.hasKey(NBT_LAST_DISPLAY_NAME);
+        if (hasMarker && source.equals(lastDisplayName)) {
             return;
         }
 
@@ -158,6 +165,7 @@ public class TraitCleverTranslation extends AbstractTrait {
                     tag.setFloat(NBT_X, xValue);
                     tag.setString(NBT_LAST_SOURCE, source);
                     tag.setString(NBT_LAST_TARGET, translated);
+                    tag.setString(NBT_LAST_DISPLAY_NAME, source);
 
                     if (playerId != null) {
                         sendMessageToPlayer(server, playerId, "[机翻有理] 翻译完成：" + translated + " (X=" + String.format(Locale.ROOT, "%.2f", xValue) + ")");
