@@ -28,6 +28,8 @@ modifier.ciallo.name=Ciallo～(∠・ω< )⌒★
 modifier.ciallo.desc=You're right, but this is Ciallo～(∠・ω< )⌒★
 modifier.soundeffects.name=Sound Effects Library - Limited Time Free
 modifier.soundeffects.desc=What a bustling crowd!
+modifier.clever_translation.name=Clever Translation
+modifier.clever_translation.desc=Every 60s, translate the name and scale damage by translation length.
 
 stat.tcongreedyaddon.explosive.radius.name=Explosion Radius
 stat.explosivecore.name=Explosion Catalyzer
