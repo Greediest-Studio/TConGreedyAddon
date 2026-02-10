@@ -3,6 +3,7 @@ package com.smd.tcongreedyaddon.plugin.something;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.traits.something.TraitCiallo;
 import com.smd.tcongreedyaddon.traits.something.TraitCleverTranslation;
+import com.smd.tcongreedyaddon.traits.something.TraitConnection404;
 import com.smd.tcongreedyaddon.traits.something.TraitSoundEffect;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
@@ -19,6 +20,7 @@ public class something implements IModule {
     public static final AbstractTrait ciallo = new TraitCiallo();
     public static final AbstractTrait soundeffects = new TraitSoundEffect();
     public static final AbstractTrait cleverTranslation = new TraitCleverTranslation();
+    public static final AbstractTrait connection404 = new TraitConnection404();
 
     public static String baiduAppId = "";
     public static String baiduAppKey = "";
@@ -59,6 +61,7 @@ public class something implements IModule {
         TinkerRegistry.addTrait(ciallo);
         TinkerRegistry.addTrait(soundeffects);
         TinkerRegistry.addTrait(cleverTranslation);
+        TinkerRegistry.addTrait(connection404);
     }
 
     @Override

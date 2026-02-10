@@ -30,6 +30,8 @@ modifier.soundeffects.name=Sound Effects Library - Limited Time Free
 modifier.soundeffects.desc=What a bustling crowd!
 modifier.clever_translation.name=Clever Translation
 modifier.clever_translation.desc=Every 60s, translate the name and scale damage by translation length.
+modifier.connection_404.name=Connection 404
+modifier.connection_404.desc=Every 120s, ping github.com asynchronously and scale damage by 175%-X, where X is loss rate.
 
 stat.tcongreedyaddon.explosive.radius.name=Explosion Radius
 stat.explosivecore.name=Explosion Catalyzer
