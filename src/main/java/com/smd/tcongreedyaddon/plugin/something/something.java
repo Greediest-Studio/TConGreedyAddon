@@ -20,6 +20,7 @@ public class something implements IModule {
     public static final AbstractTrait connection404 = new TraitConnection404();
     public static final AbstractTrait autobow = new TraitAutoBow();
     public static final AbstractTrait overcharge = new TraitOvercharge();
+    public static final AbstractTrait deathboost = new TraitDeathBoost();
 
     public static String baiduAppId = "";
     public static String baiduAppKey = "";
@@ -63,6 +64,7 @@ public class something implements IModule {
         TinkerRegistry.addTrait(connection404);
         TinkerRegistry.addTrait(autobow);
         TinkerRegistry.addTrait(overcharge);
+        TinkerRegistry.addTrait(deathboost);
     }
 
     @Override

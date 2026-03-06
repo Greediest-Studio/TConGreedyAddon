@@ -35,11 +35,14 @@ public class MaterialRenderingDebugHelper {
         if (!com.smd.tcongreedyaddon.config.MaterialShaderFixConfig.enableDebugLogging) {
             return;
         }
-        
+
         LOGGER.info("======= Material Shader Fix Summary =======");
-        
+
         Map<String, Set<Material>> customPartToFixedMaterials = new HashMap<>();
-        
+        for (String customType : CUSTOM_STAT_TYPES) {
+            customPartToFixedMaterials.put(customType, new HashSet<>());
+        }
+
         // Find all custom parts
         Set<IToolPart> customParts = new HashSet<>();
         for (ToolCore tool : TinkerRegistry.getTools()) {
@@ -47,12 +50,11 @@ public class MaterialRenderingDebugHelper {
                 for (String customType : CUSTOM_STAT_TYPES) {
                     if (pmt.usesStat(customType)) {
                         customParts.addAll(pmt.getPossibleParts());
-                        customPartToFixedMaterials.putIfAbsent(customType, new HashSet<>());
                     }
                 }
             }
         }
-        
+
         if (customParts.isEmpty()) {
             LOGGER.info("No custom part types detected (PlusTiC/Tinkers-Evolution may not be loaded)");
             LOGGER.info("===========================================");
