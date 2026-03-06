@@ -1,26 +1,15 @@
 item.greatblade.name=Greatblade
 item.battleaxe.name=Battleaxe
-item.cutlass.name=Cutlass
-item.javelin.name=Javelin
 item.dagger.name=Dagger
 item.tconstruct:crossbow.name=Crossbow
-item.scimitar.name=Scimitar
-item.explosive_bow.name=Explosive Bow
-item.explosive_arrow.name=Explosive Arrow
+item.allinonetool.name=item.allinonetool.name
 
-item.fullGuard.name=Full Guard
 item.greatbladeCore.name=Greatblade Core
-item.explosiveCore.name=Explosion Catalyzer
 
 item.greatblade.desc=The Great Equalizer. The heavy Greatblade sacrifices raw damage for enemy percent HP damage, and excels vs bosses. Slow, Requires two hands!
 item.battleaxe.desc=The Battleaxe is a heavy offensive weapon. As a berserker, you deal and take significantly more damage. \n It is capable of bringing down small trees.
-item.cutlass.desc=The Cutlass is a weapon for those of great skill, or those who think they have it and want to show off. On critical hits, a short burst of speed is granted.
-item.javelin.desc=Ranged Melee weapon hybrid. Potent as a melee weapon, devastating at range.
 item.tconstruct:crossbow.desc=The Crossbow is a slow but very powerful weapon. It has to be loaded beforehand, but can be fired at any moment afterwards.\nUses Tinkers' Bolts.
-item.dagger.desc=The Dagger is a short blade that can not be thrown.
-item.scimitar.desc=The scimitar is a sharp, lightweight blade focused on bleeding enemies to death.
-item.explosive_bow.desc=A special bow variant that catalyzes materials when activated. Shoots explosive arrows.
-item.explosive_arrow.desc=Special heavy tipped arrows designed to be shot from a rail. Used in explosive bow.
+item.allinonetool.desc=item.allinonetool.desc
 
 modifier.explosive_range.name=Catalyzing
 modifier.explosive_range.desc=Explosions have additional range due to additional catalyzation efficiency
@@ -53,3 +42,13 @@ effect.tcongreedyaddon.berserker=Berserker
 effect.tcongreedyaddon.hemorrhage=Hemorrhage
 
 death.attack.tcongreedyaddon.hemorrhage=%1$s died due to exsanguination
+
+modifier.dreadplague.name=modifier.dreadplague.name
+modifier.dreadplague.desc=modifier.dreadplague.desc
+modifier.coraliumplague.name=modifier.coraliumplague.name
+modifier.coraliumplague.desc=modifier.coraliumplague.desc
+modifier.dreadpurity.name=modifier.dreadpurity.name
+modifier.dreadpurity.desc=modifier.dreadpurity.desc
+modifier.light_pierce.name=modifier.light_pierce.name
+modifier.light_pierce.desc=modifier.light_pierce.desc
+modifier.light_pierce.extra=modifier.light_pierce.extra

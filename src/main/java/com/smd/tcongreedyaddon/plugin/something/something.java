@@ -1,10 +1,7 @@
 package com.smd.tcongreedyaddon.plugin.something;
 
 import com.smd.tcongreedyaddon.plugin.IModule;
-import com.smd.tcongreedyaddon.traits.something.TraitCiallo;
-import com.smd.tcongreedyaddon.traits.something.TraitCleverTranslation;
-import com.smd.tcongreedyaddon.traits.something.TraitConnection404;
-import com.smd.tcongreedyaddon.traits.something.TraitSoundEffect;
+import com.smd.tcongreedyaddon.traits.something.*;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
@@ -21,6 +18,8 @@ public class something implements IModule {
     public static final AbstractTrait soundeffects = new TraitSoundEffect();
     public static final AbstractTrait cleverTranslation = new TraitCleverTranslation();
     public static final AbstractTrait connection404 = new TraitConnection404();
+    public static final AbstractTrait autobow = new TraitAutoBow();
+    public static final AbstractTrait overcharge = new TraitOvercharge();
 
     public static String baiduAppId = "";
     public static String baiduAppKey = "";
@@ -62,6 +61,8 @@ public class something implements IModule {
         TinkerRegistry.addTrait(soundeffects);
         TinkerRegistry.addTrait(cleverTranslation);
         TinkerRegistry.addTrait(connection404);
+        TinkerRegistry.addTrait(autobow);
+        TinkerRegistry.addTrait(overcharge);
     }
 
     @Override
