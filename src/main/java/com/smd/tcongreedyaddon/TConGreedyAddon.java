@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
+import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
 import com.smd.tcongreedyaddon.plugin.something.something;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.AbyssalCraft.AbyssalCraft;
@@ -45,6 +46,7 @@ public class TConGreedyAddon {
         ModuleManager.registerModule(new OldWeapons());
         ModuleManager.registerModule(new AbyssalCraft());
         ModuleManager.registerModule(new something());
+        ModuleManager.registerModule(new SpecialWeapons());
 
         ModuleManager.setupConfig(config);
 
