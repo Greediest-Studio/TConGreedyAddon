@@ -44,6 +44,9 @@ public abstract class MagicPageItem extends Item {
         return false;
     }
 
+    public void onHeldUpdate(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, SlotType slot) {
+    }
+
     public void nextSpell(ItemStack toolStack, NBTTagCompound modifierData) {}
 
     public int getInitialSpellIndex(ItemStack pageStack) {

@@ -121,35 +121,49 @@ public class MagicBook extends TinkerToolCore {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
-        if (world.isRemote) {
-            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-        }
 
-        // 处理副手安装书页（保持不变）
         ItemStack offhand = player.getHeldItemOffhand();
         if (hand == EnumHand.MAIN_HAND && !offhand.isEmpty() && offhand.getItem() instanceof MagicPageItem) {
-            return handlePageInstallation(world, player, stack, offhand);
-        }
+            MagicPageItem page = (MagicPageItem) offhand.getItem();
+            MagicPageItem.SlotType slotType = page.getSlotType();
+            boolean slotAvailable = isSlotAvailable(stack, slotType);
 
-        // 处理切换法术（潜行+右键，保持不变）
-        if (player.isSneaking()) {
-            initSlots(stack);
-            NBTTagCompound tag = TagUtil.getTagSafe(stack);
-            NBTTagCompound rightData = tag.getCompoundTag(TAG_RIGHT_PAGE);
-            if (!rightData.isEmpty()) {
-                String pageId = rightData.getString(TAG_PAGE_ID);
-                Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-                if (pageItem instanceof MagicPageItem) {
-                    MagicPageItem page = (MagicPageItem) pageItem;
-                    page.nextSpell(stack, rightData);
-                    tag.setTag(TAG_RIGHT_PAGE, rightData);
-                    stack.setTagCompound(tag);
-                    return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            if (world.isRemote) {
+                return new ActionResult<>(slotAvailable ? EnumActionResult.SUCCESS : EnumActionResult.FAIL, stack);
+            } else {
+                if (slotAvailable) {
+                    return handlePageInstallation(world, player, stack, offhand);
+                } else {
+                    player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_unavailable")));
+                    return new ActionResult<>(EnumActionResult.FAIL, stack);
                 }
             }
         }
 
-        // 检查工具是否损坏
+        if (player.isSneaking()) {
+            initSlots(stack);
+            NBTTagCompound tag = TagUtil.getTagSafe(stack);
+            NBTTagCompound rightData = tag.getCompoundTag(TAG_RIGHT_PAGE);
+            boolean hasRightPage = !rightData.isEmpty();
+
+            if (world.isRemote) {
+                return new ActionResult<>(hasRightPage ? EnumActionResult.SUCCESS : EnumActionResult.FAIL, stack);
+            } else {
+                if (hasRightPage) {
+                    String pageId = rightData.getString(TAG_PAGE_ID);
+                    Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
+                    if (pageItem instanceof MagicPageItem) {
+                        MagicPageItem page = (MagicPageItem) pageItem;
+                        page.nextSpell(stack, rightData);
+                        tag.setTag(TAG_RIGHT_PAGE, rightData);
+                        stack.setTagCompound(tag);
+                        return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+                    }
+                }
+                return new ActionResult<>(EnumActionResult.FAIL, stack);
+            }
+        }
+
         if (ToolHelper.isBroken(stack)) {
             return new ActionResult<>(EnumActionResult.FAIL, stack);
         }
@@ -157,27 +171,76 @@ public class MagicBook extends TinkerToolCore {
         initSlots(stack);
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
         NBTTagCompound rightData = tag.getCompoundTag(TAG_RIGHT_PAGE);
+        boolean canUseSpell = false;
+        MagicPageItem page = null;
+        int spellIndex = -1;
+
         if (!rightData.isEmpty()) {
             String pageId = rightData.getString(TAG_PAGE_ID);
             Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
             if (pageItem instanceof MagicPageItem) {
-                MagicPageItem page = (MagicPageItem) pageItem;
-
-                    int spellIndex = rightData.getInteger(TAG_SPELL_INDEX);
-                    if (isPageOnCooldown(world, rightData, page, spellIndex)) {
-                        return new ActionResult<>(EnumActionResult.FAIL, stack);
-                    }
-                    if (page.onRightClick(world, player, stack, rightData)) {
-                        setPageCooldown(world, rightData, page, spellIndex);
-                        tag.setTag(TAG_RIGHT_PAGE, rightData);
-                        stack.setTagCompound(tag);
-                        ToolHelper.damageTool(stack, DURABILITY_COST, player);
-                        return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-                    }
+                page = (MagicPageItem) pageItem;
+                spellIndex = rightData.getInteger(TAG_SPELL_INDEX);
+                canUseSpell = !isPageOnCooldown(world, rightData, page, spellIndex);
             }
         }
 
-        return new ActionResult<>(EnumActionResult.FAIL, stack);
+        if (world.isRemote) {
+            return new ActionResult<>(canUseSpell ? EnumActionResult.SUCCESS : EnumActionResult.FAIL, stack);
+        } else {
+            if (canUseSpell) {
+                if (page.onRightClick(world, player, stack, rightData)) {
+                    setPageCooldown(world, rightData, page, spellIndex);
+                    tag.setTag(TAG_RIGHT_PAGE, rightData);
+                    stack.setTagCompound(tag);
+                    ToolHelper.damageTool(stack, DURABILITY_COST, player);
+                    return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+                }
+            }
+            return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+    }
+
+    @Override
+    public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
+        super.onUpdate(stack, world, entity, itemSlot, isSelected);
+        if (!(entity instanceof EntityPlayer)) return;
+        EntityPlayer player = (EntityPlayer) entity;
+        if (!isSelected) return;
+
+        NBTTagCompound tag = TagUtil.getTagSafe(stack);
+        boolean dirty = false;
+
+        NBTTagCompound leftData = tag.getCompoundTag(TAG_LEFT_PAGE);
+        if (!leftData.isEmpty()) {
+            String leftPageId = leftData.getString(TAG_PAGE_ID);
+            Item leftPageItem = Item.REGISTRY.getObject(new ResourceLocation(leftPageId));
+            if (leftPageItem instanceof MagicPageItem) {
+                NBTTagCompound leftCopy = leftData.copy();
+                ((MagicPageItem) leftPageItem).onHeldUpdate(world, player, stack, leftCopy, MagicPageItem.SlotType.LEFT);
+                if (!leftCopy.equals(leftData)) {
+                    tag.setTag(TAG_LEFT_PAGE, leftCopy);
+                    dirty = true;
+                }
+            }
+        }
+
+        NBTTagCompound rightData = tag.getCompoundTag(TAG_RIGHT_PAGE);
+        if (!rightData.isEmpty()) {
+            String rightPageId = rightData.getString(TAG_PAGE_ID);
+            Item rightPageItem = Item.REGISTRY.getObject(new ResourceLocation(rightPageId));
+            if (rightPageItem instanceof MagicPageItem) {
+                NBTTagCompound rightCopy = rightData.copy();
+                ((MagicPageItem) rightPageItem).onHeldUpdate(world, player, stack, rightCopy, MagicPageItem.SlotType.RIGHT);
+                if (!rightCopy.equals(rightData)) {
+                    tag.setTag(TAG_RIGHT_PAGE, rightCopy);
+                    dirty = true;
+                }
+            }
+        }
+        if (dirty) {
+            stack.setTagCompound(tag);
+        }
     }
 
     private ActionResult<ItemStack> handlePageInstallation(World world, EntityPlayer player, ItemStack toolStack, ItemStack pageStack) {
