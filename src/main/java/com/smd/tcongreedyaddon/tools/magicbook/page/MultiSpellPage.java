@@ -4,6 +4,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
@@ -21,12 +22,52 @@ public abstract class MultiSpellPage extends MagicPageItem {
     public static class Spell {
         public final String name;
         public final int cooldownTicks;
+        public final ResourceLocation icon;
         public final SpellAction action;
 
-        public Spell(String name, int cooldownTicks, SpellAction action) {
-            this.name = name;
-            this.cooldownTicks = cooldownTicks;
-            this.action = action;
+        private Spell(Builder builder) {
+            this.name = builder.name;
+            this.cooldownTicks = builder.cooldownTicks;
+            this.icon = builder.icon;
+            this.action = builder.action;
+        }
+
+        public static class Builder {
+            private String name;
+            private int cooldownTicks;
+            private ResourceLocation icon;
+            private SpellAction action;
+
+            public Builder name(String name) {
+                this.name = name;
+                return this;
+            }
+
+            public Builder cooldown(int ticks) {
+                this.cooldownTicks = ticks;
+                return this;
+            }
+
+            public Builder icon(ResourceLocation icon) {
+                this.icon = icon;
+                return this;
+            }
+
+            public Builder action(SpellAction action) {
+                this.action = action;
+                return this;
+            }
+
+            public Spell build() {
+
+                if (name == null || name.isEmpty()) {
+                    throw new IllegalStateException("Spell must have a non-empty name");
+                }
+                if (action == null) {
+                    throw new IllegalStateException("Spell must have an action");
+                }
+                return new Spell(this);
+            }
         }
     }
 
@@ -36,8 +77,8 @@ public abstract class MultiSpellPage extends MagicPageItem {
 
     protected abstract void registerSpells();
 
-    protected void addSpell(String name, int cooldownTicks, SpellAction action) {
-        spells.add(new Spell(name, cooldownTicks, action));
+    protected void addSpell(Spell.Builder builder) {
+        spells.add(builder.build());
     }
 
     @Override
@@ -74,9 +115,7 @@ public abstract class MultiSpellPage extends MagicPageItem {
         return 0;
     }
 
-    /**
-     * 获取当前法术的显示名称（用于工具提示）
-     */
+    @Override
     public String getCurrentSpellDisplayName(NBTTagCompound pageData) {
         int index = pageData.getInteger("spellIndex");
         if (index >= 0 && index < spells.size()) {
@@ -92,5 +131,21 @@ public abstract class MultiSpellPage extends MagicPageItem {
             names.add(spell.name);
         }
         return names;
+    }
+
+    public ResourceLocation getCurrentSpellIcon(NBTTagCompound pageData) {
+        int index = pageData.getInteger("spellIndex");
+        if (index >= 0 && index < spells.size()) {
+            return spells.get(index).icon;
+        }
+        return null;
+    }
+
+    public List<ResourceLocation> getSpellIconTextures() {
+        List<ResourceLocation> icons = new ArrayList<>();
+        for (Spell spell : spells) {
+            icons.add(spell.icon);
+        }
+        return icons;
     }
 }

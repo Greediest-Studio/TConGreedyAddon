@@ -50,13 +50,6 @@ public abstract class MagicPageItem extends Item {
         return 0;
     }
 
-    /**
-     * 返回该书页是否属于持续施法类型（按住右键持续生效）
-     */
-    public boolean isContinuous() {
-        return false;
-    }
-
     public String getCurrentSpellDisplayName(NBTTagCompound pageData) {
         return "Spell " + (pageData.getInteger("spellIndex") + 1);
     }

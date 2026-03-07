@@ -5,20 +5,20 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.*;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.*;
 import slimeknights.tconstruct.library.tinkering.Category;
@@ -37,13 +37,14 @@ public class MagicBook extends TinkerToolCore {
 
     public static final float BEAM_RANGE = 10.0F;
     public static final int DURABILITY_COST = 1;
-    public static final int COOLDOWN_TICKS = 20;
+
+    private static final Logger LOGGER = LogManager.getLogger("TConGreedyAddon/magicbook");
 
     // NBT keys for slots
     private static final String TAG_LEFT_PAGE = "leftPage";
-    private static final String TAG_RIGHT_PAGE = "rightPage";
-    private static final String TAG_PAGE_ID = "pageId";
-    private static final String TAG_SPELL_INDEX = "spellIndex";
+    public static final String TAG_RIGHT_PAGE = "rightPage";
+    public static final String TAG_PAGE_ID = "pageId";
+    public static final String TAG_SPELL_INDEX = "spellIndex";
 
     public MagicBook() {
         super(
@@ -55,56 +56,40 @@ public class MagicBook extends TinkerToolCore {
         setTranslationKey("magicbook").setRegistryName("magicbook");
     }
 
-    // ========== 槽位初始化 ==========
     private void initSlots(ItemStack stack) {
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
         boolean dirty = false;
 
-        // 如果已经存在槽位，则无需初始化
-        if (tag.hasKey(TAG_LEFT_PAGE) && tag.hasKey(TAG_RIGHT_PAGE)) {
-            return;
+        // 如果已经存在左右槽位 NBT，且工具材料未改变（通常材料在组装后固定），可以跳过初始化
+        // 但为了安全，还是根据当前核心材料重新判断槽位是否存在
+        SlotStats stats = getCoreSlotStats(stack);
+        boolean hasLeft = true, hasRight = true; // 默认值
+
+        if (stats != null) {
+            hasLeft = stats.hasLeft;
+            hasRight = stats.hasRight;
+        } else {
+            // 无统计数据时，可以记录警告并采用默认值（双槽）
+            LOGGER.info("No SlotStats found for core material, defaulting to both slots available.");
         }
 
-        // 获取 magiccore 材料
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() < 3) {
-            // 异常情况，创建默认槽位
-            if (!tag.hasKey(TAG_LEFT_PAGE)) {
-                tag.setTag(TAG_LEFT_PAGE, new NBTTagCompound());
-                dirty = true;
-            }
-            if (!tag.hasKey(TAG_RIGHT_PAGE)) {
-                tag.setTag(TAG_RIGHT_PAGE, new NBTTagCompound());
-                dirty = true;
-            }
-        } else {
-            Material coreMat = materials.get(2);
-            boolean hasLeft = true;
-            boolean hasRight = true;
-            String matId = coreMat.getIdentifier();
-            if ("iron".equals(matId)) {
-                hasLeft = false; // 铁质核心只有右槽
-            } else if ("diamond".equals(matId)) {
-                hasLeft = true;
-                hasRight = true;
-            } else if ("manyullyn".equals(matId)) {
-                hasLeft = true;
-                hasRight = true;
-            } else {
-                // 默认双槽
-                hasLeft = true;
-                hasRight = true;
-            }
+        if (hasLeft && !tag.hasKey(TAG_LEFT_PAGE)) {
+            tag.setTag(TAG_LEFT_PAGE, new NBTTagCompound());
+            dirty = true;
+        }
 
-            if (hasLeft && !tag.hasKey(TAG_LEFT_PAGE)) {
-                tag.setTag(TAG_LEFT_PAGE, new NBTTagCompound());
-                dirty = true;
-            }
-            if (hasRight && !tag.hasKey(TAG_RIGHT_PAGE)) {
-                tag.setTag(TAG_RIGHT_PAGE, new NBTTagCompound());
-                dirty = true;
-            }
+        else if (!hasLeft && tag.hasKey(TAG_LEFT_PAGE)) {
+            tag.removeTag(TAG_LEFT_PAGE);
+            dirty = true;
+        }
+
+        if (hasRight && !tag.hasKey(TAG_RIGHT_PAGE)) {
+            tag.setTag(TAG_RIGHT_PAGE, new NBTTagCompound());
+            dirty = true;
+        }
+        else if (!hasRight && tag.hasKey(TAG_RIGHT_PAGE)) {
+            tag.removeTag(TAG_RIGHT_PAGE);
+            dirty = true;
         }
 
         if (dirty) {
@@ -160,7 +145,6 @@ public class MagicBook extends TinkerToolCore {
                     page.nextSpell(stack, rightData);
                     tag.setTag(TAG_RIGHT_PAGE, rightData);
                     stack.setTagCompound(tag);
-                    player.sendMessage(new TextComponentString(I18n.format("spell_switched")));
                     return new ActionResult<>(EnumActionResult.SUCCESS, stack);
                 }
             }
@@ -180,16 +164,8 @@ public class MagicBook extends TinkerToolCore {
             if (pageItem instanceof MagicPageItem) {
                 MagicPageItem page = (MagicPageItem) pageItem;
 
-                if (page.isContinuous()) {
-
-                    player.setActiveHand(hand);
-                    return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-                } else {
                     int spellIndex = rightData.getInteger(TAG_SPELL_INDEX);
                     if (isPageOnCooldown(world, rightData, page, spellIndex)) {
-                        if (!world.isRemote) {
-                            player.sendMessage(new TextComponentString("Spell is on cooldown!"));
-                        }
                         return new ActionResult<>(EnumActionResult.FAIL, stack);
                     }
                     if (page.onRightClick(world, player, stack, rightData)) {
@@ -199,7 +175,6 @@ public class MagicBook extends TinkerToolCore {
                         ToolHelper.damageTool(stack, DURABILITY_COST, player);
                         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
                     }
-                }
             }
         }
 
@@ -209,6 +184,14 @@ public class MagicBook extends TinkerToolCore {
     private ActionResult<ItemStack> handlePageInstallation(World world, EntityPlayer player, ItemStack toolStack, ItemStack pageStack) {
         MagicPageItem page = (MagicPageItem) pageStack.getItem();
         MagicPageItem.SlotType slotType = page.getSlotType();
+
+        if (!isSlotAvailable(toolStack, slotType)) {
+            if (!world.isRemote) {
+                player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_unavailable")));
+            }
+            return new ActionResult<>(EnumActionResult.FAIL, toolStack);
+        }
+
         String targetSlot = slotType == MagicPageItem.SlotType.LEFT ? TAG_LEFT_PAGE : TAG_RIGHT_PAGE;
 
         NBTTagCompound toolTag = TagUtil.getTagSafe(toolStack);
@@ -234,7 +217,6 @@ public class MagicBook extends TinkerToolCore {
         toolTag.setTag(targetSlot, newData);
         toolStack.setTagCompound(toolTag);
 
-        // 消耗书页（非创造）
         if (!player.capabilities.isCreativeMode) {
             pageStack.shrink(1);
         }
@@ -378,5 +360,22 @@ public class MagicBook extends TinkerToolCore {
         Material coreMat = materials.get(2);
         RangeMaterialStats rangeStats = coreMat.getStats(RangeMaterialStats.TYPE);
         return rangeStats != null ? rangeStats.range : MagicBook.BEAM_RANGE;
+    }
+
+    @Nullable
+    private SlotStats getCoreSlotStats(ItemStack toolStack) {
+        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(toolStack);
+        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
+        if (materials.size() < 3) return null;
+        Material coreMat = materials.get(2);
+        return coreMat.getStats(SlotStats.TYPE);
+    }
+
+    private boolean isSlotAvailable(ItemStack toolStack, MagicPageItem.SlotType slotType) {
+        SlotStats stats = getCoreSlotStats(toolStack);
+        if (stats == null) {
+            return true;
+        }
+        return slotType == MagicPageItem.SlotType.LEFT ? stats.hasLeft : stats.hasRight;
     }
 }

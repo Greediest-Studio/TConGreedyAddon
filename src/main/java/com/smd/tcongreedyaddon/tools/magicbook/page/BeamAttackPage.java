@@ -1,9 +1,10 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page;
 
-
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import slimeknights.tconstruct.library.utils.ToolHelper;
 
@@ -17,23 +18,28 @@ public class BeamAttackPage extends MultiSpellPage {
 
     @Override
     protected void registerSpells() {
-        addSpell("Beam Attack", 20, (world, player, toolStack, pageData) -> {
-            if (world.isRemote) return true;
-            float range = MagicBook.getBeamRangeFromBook(toolStack);
-            AxisAlignedBB aabb = player.getEntityBoundingBox().grow(range);
-            List<EntityLivingBase> targets = world.getEntitiesWithinAABB(EntityLivingBase.class, aabb,
-                    entity -> entity != player && entity.isEntityAlive());
+        addSpell(new Spell.Builder()
+                .name(I18n.format("beam_attack"))
+                .cooldown(20)
+                .icon(new ResourceLocation("minecraft", "items/large_fireball"))
+                .action((world, player, toolStack, pageData) -> {
+                    if (world.isRemote) return true;
+                    float range = MagicBook.getBeamRangeFromBook(toolStack);
+                    AxisAlignedBB aabb = player.getEntityBoundingBox().grow(range);
+                    List<EntityLivingBase> targets = world.getEntitiesWithinAABB(EntityLivingBase.class, aabb,
+                            entity -> entity != player && entity.isEntityAlive());
 
-            float baseDamage = ToolHelper.getActualAttack(toolStack);
-            for (EntityLivingBase target : targets) {
-                target.attackEntityFrom(DamageSource.causePlayerDamage(player), baseDamage);
-            }
-            return true;
-        });
+                    float baseDamage = ToolHelper.getActualAttack(toolStack);
+                    for (EntityLivingBase target : targets) {
+                        target.attackEntityFrom(DamageSource.causePlayerDamage(player), baseDamage);
+                    }
+                    return true;
+                })
+        );
     }
 
     @Override
     public SlotType getSlotType() {
-        return SlotType.RIGHT; // 右键槽
+        return SlotType.RIGHT;
     }
 }

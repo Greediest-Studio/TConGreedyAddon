@@ -1,7 +1,9 @@
 package com.smd.tcongreedyaddon.proxy;
 
+import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
 import com.smd.tcongreedyaddon.init.BookTransformerAppendModifiers;
 import net.minecraft.item.Item;
+import net.minecraftforge.common.MinecraftForge;
 import slimeknights.mantle.client.book.repository.BookRepository;
 import slimeknights.mantle.client.book.repository.FileRepository;
 import slimeknights.tconstruct.common.ModelRegisterUtil;
@@ -59,6 +61,12 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void registerBookData() {
         TinkerBook.INSTANCE.addTransformer(new BookTransformerAppendModifiers());
+    }
+
+    @Override
+    public void preInit() {
+        super.preInit();
+        MinecraftForge.EVENT_BUS.register(new SpellOverlayRenderer());
     }
 
     public <T extends Item & IToolPart> void registerToolPartModel(T part) {

@@ -57,6 +57,8 @@ modifier.light_pierce.extra=对阴影生物：+%s
 large_fire_ball=大火球
 small_fire_ball=小火球
 
+beam_attack=范围攻击
+
 stat.range.desc=索敌范围
 stat.range.name=范围
 stat.range.value=索敌范围: %s
@@ -66,6 +68,7 @@ tooltip.rightpage=右键效果
 tooltip.current=(当前激活)
 
 tooltip.unavailable=不可用
+message.slot_unavailable=槽位不可用
 
 stat.slot.name=技能插槽
 stat.slot.left=左键槽: %s
@@ -78,4 +81,3 @@ page_installed_to=书签被安装在
 left=左
 right=右
 slot=槽位
-spell_switched=法术已切换

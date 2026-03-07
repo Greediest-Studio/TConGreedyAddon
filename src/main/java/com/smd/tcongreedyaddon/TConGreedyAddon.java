@@ -53,6 +53,7 @@ public class TConGreedyAddon {
         ModuleManager.preInitActiveModules();
 
         proxy.registerSubscriptions();
+        proxy.preInit();
     }
 
     @Mod.EventHandler
