@@ -9,7 +9,7 @@ import java.util.List;
 
 public class RangeMaterialStats implements IMaterialStats {
 
-    public static final String TYPE = "range";
+    public static final String TYPE = TConGreedyTypes.RANGE;
 
     public final float range;
 

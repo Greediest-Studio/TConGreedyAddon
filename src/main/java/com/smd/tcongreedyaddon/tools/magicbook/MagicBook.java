@@ -42,7 +42,7 @@ public class MagicBook extends TinkerToolCore {
     private static final Logger LOGGER = LogManager.getLogger("TConGreedyAddon/magicbook");
 
     // NBT keys for slots
-    private static final String TAG_LEFT_PAGE = "leftPage";
+    public static final String TAG_LEFT_PAGE = "leftPage";
     public static final String TAG_RIGHT_PAGE = "rightPage";
     public static final String TAG_PAGE_ID = "pageId";
     public static final String TAG_SPELL_INDEX = "spellIndex";
@@ -51,8 +51,8 @@ public class MagicBook extends TinkerToolCore {
         super(
                 PartMaterialType.head(SpecialWeapons.cover),
                 PartMaterialType.handle(SpecialWeapons.hinge),
-                new PartMaterialType(SpecialWeapons.bookpage, SlotStats.TYPE),
-                new PartMaterialType(SpecialWeapons.magiccore, RangeMaterialStats.TYPE)
+                TConGreedyTypes.slot(SpecialWeapons.bookpage),
+                TConGreedyTypes.range(SpecialWeapons.magiccore)
         );
         addCategory(Category.WEAPON);
         setTranslationKey("magicbook").setRegistryName("magicbook");
@@ -137,30 +137,6 @@ public class MagicBook extends TinkerToolCore {
                     player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_unavailable")));
                     return new ActionResult<>(EnumActionResult.FAIL, stack);
                 }
-            }
-        }
-
-        if (player.isSneaking()) {
-            initSlots(stack);
-            NBTTagCompound tag = TagUtil.getTagSafe(stack);
-            NBTTagCompound rightData = tag.getCompoundTag(TAG_RIGHT_PAGE);
-            boolean hasRightPage = !rightData.isEmpty();
-
-            if (world.isRemote) {
-                return new ActionResult<>(hasRightPage ? EnumActionResult.SUCCESS : EnumActionResult.FAIL, stack);
-            } else {
-                if (hasRightPage) {
-                    String pageId = rightData.getString(TAG_PAGE_ID);
-                    Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-                    if (pageItem instanceof MagicPageItem) {
-                        MagicPageItem page = (MagicPageItem) pageItem;
-                        page.nextSpell(stack, rightData);
-                        tag.setTag(TAG_RIGHT_PAGE, rightData);
-                        stack.setTagCompound(tag);
-                        return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-                    }
-                }
-                return new ActionResult<>(EnumActionResult.FAIL, stack);
             }
         }
 
@@ -291,12 +267,12 @@ public class MagicBook extends TinkerToolCore {
     protected ToolNBT buildTagData(List<Material> materials) {
         HeadMaterialStats head = materials.get(0).getStatsOrUnknown(HeadMaterialStats.TYPE);
         HandleMaterialStats handle = materials.get(1).getStatsOrUnknown(HandleMaterialStats.TYPE);
-        ExtraMaterialStats extra = materials.get(2).getStatsOrUnknown(ExtraMaterialStats.TYPE);
+        SlotStats extra = materials.get(2).getStatsOrUnknown(SlotStats.TYPE);
+        RangeMaterialStats extra2 = materials.get(3).getStatsOrUnknown(RangeMaterialStats.TYPE);
 
         ToolNBT data = new ToolNBT();
         data.head(head);
         data.handle(handle);
-        data.extra(extra);
         data.attack += 1.0f;
         data.modifiers = DEFAULT_MODIFIERS;
         return data;
@@ -398,7 +374,6 @@ public class MagicBook extends TinkerToolCore {
                 tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.rightpage") + ":" + I18n.format("tooltip.empty"));
             }
         } else {
-            // 没有右槽时显示不可用
             tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.rightpage") + ": " + I18n.format("tooltip.unavailable"));
         }
     }
@@ -457,5 +432,9 @@ public class MagicBook extends TinkerToolCore {
             return true;
         }
         return slotType == MagicPageItem.SlotType.LEFT ? stats.hasLeft : stats.hasRight;
+    }
+
+    public static NBTTagCompound getLeftPageData(ItemStack bookStack) {
+        return TagUtil.getTagSafe(bookStack).getCompoundTag(TAG_LEFT_PAGE);
     }
 }

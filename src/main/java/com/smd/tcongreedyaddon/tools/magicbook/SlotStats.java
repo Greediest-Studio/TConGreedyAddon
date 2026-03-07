@@ -8,7 +8,8 @@ import slimeknights.tconstruct.library.materials.IMaterialStats;
 import java.util.List;
 
 public class SlotStats implements IMaterialStats {
-    public static final String TYPE = "slot";
+
+    public static final String TYPE = TConGreedyTypes.SLOT;
 
     public final boolean hasLeft;
     public final boolean hasRight;

@@ -1,5 +1,6 @@
 package com.smd.tcongreedyaddon.proxy;
 
+import com.smd.tcongreedyaddon.network.NetworkHandler;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import slimeknights.tconstruct.library.tools.IToolPart;
@@ -29,6 +30,7 @@ public class CommonProxy {
     }
 
     public void preInit() {
+        NetworkHandler.register();
     }
 
 }

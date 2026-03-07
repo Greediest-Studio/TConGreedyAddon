@@ -54,21 +54,13 @@ public class SpecialWeapons implements IModule {
     @Override
     public void init() {
         for (Material material : TinkerRegistry.getAllMaterials()) {
-            RangeMaterialStats existing = material.getStats(RangeMaterialStats.TYPE);
-            if (existing == null) {
-                float range = getRangeForMaterial(material);
-                material.addStats(new RangeMaterialStats(range));
+            if (material.getStats(RangeMaterialStats.TYPE) == null) {
+                material.addStats(new RangeMaterialStats(getRangeForMaterial(material)));
             }
-        }
-
-        // 添加槽位统计
-        for (Material material : TinkerRegistry.getAllMaterials()) {
             if (material.getStats(SlotStats.TYPE) == null) {
-                SlotStats slotStats = getSlotStatsForMaterial(material);
-                material.addStats(slotStats);
+                material.addStats(getSlotStatsForMaterial(material));
             }
         }
-
     }
 
     @Override

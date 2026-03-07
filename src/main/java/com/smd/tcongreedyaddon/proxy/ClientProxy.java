@@ -1,9 +1,12 @@
 package com.smd.tcongreedyaddon.proxy;
 
+import com.smd.tcongreedyaddon.client.ClientEventHandler;
 import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
 import com.smd.tcongreedyaddon.init.BookTransformerAppendModifiers;
+import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import slimeknights.mantle.client.book.repository.BookRepository;
 import slimeknights.mantle.client.book.repository.FileRepository;
 import slimeknights.tconstruct.common.ModelRegisterUtil;
@@ -13,6 +16,9 @@ import slimeknights.tconstruct.library.client.ToolBuildGuiInfo;
 import slimeknights.tconstruct.library.tools.IToolPart;
 import slimeknights.tconstruct.library.tools.ToolCore;
 import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
+
+import static com.smd.tcongreedyaddon.client.KeyBindings.leftpage;
+import static com.smd.tcongreedyaddon.client.KeyBindings.rightpage;
 
 public class ClientProxy extends CommonProxy {
 
@@ -52,6 +58,14 @@ public class ClientProxy extends CommonProxy {
             allinonetoolInfo.addSlotPosition( 33 - 10 - 12, 42); //guard
             TinkerRegistryClient.addToolBuilding(allinonetoolInfo);
         }
+        if (SpecialWeapons.magicbook != null) {
+            ToolBuildGuiInfo magicbookInfo = new ToolBuildGuiInfo(SpecialWeapons.magicbook);
+            magicbookInfo.addSlotPosition(33 - 10 - 2, 42 + 10); // handle
+            magicbookInfo.addSlotPosition(33 + 10 + 16 - 2, 42 - 10 + 16); // head 1
+            magicbookInfo.addSlotPosition(33 + 10 - 16 - 2, 42 - 10 - 16); // head 2
+            magicbookInfo.addSlotPosition(33 + 13 - 2, 42 - 13); // binding
+            TinkerRegistryClient.addToolBuilding(magicbookInfo);
+        }
     }
 
     public void registerToolModel(ToolCore tc) {
@@ -66,10 +80,17 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit() {
         super.preInit();
+        registerKeyBindings();
         MinecraftForge.EVENT_BUS.register(new SpellOverlayRenderer());
+        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
     }
 
     public <T extends Item & IToolPart> void registerToolPartModel(T part) {
         ModelRegisterUtil.registerPartModel(part);
+    }
+
+    public void registerKeyBindings() {
+        ClientRegistry.registerKeyBinding(leftpage);
+        ClientRegistry.registerKeyBinding(rightpage);
     }
 }
