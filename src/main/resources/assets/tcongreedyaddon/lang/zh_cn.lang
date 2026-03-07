@@ -9,6 +9,7 @@ item.greatbladeCore.name=组装核心
 item.magiccore.name=术式核心
 item.cover.name=书壳
 item.hinge.name=铰链
+item.bookpage.name=书页
 
 item.greatblade.desc=这一武器的性能平衡且出色。沉重的巨剑牺牲了高攻击力,换取了更多的槽位，攻击速度慢，需要两只手挥动！
 item.battleaxe.desc=战斧是种重型攻击类武器。手持这把武器，化身为狂战士的你可以造成比平常大得多的伤害，但受到的伤害也会变为2倍。\n它还可以用于砍伐一些小型树木。

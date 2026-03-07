@@ -4,7 +4,6 @@ import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
-import com.smd.tcongreedyaddon.tools.magicbook.MagicCorePart;
 import com.smd.tcongreedyaddon.tools.magicbook.RangeMaterialStats;
 import com.smd.tcongreedyaddon.tools.magicbook.SlotStats;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
@@ -28,6 +27,7 @@ public class SpecialWeapons implements IModule {
     public static ToolPart cover;
     public static ToolPart hinge;
     public static ToolPart magiccore;
+    public static ToolPart bookpage;
 
     public static MagicBook magicbook;
 
@@ -78,21 +78,29 @@ public class SpecialWeapons implements IModule {
     @Override
     public void initItems(RegistryEvent.Register<Item> event) {
 
-        cover = new ToolPart(Material.VALUE_Ingot * 12);
+        cover = new ToolPart(Material.VALUE_Ingot * 24);
         cover.setTranslationKey("cover").setRegistryName("cover");
         event.getRegistry().register(cover);
         TinkerRegistry.registerToolPart(cover);
         TConGreedyAddon.proxy.registerToolPartModel(cover);
         TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), cover));
 
-        hinge = new ToolPart(Material.VALUE_Ingot * 24);
+        hinge = new ToolPart(Material.VALUE_Ingot * 12);
         hinge.setTranslationKey("hinge").setRegistryName("hinge");
         event.getRegistry().register(hinge);
         TinkerRegistry.registerToolPart(hinge);
         TConGreedyAddon.proxy.registerToolPartModel(hinge);
         TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), hinge));
 
-        magiccore = new MagicCorePart();
+        bookpage = new ToolPart(Material.VALUE_Ingot * 12);
+        bookpage.setTranslationKey("bookpage").setRegistryName("bookpage");
+        event.getRegistry().register(bookpage);
+        TinkerRegistry.registerToolPart(bookpage);
+        TConGreedyAddon.proxy.registerToolPartModel(bookpage);
+        TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), bookpage));
+
+
+        magiccore = new ToolPart(Material.VALUE_Ingot * 24);
         magiccore.setTranslationKey("magiccore").setRegistryName("magiccore");
         event.getRegistry().register(magiccore);
         TinkerRegistry.registerToolPart(magiccore);

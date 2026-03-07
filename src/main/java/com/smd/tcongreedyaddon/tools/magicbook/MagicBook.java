@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -50,7 +51,8 @@ public class MagicBook extends TinkerToolCore {
         super(
                 PartMaterialType.head(SpecialWeapons.cover),
                 PartMaterialType.handle(SpecialWeapons.hinge),
-                new PartMaterialType(SpecialWeapons.magiccore, RangeMaterialStats.TYPE, SlotStats.TYPE)
+                new PartMaterialType(SpecialWeapons.bookpage, SlotStats.TYPE),
+                new PartMaterialType(SpecialWeapons.magiccore, RangeMaterialStats.TYPE)
         );
         addCategory(Category.WEAPON);
         setTranslationKey("magicbook").setRegistryName("magicbook");
@@ -60,16 +62,13 @@ public class MagicBook extends TinkerToolCore {
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
         boolean dirty = false;
 
-        // 如果已经存在左右槽位 NBT，且工具材料未改变（通常材料在组装后固定），可以跳过初始化
-        // 但为了安全，还是根据当前核心材料重新判断槽位是否存在
         SlotStats stats = getCoreSlotStats(stack);
-        boolean hasLeft = true, hasRight = true; // 默认值
+        boolean hasLeft = true, hasRight = true;
 
         if (stats != null) {
             hasLeft = stats.hasLeft;
             hasRight = stats.hasRight;
         } else {
-            // 无统计数据时，可以记录警告并采用默认值（双槽）
             LOGGER.info("No SlotStats found for core material, defaulting to both slots available.");
         }
 
@@ -242,12 +241,12 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public float damagePotential() {
-        return 1.0F;
+        return 0.8F;
     }
 
     @Override
     public double attackSpeed() {
-        return 4.0;
+        return 0.5;
     }
 
     @Override
@@ -276,7 +275,6 @@ public class MagicBook extends TinkerToolCore {
             }
         }
 
-        // 槽位显示
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
         if (tag.hasKey(TAG_LEFT_PAGE)) {
             NBTTagCompound left = tag.getCompoundTag(TAG_LEFT_PAGE);
