@@ -18,7 +18,7 @@ public class FireballPage extends MultiSpellPage {
     protected void registerSpells() {
         // 小火球
         addSpell(new Spell.Builder()
-                .name(I18n.format("small_fire_ball"))
+                .name("small_fire_ball")
                 .cooldown(20)
                 .icon(new ResourceLocation(Tags.MOD_ID, "textures/item/gaiaspawn.png"))
                 .action((world, player, toolStack, pageData) -> {
@@ -41,7 +41,7 @@ public class FireballPage extends MultiSpellPage {
 
         // 大火球
         addSpell(new Spell.Builder()
-                .name(I18n.format("large_fire_ball"))
+                .name("large_fire_ball")
                 .cooldown(60)
                 .icon(new ResourceLocation("minecraft", "item/large_fireball"))
                 .action((world, player, toolStack, pageData) -> {

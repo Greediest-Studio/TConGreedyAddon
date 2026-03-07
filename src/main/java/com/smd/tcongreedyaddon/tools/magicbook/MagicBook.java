@@ -266,7 +266,6 @@ public class MagicBook extends TinkerToolCore {
         initSlots(stack);
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
-        // 范围显示
         NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
         if (materials.size() >= 3) {
@@ -282,12 +281,32 @@ public class MagicBook extends TinkerToolCore {
         if (tag.hasKey(TAG_LEFT_PAGE)) {
             NBTTagCompound left = tag.getCompoundTag(TAG_LEFT_PAGE);
             if (!left.isEmpty()) {
-                tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":"+ left.getString(TAG_PAGE_ID));
+                String pageId = left.getString(TAG_PAGE_ID);
+                Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
+                if (pageItem instanceof MagicPageItem) {
+                    MagicPageItem page = (MagicPageItem) pageItem;
+                    List<String> spellNames = page.getAllSpellNames(left);
+                    if (!spellNames.isEmpty()) {
+                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
+                        String currentSpell = page.getCurrentSpellDisplayName(left);
+                        for (String spellName : spellNames) {
+                            if (spellName.equals(currentSpell)) {
+                                tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                            } else {
+                                tooltip.add(TextFormatting.GRAY + "  - " + spellName);
+                            }
+                        }
+                    } else {
+                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + page.getCurrentSpellDisplayName(left));
+                    }
+                } else {
+                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + left.getString(TAG_PAGE_ID));
+                }
             } else {
-                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.leftpage") + ":"+ I18n.format("tooltip.empty"));
+                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.empty"));
             }
         } else {
-            tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.leftpage") + ":"+ I18n.format("tooltip.unavailable"));
+            tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.unavailable"));
         }
 
         if (tag.hasKey(TAG_RIGHT_PAGE)) {

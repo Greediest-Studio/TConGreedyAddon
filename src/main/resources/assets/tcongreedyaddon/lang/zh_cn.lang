@@ -59,6 +59,8 @@ small_fire_ball=小火球
 
 beam_attack=范围攻击
 
+default_attack=默认攻击模式
+
 stat.range.desc=索敌范围
 stat.range.name=范围
 stat.range.value=索敌范围: %s

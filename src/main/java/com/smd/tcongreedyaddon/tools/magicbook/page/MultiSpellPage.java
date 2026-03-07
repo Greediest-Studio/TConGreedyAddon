@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
@@ -119,7 +120,9 @@ public abstract class MultiSpellPage extends MagicPageItem {
     public String getCurrentSpellDisplayName(NBTTagCompound pageData) {
         int index = pageData.getInteger("spellIndex");
         if (index >= 0 && index < spells.size()) {
-            return spells.get(index).name;
+            String key = spells.get(index).name;
+
+            return I18n.translateToLocal(key);
         }
         return "Unknown";
     }
@@ -128,7 +131,7 @@ public abstract class MultiSpellPage extends MagicPageItem {
     public List<String> getAllSpellNames(NBTTagCompound pageData) {
         List<String> names = new ArrayList<>();
         for (Spell spell : spells) {
-            names.add(spell.name);
+            names.add(I18n.translateToLocal(spell.name));
         }
         return names;
     }

@@ -19,7 +19,7 @@ public class BeamAttackPage extends MultiSpellPage {
     @Override
     protected void registerSpells() {
         addSpell(new Spell.Builder()
-                .name(I18n.format("beam_attack"))
+                .name("beam_attack")
                 .cooldown(20)
                 .icon(new ResourceLocation("minecraft", "items/large_fireball"))
                 .action((world, player, toolStack, pageData) -> {
