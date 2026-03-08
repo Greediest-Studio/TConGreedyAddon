@@ -1,6 +1,8 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.RangeMaterialStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SlotStats;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -49,8 +51,8 @@ public class MagicBook extends TinkerToolCore {
         super(
                 PartMaterialType.head(SpecialWeapons.cover),
                 PartMaterialType.handle(SpecialWeapons.hinge),
-                TConGreedyTypes.slot(SpecialWeapons.bookpage),
-                TConGreedyTypes.range(SpecialWeapons.magiccore)
+                TConGreedyTypes.bookpage(SpecialWeapons.bookpage),
+                TConGreedyTypes.magiccore(SpecialWeapons.magiccore)
         );
         addCategory(Category.WEAPON);
         setTranslationKey("magicbook").setRegistryName("magicbook");
@@ -67,7 +69,7 @@ public class MagicBook extends TinkerToolCore {
             hasLeft = stats.hasLeft;
             hasRight = stats.hasRight;
         } else {
-            LOGGER.info("No SlotStats found for core material, defaulting to both slots available.");
+            LOGGER.debug("No SlotStats found for core material, defaulting to both slots available.");
         }
 
         if (hasLeft && !tag.hasKey(TAG_LEFT_PAGE)) {
@@ -256,8 +258,7 @@ public class MagicBook extends TinkerToolCore {
         if (!player.capabilities.isCreativeMode) {
             pageStack.shrink(1);
         }
-
-        player.sendMessage(new TextComponentString(I18n.format("page_installed_to") + (slotType == MagicPageItem.SlotType.LEFT ? I18n.format("left") : I18n.format("right")) + I18n.format("slot")));
+        player.sendMessage(new TextComponentString(I18n.format("page.installed", I18n.format(slotType == MagicPageItem.SlotType.LEFT ? "slot.left" : "slot.right"))));
         return new ActionResult<>(EnumActionResult.SUCCESS, toolStack);
     }
 
@@ -265,8 +266,6 @@ public class MagicBook extends TinkerToolCore {
     protected ToolNBT buildTagData(List<Material> materials) {
         HeadMaterialStats head = materials.get(0).getStatsOrUnknown(HeadMaterialStats.TYPE);
         HandleMaterialStats handle = materials.get(1).getStatsOrUnknown(HandleMaterialStats.TYPE);
-        SlotStats extra = materials.get(2).getStatsOrUnknown(SlotStats.TYPE);
-        RangeMaterialStats extra2 = materials.get(3).getStatsOrUnknown(RangeMaterialStats.TYPE);
 
         ToolNBT data = new ToolNBT();
         data.head(head);
@@ -283,7 +282,7 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public double attackSpeed() {
-        return 0.5;
+        return 0.8;
     }
 
     @Override
@@ -299,13 +298,13 @@ public class MagicBook extends TinkerToolCore {
     @SideOnly(Side.CLIENT)
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        initSlots(stack);
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
         NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() >= 3) {
-            Material coreMat = materials.get(2);
+
+        if (materials.size() >= 4) {
+            Material coreMat = materials.get(3);
             RangeMaterialStats rangeStats = coreMat.getStats(RangeMaterialStats.TYPE);
             if (rangeStats != null) {
                 tooltip.add(TextFormatting.GOLD + rangeStats.getLocalizedName() + ": " + rangeStats.range);
@@ -313,78 +312,72 @@ public class MagicBook extends TinkerToolCore {
         }
 
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
-        if (tag.hasKey(TAG_LEFT_PAGE)) {
-            NBTTagCompound left = tag.getCompoundTag(TAG_LEFT_PAGE);
-            if (!left.isEmpty()) {
-                String pageId = left.getString(TAG_PAGE_ID);
-                Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-                if (pageItem instanceof MagicPageItem) {
-                    MagicPageItem page = (MagicPageItem) pageItem;
-                    List<String> spellNames = page.getAllSpellNames(left);
-                    if (!spellNames.isEmpty()) {
-                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
-                        String currentSpell = page.getCurrentSpellDisplayName(left);
-                        for (String spellName : spellNames) {
-                            if (spellName.equals(currentSpell)) {
-                                tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
-                            } else {
-                                tooltip.add(TextFormatting.GRAY + "  - " + spellName);
-                            }
+
+        boolean leftAvailable = isSlotAvailable(stack, MagicPageItem.SlotType.LEFT);
+        NBTTagCompound leftData = tag.getCompoundTag(TAG_LEFT_PAGE);
+
+        if (!leftData.isEmpty()) {
+            String pageId = leftData.getString(TAG_PAGE_ID);
+            Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
+            if (pageItem instanceof MagicPageItem) {
+                MagicPageItem page = (MagicPageItem) pageItem;
+                List<String> spellNames = page.getAllSpellNames(leftData);
+                if (!spellNames.isEmpty()) {
+                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
+                    String currentSpell = page.getCurrentSpellDisplayName(leftData);
+                    for (String spellName : spellNames) {
+                        if (spellName.equals(currentSpell)) {
+                            tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                        } else {
+                            tooltip.add(TextFormatting.GRAY + "  - " + spellName);
                         }
-                    } else {
-                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + page.getCurrentSpellDisplayName(left));
                     }
                 } else {
-                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + left.getString(TAG_PAGE_ID));
+                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + page.getCurrentSpellDisplayName(leftData));
                 }
             } else {
+                tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + leftData.getString(TAG_PAGE_ID));
+            }
+        } else {
+            if (leftAvailable) {
                 tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.empty"));
+            } else {
+                tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.unavailable"));
             }
-        } else {
-            tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.unavailable"));
         }
 
-        if (tag.hasKey(TAG_RIGHT_PAGE)) {
-            NBTTagCompound right = tag.getCompoundTag(TAG_RIGHT_PAGE);
-            if (!right.isEmpty()) {
-                String pageId = right.getString(TAG_PAGE_ID);
-                Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-                if (pageItem instanceof MagicPageItem) {
-                    MagicPageItem page = (MagicPageItem) pageItem;
-                    List<String> spellNames = page.getAllSpellNames(right);
-                    if (!spellNames.isEmpty()) {
-                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ":");
-                        String currentSpell = page.getCurrentSpellDisplayName(right);
-                        for (String spellName : spellNames) {
-                            if (spellName.equals(currentSpell)) {
-                                tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
-                            } else {
-                                tooltip.add(TextFormatting.GRAY + "  - " + spellName);
-                            }
+        boolean rightAvailable = isSlotAvailable(stack, MagicPageItem.SlotType.RIGHT);
+        NBTTagCompound rightData = tag.getCompoundTag(TAG_RIGHT_PAGE);
+
+        if (!rightData.isEmpty()) {
+            String pageId = rightData.getString(TAG_PAGE_ID);
+            Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
+            if (pageItem instanceof MagicPageItem) {
+                MagicPageItem page = (MagicPageItem) pageItem;
+                List<String> spellNames = page.getAllSpellNames(rightData);
+                if (!spellNames.isEmpty()) {
+                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ":");
+                    String currentSpell = page.getCurrentSpellDisplayName(rightData);
+                    for (String spellName : spellNames) {
+                        if (spellName.equals(currentSpell)) {
+                            tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                        } else {
+                            tooltip.add(TextFormatting.GRAY + "  - " + spellName);
                         }
-                    } else {
-                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ": " + page.getCurrentSpellDisplayName(right));
                     }
                 } else {
-                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ": " + right.getString(TAG_PAGE_ID));
+                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ": " + page.getCurrentSpellDisplayName(rightData));
                 }
             } else {
-                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.rightpage") + ":" + I18n.format("tooltip.empty"));
+                tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ": " + rightData.getString(TAG_PAGE_ID));
             }
         } else {
-            tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.rightpage") + ": " + I18n.format("tooltip.unavailable"));
+            if (rightAvailable) {
+                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.rightpage") + ": " + I18n.format("tooltip.empty"));
+            } else {
+                tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.rightpage") + ": " + I18n.format("tooltip.unavailable"));
+            }
         }
-    }
-
-    protected float getToolAttackDamage(ItemStack toolStack) {
-        return ToolHelper.getActualAttack(toolStack);
-    }
-
-    protected boolean performStandardAttack(ItemStack toolStack, EntityPlayer player, Entity target) {
-        if (toolStack.getItem() instanceof TinkerToolCore) {
-            return ToolHelper.attackEntity(toolStack, (TinkerToolCore) toolStack.getItem(), player, target);
-        }
-        return false;
     }
 
     private boolean isPageOnCooldown(World world, NBTTagCompound pageData, MagicPageItem page, int spellIndex) {

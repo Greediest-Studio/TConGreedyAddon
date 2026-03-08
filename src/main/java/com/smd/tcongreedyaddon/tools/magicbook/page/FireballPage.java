@@ -15,7 +15,7 @@ public class FireballPage extends UnifiedMagicPage {
                 .addRightSpell(new RightSpell.Builder()
                         .name("small_fire_ball")
                         .cooldown(20)
-                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/item/gaiaspawn.png"))
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/burning_dash.png"))
                         .action((world, player, toolStack, pageData) -> {
                             if (world.isRemote) return true;
                             Vec3d look = player.getLookVec();
@@ -37,7 +37,7 @@ public class FireballPage extends UnifiedMagicPage {
                 .addRightSpell(new RightSpell.Builder()
                         .name("large_fire_ball")
                         .cooldown(60)
-                        .icon(new ResourceLocation("minecraft", "textures/items/fireball.png"))
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/charge.png"))
                         .action((world, player, toolStack, pageData) -> {
                             if (world.isRemote) return true;
                             Vec3d look = player.getLookVec();
