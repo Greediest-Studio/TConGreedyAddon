@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.RightClickSpell;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -13,10 +14,10 @@ public class BeamAttackPage extends UnifiedMagicPage {
 
     public BeamAttackPage() {
         super(new UnifiedMagicPage.Builder(SlotType.RIGHT)
-                .addRightSpell(new RightSpell.Builder()
+                .addRightSpell(new RightClickSpell.Builder()
                         .name("beam_attack")
                         .cooldown(20)
-                        .icon(new ResourceLocation("minecraft", "items/large_fireball"))
+                        .icon(new ResourceLocation("minecraft", "textures/items/fireball.png"))
                         .action((world, player, toolStack, pageData) -> {
                             if (world.isRemote) return true;
                             float range = MagicBook.getBeamRangeFromBook(toolStack);
@@ -29,7 +30,8 @@ public class BeamAttackPage extends UnifiedMagicPage {
                                 target.attackEntityFrom(DamageSource.causePlayerDamage(player), baseDamage);
                             }
                             return true;
-                        }))
+                        })
+                        .build())
                 .displayName("beam_attack_page")
         );
 

@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page;
 
 import com.smd.tcongreedyaddon.Tags;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.RightClickSpell;
 import net.minecraft.entity.projectile.EntityLargeFireball;
 import net.minecraft.entity.projectile.EntitySmallFireball;
 import net.minecraft.init.SoundEvents;
@@ -12,7 +13,7 @@ public class FireballPage extends UnifiedMagicPage {
     public FireballPage() {
         super(new UnifiedMagicPage.Builder(SlotType.RIGHT)
                 // 小火球
-                .addRightSpell(new RightSpell.Builder()
+                .addRightSpell(new RightClickSpell.Builder()
                         .name("spell.small_fire_ball")
                         .cooldown(20)
                         .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/burning_dash.png"))
@@ -31,10 +32,11 @@ public class FireballPage extends UnifiedMagicPage {
                             world.spawnEntity(fireball);
                             player.playSound(SoundEvents.ENTITY_BLAZE_SHOOT, 1.0F, 1.0F);
                             return true;
-                        }))
+                        })
+                        .build())
 
                 // 大火球
-                .addRightSpell(new RightSpell.Builder()
+                .addRightSpell(new RightClickSpell.Builder()
                         .name("spell.large_fire_ball")
                         .cooldown(60)
                         .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/charge.png"))
@@ -53,7 +55,8 @@ public class FireballPage extends UnifiedMagicPage {
                             world.spawnEntity(fireball);
                             player.playSound(SoundEvents.ENTITY_BLAZE_SHOOT, 1.0F, 1.0F);
                             return true;
-                        }))
+                        })
+                        .build())
                 .displayName("fireball_page")
         );
 

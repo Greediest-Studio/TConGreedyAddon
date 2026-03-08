@@ -36,7 +36,7 @@ public abstract class MagicPageItem extends Item {
         return 0;
     }
 
-    public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target) {
+    public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData) {
         return false;
     }
 

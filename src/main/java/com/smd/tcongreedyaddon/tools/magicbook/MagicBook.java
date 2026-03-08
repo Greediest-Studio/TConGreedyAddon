@@ -109,7 +109,17 @@ public class MagicBook extends TinkerToolCore {
             Item pageItem = Item.REGISTRY.getObject(new ResourceLocation(pageId));
             if (pageItem instanceof MagicPageItem) {
                 MagicPageItem page = (MagicPageItem) pageItem;
-                return page.onLeftClick(stack, player, entity);
+                int spellIndex = leftData.getInteger(TAG_SPELL_INDEX);
+                if (!isPageOnCooldown(player.world, leftData, page, spellIndex)) {
+                    boolean result = page.onLeftClick(stack, player, entity, leftData);
+                    if (result) {
+                        setPageCooldown(player.world, leftData, page, spellIndex);
+                        tag.setTag(TAG_LEFT_PAGE, leftData);
+                        stack.setTagCompound(tag);
+                        ToolHelper.damageTool(stack, DURABILITY_COST, player);
+                    }
+                    return result;
+                }
             }
         }
         return true;
@@ -251,10 +261,9 @@ public class MagicBook extends TinkerToolCore {
 
         NBTTagCompound newData = new NBTTagCompound();
         newData.setString(TAG_PAGE_ID, page.getPageIdentifier());
-        if (targetSlot.equals(TAG_RIGHT_PAGE)) {
-            newData.setInteger(TAG_SPELL_INDEX, page.getInitialSpellIndex(pageStack));
-            newData.setTag("cooldowns", new NBTTagCompound());
-        }
+        newData.setInteger(TAG_SPELL_INDEX, page.getInitialSpellIndex(pageStack));
+        newData.setTag("cooldowns", new NBTTagCompound());
+
         toolTag.setTag(targetSlot, newData);
         toolStack.setTagCompound(toolTag);
 
