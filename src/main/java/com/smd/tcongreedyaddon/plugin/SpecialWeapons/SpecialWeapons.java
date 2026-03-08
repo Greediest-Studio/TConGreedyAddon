@@ -6,6 +6,7 @@ import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.RangeMaterialStats;
 import com.smd.tcongreedyaddon.tools.magicbook.SlotStats;
+import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
@@ -49,10 +50,9 @@ public class SpecialWeapons implements IModule {
 
     @Override
     public void preInit() {
-    }
 
-    @Override
-    public void init() {
+        TConGreedyTypes.init();
+        
         for (Material material : TinkerRegistry.getAllMaterials()) {
             if (material.getStats(RangeMaterialStats.TYPE) == null) {
                 material.addStats(new RangeMaterialStats(getRangeForMaterial(material)));
@@ -61,6 +61,10 @@ public class SpecialWeapons implements IModule {
                 material.addStats(getSlotStatsForMaterial(material));
             }
         }
+    }
+
+    @Override
+    public void init() {
     }
 
     @Override
