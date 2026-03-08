@@ -283,7 +283,7 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public double attackSpeed() {
-        return 0.5;
+        return 0.8;
     }
 
     @Override
@@ -332,16 +332,16 @@ public class MagicBook extends TinkerToolCore {
                             }
                         }
                     } else {
-                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + page.getCurrentSpellDisplayName(left));
+                        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":" + page.getCurrentSpellDisplayName(left));
                     }
                 } else {
-                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ": " + left.getString(TAG_PAGE_ID));
+                    tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":" + left.getString(TAG_PAGE_ID));
                 }
             } else {
-                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.empty"));
+                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.leftpage") + ":" + I18n.format("tooltip.empty"));
             }
         } else {
-            tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.leftpage") + ": " + I18n.format("tooltip.unavailable"));
+            tooltip.add(TextFormatting.DARK_GRAY + I18n.format("tooltip.leftpage") + ":" + I18n.format("tooltip.unavailable"));
         }
 
         if (tag.hasKey(TAG_RIGHT_PAGE)) {
