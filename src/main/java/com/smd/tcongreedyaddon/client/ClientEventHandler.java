@@ -6,7 +6,6 @@ import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
@@ -23,7 +22,6 @@ public class ClientEventHandler {
                 if (held.getItem() instanceof MagicBook) {
                     int slot = 0;
                     NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(slot));
-
                 }
             }
             if (KeyBindings.rightpage.isPressed()) {

@@ -1,8 +1,8 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.RangeMaterialStats;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SlotStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -47,6 +47,9 @@ public class MagicBook extends TinkerToolCore {
     public static final String TAG_PAGE_ID = "pageId";
     public static final String TAG_SPELL_INDEX = "spellIndex";
 
+    /*
+    0,1，书壳，铰链决定基础属性，2，书页，决定施法速度和槽位是否开启，3，术式核心，决定暴击和施法范围
+     */
     public MagicBook() {
         super(
                 PartMaterialType.head(SpecialWeapons.cover),
@@ -62,7 +65,7 @@ public class MagicBook extends TinkerToolCore {
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
         boolean dirty = false;
 
-        SlotStats stats = getCoreSlotStats(stack);
+        BookPageStats stats = getCoreBookPageStats(stack);
         boolean hasLeft = true, hasRight = true;
 
         if (stats != null) {
@@ -123,7 +126,7 @@ public class MagicBook extends TinkerToolCore {
         ItemStack stack = player.getHeldItem(hand);
 
         ItemStack offhand = player.getHeldItemOffhand();
-        if (hand == EnumHand.MAIN_HAND && !offhand.isEmpty() && offhand.getItem() instanceof MagicPageItem) {
+        if (hand == EnumHand.MAIN_HAND && player.isSneaking() && !offhand.isEmpty() && offhand.getItem() instanceof MagicPageItem) {
             MagicPageItem page = (MagicPageItem) offhand.getItem();
             MagicPageItem.SlotType slotType = page.getSlotType();
             boolean slotAvailable = isSlotAvailable(stack, slotType);
@@ -305,9 +308,11 @@ public class MagicBook extends TinkerToolCore {
 
         if (materials.size() >= 4) {
             Material coreMat = materials.get(3);
-            RangeMaterialStats rangeStats = coreMat.getStats(RangeMaterialStats.TYPE);
-            if (rangeStats != null) {
-                tooltip.add(TextFormatting.GOLD + rangeStats.getLocalizedName() + ": " + rangeStats.range);
+            MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
+            if (coreStats != null) {
+                for (String infoLine : coreStats.getLocalizedInfo()) {
+                    tooltip.add(TextFormatting.GOLD + infoLine);
+                }
             }
         }
 
@@ -404,28 +409,25 @@ public class MagicBook extends TinkerToolCore {
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
         if (materials.size() < 3) return MagicBook.BEAM_RANGE;
         Material coreMat = materials.get(2);
-        RangeMaterialStats rangeStats = coreMat.getStats(RangeMaterialStats.TYPE);
-        return rangeStats != null ? rangeStats.range : MagicBook.BEAM_RANGE;
+        MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
+        return coreStats != null ? coreStats.range : MagicBook.BEAM_RANGE;
     }
 
     @Nullable
-    private SlotStats getCoreSlotStats(ItemStack toolStack) {
+    private BookPageStats getCoreBookPageStats(ItemStack toolStack) {
         NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(toolStack);
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
         if (materials.size() < 3) return null;
         Material coreMat = materials.get(2);
-        return coreMat.getStats(SlotStats.TYPE);
+        return coreMat.getStats(BookPageStats.TYPE);
     }
 
     private boolean isSlotAvailable(ItemStack toolStack, MagicPageItem.SlotType slotType) {
-        SlotStats stats = getCoreSlotStats(toolStack);
+        BookPageStats stats = getCoreBookPageStats(toolStack);
         if (stats == null) {
             return true;
         }
         return slotType == MagicPageItem.SlotType.LEFT ? stats.hasLeft : stats.hasRight;
     }
 
-    public static NBTTagCompound getLeftPageData(ItemStack bookStack) {
-        return TagUtil.getTagSafe(bookStack).getCompoundTag(TAG_LEFT_PAGE);
-    }
 }

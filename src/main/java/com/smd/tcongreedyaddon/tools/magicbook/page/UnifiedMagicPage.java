@@ -180,7 +180,6 @@ public class UnifiedMagicPage extends MagicPageItem {
         }
     }
 
-    // --- 切换法术 ---
     @Override
     public void nextSpell(ItemStack toolStack, NBTTagCompound pageData) {
         List<?> spells = slotType == SlotType.LEFT ? leftSpells : rightSpells;

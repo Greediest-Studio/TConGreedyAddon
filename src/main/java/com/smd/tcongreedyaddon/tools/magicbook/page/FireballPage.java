@@ -13,7 +13,7 @@ public class FireballPage extends UnifiedMagicPage {
         super(new UnifiedMagicPage.Builder(SlotType.RIGHT)
                 // 小火球
                 .addRightSpell(new RightSpell.Builder()
-                        .name("small_fire_ball")
+                        .name("spell.small_fire_ball")
                         .cooldown(20)
                         .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/burning_dash.png"))
                         .action((world, player, toolStack, pageData) -> {
@@ -35,7 +35,7 @@ public class FireballPage extends UnifiedMagicPage {
 
                 // 大火球
                 .addRightSpell(new RightSpell.Builder()
-                        .name("large_fire_ball")
+                        .name("spell.large_fire_ball")
                         .cooldown(60)
                         .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/charge.png"))
                         .action((world, player, toolStack, pageData) -> {

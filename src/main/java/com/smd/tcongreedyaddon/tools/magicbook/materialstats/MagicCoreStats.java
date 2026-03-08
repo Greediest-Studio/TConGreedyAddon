@@ -8,26 +8,29 @@ import slimeknights.tconstruct.library.materials.AbstractMaterialStats;
 
 import java.util.List;
 
-public class CritChanceStats extends AbstractMaterialStats {
+public class MagicCoreStats extends AbstractMaterialStats {
 
-    public static final String TYPE = TConGreedyTypes.CRITCHANCE;
+    public static final String TYPE = TConGreedyTypes.MAGICCORE;
 
+    public final float range;
     public final float critchance;
 
-    public CritChanceStats(float critchance) {
-        super(TConGreedyTypes.CRITCHANCE);
+    public MagicCoreStats(float range, float critchance) {
+        super(TConGreedyTypes.MAGICCORE);
+        this.range = range;
         this.critchance = critchance;
     }
 
     @Override
     public List<String> getLocalizedInfo() {
         List<String> info = Lists.newArrayList();
+        info.add(Util.translateFormatted("stat.range.value", Util.df.format(range)));
         info.add(Util.translateFormatted("stat.critchance.value", Util.df.format(critchance)));
         return info;
     }
 
     @Override
     public List<String> getLocalizedDesc() {
-        return ImmutableList.of(Util.translate("stat.critchance.desc"));
+        return ImmutableList.of(Util.translate("stat.magiccore.desc"));
     }
 }

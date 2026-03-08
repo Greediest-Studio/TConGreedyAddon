@@ -55,24 +55,29 @@ modifier.light_pierce.name=光之穿刺
 modifier.light_pierce.desc=§o阴影克星§r\n对阴影生物造成大量伤害。
 modifier.light_pierce.extra=对阴影生物：+%s
 
-large_fire_ball=大火球
-small_fire_ball=小火球
+stat.tcongreedyaddon.magiccore.name=术式核心
+stat.magiccore.desc=术式核心属性
+stat.critchance.value=法术暴击率: %s
+stat.range.value=施法范围: %s
+
+stat.tcongreedyaddon.bookpage.name=书页
+stat.bookpage.desc=书页属性
+stat.spellspeed.value=施法速度: %s
+stat.slot.left=左键槽: %s
+stat.slot.right=右键槽: %s
+stat.slot.available=允许
+stat.slot.unavailable=禁止
+tooltip.empty=空槽位
+
+
+
+spell.large_fire_ball=大火球
+spell.small_fire_ball=小火球
 
 beam_attack=范围攻击
 
 default_attack=默认攻击模式
 
-stat.range.desc=索敌范围
-stat.tcongreedyaddon.range.name=范围
-stat.range.value=索敌范围: %s
-
-stat.spellspeed.desc=施法速度
-stat.tcongreedyaddon.spellspeed.name=施法速度
-stat.spellspeed.value=施法速度: %s
-
-stat.critchance.desc=法术暴击率
-stat.tcongreedyaddon.critchance.name=法术暴击率
-stat.critchance.value=法术暴击率: %s
 
 tooltip.leftpage=左键效果
 tooltip.rightpage=右键效果
@@ -80,14 +85,6 @@ tooltip.current=(当前激活)
 
 tooltip.unavailable=不可用
 message.slot_unavailable=槽位不可用
-
-stat.tcongreedyaddon.slot.name=技能插槽
-stat.slot.left=左键槽: %s
-stat.slot.right=右键槽: %s
-stat.slot.available=允许
-stat.slot.unavailable=禁止
-tooltip.empty=空槽位
-
 
 page.installed=已安装至%s书签槽
 slot.left=左

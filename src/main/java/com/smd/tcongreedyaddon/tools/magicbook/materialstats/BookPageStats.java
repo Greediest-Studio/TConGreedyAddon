@@ -8,17 +8,19 @@ import slimeknights.tconstruct.library.materials.AbstractMaterialStats;
 
 import java.util.List;
 
-public class SlotStats extends AbstractMaterialStats {
+public class BookPageStats extends AbstractMaterialStats {
 
-    public static final String TYPE = TConGreedyTypes.SLOT;
+    public static final String TYPE = TConGreedyTypes.BOOKPAGE;
 
     public final boolean hasLeft;
     public final boolean hasRight;
+    public final int spellspeed;
 
-    public SlotStats(boolean hasLeft, boolean hasRight) {
-        super(TConGreedyTypes.SLOT);
+    public BookPageStats(boolean hasLeft, boolean hasRight, int spellspeed) {
+        super(TConGreedyTypes.BOOKPAGE);
         this.hasLeft = hasLeft;
         this.hasRight = hasRight;
+        this.spellspeed = spellspeed;
     }
 
     @Override
@@ -26,13 +28,15 @@ public class SlotStats extends AbstractMaterialStats {
         List<String> info = Lists.newArrayList();
         String left = hasLeft ? Util.translate("stat.slot.available") : Util.translate("stat.slot.unavailable");
         String right = hasRight ? Util.translate("stat.slot.available") : Util.translate("stat.slot.unavailable");
+        info.add(Util.translateFormatted("stat.spellspeed.value", Util.df.format(spellspeed)));
         info.add(Util.translateFormatted("stat.slot.left", left));
         info.add(Util.translateFormatted("stat.slot.right", right));
+
         return info;
     }
 
     @Override
     public List<String> getLocalizedDesc() {
-        return ImmutableList.of(Util.translate("stat.slot.desc"));
+        return ImmutableList.of(Util.translate("stat.bookpage.desc"));
     }
 }

@@ -4,11 +4,9 @@ import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.CritChanceStats;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.RangeMaterialStats;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SlotStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SpellSpeedStats;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
@@ -56,17 +54,11 @@ public class SpecialWeapons implements IModule {
         TConGreedyTypes.init();
         
         for (Material material : TinkerRegistry.getAllMaterials()) {
-            if (material.getStats(RangeMaterialStats.TYPE) == null) {
-                material.addStats(new RangeMaterialStats(getRangeForMaterial(material)));
+            if (material.getStats(BookPageStats.TYPE) == null) {
+                material.addStats(getBookPageForMaterial(material));
             }
-            if (material.getStats(SlotStats.TYPE) == null) {
-                material.addStats(getSlotStatsForMaterial(material));
-            }
-            if (material.getStats(CritChanceStats.TYPE) == null) {
-                material.addStats(new CritChanceStats(getCritChanceForMaterial(material)));
-            }
-            if (material.getStats(SpellSpeedStats.TYPE) == null) {
-                material.addStats(new SpellSpeedStats(getSpellSpeedForMaterial(material)));
+            if (material.getStats(MagicCoreStats.TYPE) == null) {
+                material.addStats(getMagicCoreForMaterial(material));
             }
         }
     }
@@ -124,47 +116,29 @@ public class SpecialWeapons implements IModule {
         event.getRegistry().register(fireballPage);
     }
 
-    private float getRangeForMaterial(Material material) {
-
-        switch (material.getIdentifier()) {
-            case "iron": return 5.0f;
-            case "diamond": return 15.0f;
-            case "manyullyn": return 20.0f;
-            default: return 10.0f;
-        }
-    }
-
-    private int getSpellSpeedForMaterial(Material material) {
-
-        switch (material.getIdentifier()) {
-            case "iron": return 5;
-            case "diamond": return 10;
-            case "manyullyn": return 15;
-            default: return 8;
-        }
-    }
-
-    private float getCritChanceForMaterial(Material material) {
-
-        switch (material.getIdentifier()) {
-            case "iron": return 5.0f;
-            case "diamond": return 15.0f;
-            case "manyullyn": return 20.0f;
-            default: return 10.0f;
-        }
-    }
-
-    private SlotStats getSlotStatsForMaterial(Material material) {
+    private MagicCoreStats getMagicCoreForMaterial(Material material) {
         String id = material.getIdentifier();
-        // 根据材料 ID 分配槽位
         switch (id) {
             case "iron":
-                return new SlotStats(false, true);  // 只有右槽
+                return new MagicCoreStats(10,10);
+            case "stone":
+            case "wood":
+                return new MagicCoreStats(10,5);
+            default:
+                return new MagicCoreStats(5,5);
+        }
+    }
+
+    private BookPageStats getBookPageForMaterial(Material material) {
+        String id = material.getIdentifier();
+        switch (id) {
+            case "iron":
+                return new BookPageStats(false, true,5);
             case "diamond":
             case "manyullyn":
-                return new SlotStats(true, true);   // 双槽
+                return new BookPageStats(true, true,5);
             default:
-                return new SlotStats(true, true);   // 默认双槽
+                return new BookPageStats(true, true,2);
         }
     }
 }
