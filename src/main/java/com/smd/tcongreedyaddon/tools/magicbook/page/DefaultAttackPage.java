@@ -20,12 +20,14 @@ public class DefaultAttackPage extends UnifiedMagicPage {
                 .addLeftSpell(new LeftClickSpell.Builder()
                         .name("default_attack")
                         .cooldown(0)
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/3.png"))
                         .action(DefaultAttackPage::performStandardAttack)
                         .build())
 
                 .addLeftSpell(new LeftClickSpell.Builder()
                         .name("test_attack_1")
                         .cooldown(10)
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/1.png"))
                         .action((toolStack, player, target) -> {
                             if (!player.world.isRemote) {
                                 target.attackEntityFrom(DamageSource.causePlayerDamage(player), 1.0f);
@@ -39,11 +41,52 @@ public class DefaultAttackPage extends UnifiedMagicPage {
                 .addLeftSpell(new LeftClickSpell.Builder()
                         .name("test_attack_2")
                         .cooldown(40)
-                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/burning_dash.png"))
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/4.png"))
                         .action((toolStack, player, target) -> {
                             if (!player.world.isRemote) {
                                 target.attackEntityFrom(DamageSource.causePlayerDamage(player), 3.0f);
                                 player.sendMessage(new TextComponentString("Test attack 2 used!"));
+                            }
+                            return true;
+                        })
+                        .build())
+
+                .addLeftSpell(new LeftClickSpell.Builder()
+                        .name("test_attack_3")
+                        .cooldown(10)
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/2.png"))
+                        .action((toolStack, player, target) -> {
+                            if (!player.world.isRemote) {
+                                target.attackEntityFrom(DamageSource.causePlayerDamage(player), 1.0f);
+                                player.sendMessage(new TextComponentString("Test attack 1 used!"));
+                                target.setFire(60);
+                            }
+                            return true;
+                        })
+                        .build())
+
+                .addLeftSpell(new LeftClickSpell.Builder()
+                        .name("test_attack_4")
+                        .cooldown(40)
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/5.png"))
+                        .action((toolStack, player, target) -> {
+                            if (!player.world.isRemote) {
+                                target.attackEntityFrom(DamageSource.causePlayerDamage(player), 3.0f);
+                                player.sendMessage(new TextComponentString("Test attack 2 used!"));
+                            }
+                            return true;
+                        })
+                        .build())
+
+                .addLeftSpell(new LeftClickSpell.Builder()
+                        .name("test_attack_5")
+                        .cooldown(60)
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/6.png"))
+                        .action((toolStack, player, target) -> {
+                            if (!player.world.isRemote) {
+                                target.attackEntityFrom(DamageSource.causePlayerDamage(player), 5.0f);
+                                player.sendMessage(new TextComponentString("Test attack 3 used!"));
+                                target.setFire(100);
                             }
                             return true;
                         })
