@@ -3,11 +3,11 @@ package com.smd.tcongreedyaddon.tools.magicbook;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import slimeknights.tconstruct.library.Util;
-import slimeknights.tconstruct.library.materials.IMaterialStats;
+import slimeknights.tconstruct.library.materials.AbstractMaterialStats;
 
 import java.util.List;
 
-public class SlotStats implements IMaterialStats {
+public class SlotStats extends AbstractMaterialStats {
 
     public static final String TYPE = TConGreedyTypes.SLOT;
 
@@ -15,18 +15,9 @@ public class SlotStats implements IMaterialStats {
     public final boolean hasRight;
 
     public SlotStats(boolean hasLeft, boolean hasRight) {
+        super(TConGreedyTypes.SLOT);
         this.hasLeft = hasLeft;
         this.hasRight = hasRight;
-    }
-
-    @Override
-    public String getIdentifier() {
-        return TYPE;
-    }
-
-    @Override
-    public String getLocalizedName() {
-        return Util.translate("stat.slot.name");
     }
 
     @Override

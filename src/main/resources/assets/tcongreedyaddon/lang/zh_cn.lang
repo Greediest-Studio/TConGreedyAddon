@@ -63,7 +63,7 @@ beam_attack=范围攻击
 default_attack=默认攻击模式
 
 stat.range.desc=索敌范围
-stat.range.name=范围
+stat.tcongreedyaddon.range.name=范围
 stat.range.value=索敌范围: %s
 
 tooltip.leftpage=左键效果
@@ -73,7 +73,7 @@ tooltip.current=(当前激活)
 tooltip.unavailable=不可用
 message.slot_unavailable=槽位不可用
 
-stat.slot.name=技能插槽
+stat.tcongreedyaddon.slot.name=技能插槽
 stat.slot.left=左键槽: %s
 stat.slot.right=右键槽: %s
 stat.slot.available=允许

@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
-import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -20,7 +19,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.*;
 import slimeknights.tconstruct.library.tinkering.Category;
 import slimeknights.tconstruct.library.tinkering.PartMaterialType;
@@ -310,7 +308,7 @@ public class MagicBook extends TinkerToolCore {
             Material coreMat = materials.get(2);
             RangeMaterialStats rangeStats = coreMat.getStats(RangeMaterialStats.TYPE);
             if (rangeStats != null) {
-                tooltip.add(TextFormatting.GOLD + Util.translate("stat.range.name") + ": " + rangeStats.range);
+                tooltip.add(TextFormatting.GOLD + rangeStats.getLocalizedName() + ": " + rangeStats.range);
             }
         }
 

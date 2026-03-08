@@ -3,28 +3,19 @@ package com.smd.tcongreedyaddon.tools.magicbook;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import slimeknights.tconstruct.library.Util;
-import slimeknights.tconstruct.library.materials.IMaterialStats;
+import slimeknights.tconstruct.library.materials.AbstractMaterialStats;
 
 import java.util.List;
 
-public class RangeMaterialStats implements IMaterialStats {
+public class RangeMaterialStats extends AbstractMaterialStats {
 
     public static final String TYPE = TConGreedyTypes.RANGE;
 
     public final float range;
 
     public RangeMaterialStats(float range) {
+        super(TConGreedyTypes.RANGE);
         this.range = range;
-    }
-
-    @Override
-    public String getIdentifier() {
-        return TYPE;
-    }
-
-    @Override
-    public String getLocalizedName() {
-        return Util.translate("stat.range.name");
     }
 
     @Override
