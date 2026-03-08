@@ -4,9 +4,11 @@ import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
-import com.smd.tcongreedyaddon.tools.magicbook.RangeMaterialStats;
-import com.smd.tcongreedyaddon.tools.magicbook.SlotStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.CritChanceStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.RangeMaterialStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SlotStats;
 import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SpellSpeedStats;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
@@ -59,6 +61,12 @@ public class SpecialWeapons implements IModule {
             }
             if (material.getStats(SlotStats.TYPE) == null) {
                 material.addStats(getSlotStatsForMaterial(material));
+            }
+            if (material.getStats(CritChanceStats.TYPE) == null) {
+                material.addStats(new CritChanceStats(getCritChanceForMaterial(material)));
+            }
+            if (material.getStats(SpellSpeedStats.TYPE) == null) {
+                material.addStats(new SpellSpeedStats(getSpellSpeedForMaterial(material)));
             }
         }
     }
@@ -117,6 +125,26 @@ public class SpecialWeapons implements IModule {
     }
 
     private float getRangeForMaterial(Material material) {
+
+        switch (material.getIdentifier()) {
+            case "iron": return 5.0f;
+            case "diamond": return 15.0f;
+            case "manyullyn": return 20.0f;
+            default: return 10.0f;
+        }
+    }
+
+    private int getSpellSpeedForMaterial(Material material) {
+
+        switch (material.getIdentifier()) {
+            case "iron": return 5;
+            case "diamond": return 10;
+            case "manyullyn": return 15;
+            default: return 8;
+        }
+    }
+
+    private float getCritChanceForMaterial(Material material) {
 
         switch (material.getIdentifier()) {
             case "iron": return 5.0f;

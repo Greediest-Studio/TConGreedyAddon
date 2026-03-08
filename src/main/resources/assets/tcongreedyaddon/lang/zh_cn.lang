@@ -66,6 +66,14 @@ stat.range.desc=索敌范围
 stat.tcongreedyaddon.range.name=范围
 stat.range.value=索敌范围: %s
 
+stat.spellspeed.desc=施法速度
+stat.tcongreedyaddon.spellspeed.name=施法速度
+stat.spellspeed.value=施法速度: %s
+
+stat.critchance.desc=法术暴击率
+stat.tcongreedyaddon.critchance.name=法术暴击率
+stat.critchance.value=法术暴击率: %s
+
 tooltip.leftpage=左键效果
 tooltip.rightpage=右键效果
 tooltip.current=(当前激活)

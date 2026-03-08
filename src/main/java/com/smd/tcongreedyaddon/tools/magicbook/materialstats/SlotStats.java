@@ -1,7 +1,8 @@
-package com.smd.tcongreedyaddon.tools.magicbook;
+package com.smd.tcongreedyaddon.tools.magicbook.materialstats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.AbstractMaterialStats;
 

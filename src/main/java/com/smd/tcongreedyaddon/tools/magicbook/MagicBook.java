@@ -1,6 +1,8 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.RangeMaterialStats;
+import com.smd.tcongreedyaddon.tools.magicbook.materialstats.SlotStats;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -49,8 +51,8 @@ public class MagicBook extends TinkerToolCore {
         super(
                 PartMaterialType.head(SpecialWeapons.cover),
                 PartMaterialType.handle(SpecialWeapons.hinge),
-                TConGreedyTypes.slot(SpecialWeapons.bookpage),
-                TConGreedyTypes.range(SpecialWeapons.magiccore)
+                TConGreedyTypes.bookpage(SpecialWeapons.bookpage),
+                TConGreedyTypes.magiccore(SpecialWeapons.magiccore)
         );
         addCategory(Category.WEAPON);
         setTranslationKey("magicbook").setRegistryName("magicbook");
@@ -265,8 +267,6 @@ public class MagicBook extends TinkerToolCore {
     protected ToolNBT buildTagData(List<Material> materials) {
         HeadMaterialStats head = materials.get(0).getStatsOrUnknown(HeadMaterialStats.TYPE);
         HandleMaterialStats handle = materials.get(1).getStatsOrUnknown(HandleMaterialStats.TYPE);
-        SlotStats extra = materials.get(2).getStatsOrUnknown(SlotStats.TYPE);
-        RangeMaterialStats extra2 = materials.get(3).getStatsOrUnknown(RangeMaterialStats.TYPE);
 
         ToolNBT data = new ToolNBT();
         data.head(head);
