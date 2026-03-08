@@ -88,7 +88,9 @@ stat.slot.available=允许
 stat.slot.unavailable=禁止
 tooltip.empty=空槽位
 
-page_installed_to=书签被安装在
-left=左
-right=右
-slot=槽位
+
+page.installed=已安装至%s书签槽
+slot.left=左
+slot.right=右
+
+
