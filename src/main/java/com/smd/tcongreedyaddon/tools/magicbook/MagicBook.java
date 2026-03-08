@@ -289,12 +289,12 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public float damagePotential() {
-        return 0.8F;
+        return 0.75F;
     }
 
     @Override
     public double attackSpeed() {
-        return 0.8;
+        return 1.0;
     }
 
     @Override

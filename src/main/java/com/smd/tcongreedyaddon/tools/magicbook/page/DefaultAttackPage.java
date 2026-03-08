@@ -1,11 +1,13 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page;
 
+import com.smd.tcongreedyaddon.Tags;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.LeftClickSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.PassiveSpell;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import slimeknights.tconstruct.library.tools.TinkerToolCore;
 import slimeknights.tconstruct.library.utils.ToolHelper;
@@ -36,7 +38,8 @@ public class DefaultAttackPage extends UnifiedMagicPage {
 
                 .addLeftSpell(new LeftClickSpell.Builder()
                         .name("test_attack_2")
-                        .cooldown(20)
+                        .cooldown(40)
+                        .icon(new ResourceLocation(Tags.MOD_ID, "textures/spell_icons/burning_dash.png"))
                         .action((toolStack, player, target) -> {
                             if (!player.world.isRemote) {
                                 target.attackEntityFrom(DamageSource.causePlayerDamage(player), 3.0f);
