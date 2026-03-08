@@ -307,7 +307,12 @@ public class MagicBook extends TinkerToolCore {
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
 
         if (materials.size() >= 4) {
+            Material pageMat = materials.get(2);
             Material coreMat = materials.get(3);
+            BookPageStats pageStats = pageMat.getStats(BookPageStats.TYPE);
+            if (pageStats != null) {
+                tooltip.add(TextFormatting.GOLD + pageStats.getLocalizedInfo().get(0));
+            }
             MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
             if (coreStats != null) {
                 for (String infoLine : coreStats.getLocalizedInfo()) {
