@@ -8,9 +8,9 @@ import net.minecraftforge.fml.common.eventhandler.Event;
  */
 public class TriggerSource {
     public enum Type {
-        LEFT_CLICK,   // 左键点击实体
-        RIGHT_CLICK,  // 右键使用书
-        TICK          // 每 tick 更新
+        LEFT_CLICK,
+        RIGHT_CLICK,
+        TICK
     }
 
     private final Type type;

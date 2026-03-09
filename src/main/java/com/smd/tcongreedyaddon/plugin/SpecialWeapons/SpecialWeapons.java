@@ -10,6 +10,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
+import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
@@ -35,6 +36,7 @@ public class SpecialWeapons implements IModule {
     public static FireballPage fireballPage;
     public static BeamAttackPage beamAttackPage;
     public static DefaultAttackPage defaultAttackPage;
+    public static JumpBoostPage jumoboostpage;
 
 
     @Override
@@ -114,6 +116,9 @@ public class SpecialWeapons implements IModule {
 
         fireballPage = new FireballPage();
         event.getRegistry().register(fireballPage);
+
+        jumoboostpage = new JumpBoostPage();
+        event.getRegistry().register(jumoboostpage);
     }
 
     private MagicCoreStats getMagicCoreForMaterial(Material material) {

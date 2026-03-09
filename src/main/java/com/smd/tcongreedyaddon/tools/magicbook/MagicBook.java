@@ -127,55 +127,38 @@ public class MagicBook extends TinkerToolCore {
         }
     }
 
-    /**
-     * 核心法术执行方法（由事件处理器调用）
-     * @param bookStack 魔导书物品
-     * @param player    玩家
-     * @param slot      左槽或右槽
-     * @param target    攻击目标（左键事件需要，右键可为 null）
-     * @return 是否成功执行并消耗耐久
-     */
     public boolean executeSpell(ItemStack bookStack, EntityPlayer player, MagicPageItem.SlotType slot, @Nullable Entity target) {
-        UUID playerId = player.getUniqueID();
-        if (EXECUTING_PLAYERS.contains(playerId)) {
-            return false;
+        if (ToolHelper.isBroken(bookStack)) return false;
+
+        validateSpellIndices(bookStack);
+        List<SpellEntry> spells = buildSpellList(bookStack, slot);
+        if (spells.isEmpty()) return false;
+
+        NBTTagCompound tag = TagUtil.getTagSafe(bookStack);
+        int index = tag.getInteger(slot == MagicPageItem.SlotType.LEFT ? TAG_CUR_LEFT_INDEX : TAG_CUR_RIGHT_INDEX);
+        if (index < 0 || index >= spells.size()) index = 0;
+        SpellEntry entry = spells.get(index);
+
+        if (entry.page.isSpellOnCooldown(entry.pageStack, entry.internalIndex, player.world)) return false;
+
+        NBTTagCompound pageData = entry.pageStack.getTagCompound();
+        if (pageData == null) pageData = new NBTTagCompound();
+        pageData.setInteger("spellIndex", entry.internalIndex);
+
+        boolean result;
+        if (slot == MagicPageItem.SlotType.LEFT) {
+            result = entry.page.onLeftClick(bookStack, player, target, pageData, entry.pageStack);
+        } else {
+            result = entry.page.onRightClick(player.world, player, bookStack, pageData, entry.pageStack);
         }
-        EXECUTING_PLAYERS.add(playerId);
-        try {
-            if (ToolHelper.isBroken(bookStack)) return false;
 
-            validateSpellIndices(bookStack);
-            List<SpellEntry> spells = buildSpellList(bookStack, slot);
-            if (spells.isEmpty()) return false;
-
-            NBTTagCompound tag = TagUtil.getTagSafe(bookStack);
-            int index = tag.getInteger(slot == MagicPageItem.SlotType.LEFT ? TAG_CUR_LEFT_INDEX : TAG_CUR_RIGHT_INDEX);
-            if (index < 0 || index >= spells.size()) index = 0;
-            SpellEntry entry = spells.get(index);
-
-            if (entry.page.isSpellOnCooldown(entry.pageStack, entry.internalIndex, player.world)) return false;
-
-            NBTTagCompound pageData = entry.pageStack.getTagCompound();
-            if (pageData == null) pageData = new NBTTagCompound();
-            pageData.setInteger("spellIndex", entry.internalIndex);
-
-            boolean result;
-            if (slot == MagicPageItem.SlotType.LEFT) {
-                result = entry.page.onLeftClick(bookStack, player, target, pageData, entry.pageStack);
-            } else {
-                result = entry.page.onRightClick(player.world, player, bookStack, pageData, entry.pageStack);
-            }
-
-            if (result) {
-                entry.page.setSpellCooldown(entry.pageStack, entry.internalIndex, player.world);
-                entry.pageStack.setTagCompound(pageData);
-                getInventory(bookStack).setStackInSlot(entry.slot, entry.pageStack);
-                ToolHelper.damageTool(bookStack, DURABILITY_COST, player);
-            }
-            return result;
-        } finally {
-            EXECUTING_PLAYERS.remove(playerId);
+        if (result) {
+            entry.page.setSpellCooldown(entry.pageStack, entry.internalIndex, player.world);
+            entry.pageStack.setTagCompound(pageData);
+            getInventory(bookStack).setStackInSlot(entry.slot, entry.pageStack);
+            ToolHelper.damageTool(bookStack, DURABILITY_COST, player);
         }
+        return result;
     }
 
     // ==================== 切换法术 ====================
@@ -198,7 +181,14 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
-        return false;
+
+        if (player.isSneaking() || ToolHelper.isBroken(stack)) {
+            return true;
+        }
+
+        boolean executed = executeSpell(stack, player, MagicPageItem.SlotType.LEFT, entity);
+
+        return true;
     }
 
     @Override
@@ -217,7 +207,21 @@ public class MagicBook extends TinkerToolCore {
             }
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
-        return new ActionResult<>(EnumActionResult.PASS, stack);
+
+        if (ToolHelper.isBroken(stack)) {
+            return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+
+        if (world.isRemote) {
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+        }
+
+        boolean executed = executeSpell(stack, player, MagicPageItem.SlotType.RIGHT, null);
+        if (executed) {
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+        } else {
+            return new ActionResult<>(EnumActionResult.PASS, stack);
+        }
     }
 
     @Override

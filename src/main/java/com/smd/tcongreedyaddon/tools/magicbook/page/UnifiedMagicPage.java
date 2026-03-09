@@ -24,10 +24,21 @@ import java.util.stream.Collectors;
 
 public class UnifiedMagicPage extends MagicPageItem {
 
+    // 内部类，用于事件映射存储法术及其原始索引
+    private static class SpellInfo {
+        final ISpell spell;
+        final int rawIndex; // 在 leftSpells 或 rightSpells 中的原始索引
+        SpellInfo(ISpell spell, int rawIndex) {
+            this.spell = spell;
+            this.rawIndex = rawIndex;
+        }
+    }
+
     private final SlotType slotType;
     private final List<ISpell> leftSpells = new ArrayList<>();
     private final List<ISpell> rightSpells = new ArrayList<>();
-    private final Map<Class<? extends Event>, List<ISpell>> eventSpellMap = new HashMap<>(); // 事件映射
+    // 事件映射：事件类 -> 法术信息列表
+    private final Map<Class<? extends Event>, List<SpellInfo>> eventSpellMap = new HashMap<>();
     private String displayNameKey = "unified.page.default";
 
     protected UnifiedMagicPage(Builder builder) {
@@ -45,10 +56,11 @@ public class UnifiedMagicPage extends MagicPageItem {
     }
 
     private void buildEventSpellMap(List<ISpell> spells) {
-        for (ISpell spell : spells) {
+        for (int i = 0; i < spells.size(); i++) {
+            ISpell spell = spells.get(i);
             List<Class<? extends Event>> events = spell.getListeningEvents();
             for (Class<? extends Event> eventClass : events) {
-                eventSpellMap.computeIfAbsent(eventClass, k -> new ArrayList<>()).add(spell);
+                eventSpellMap.computeIfAbsent(eventClass, k -> new ArrayList<>()).add(new SpellInfo(spell, i));
             }
         }
     }
@@ -60,9 +72,44 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     // ==================== 索引管理 ====================
 
+    /**
+     * 获取指定槽位中可切换的法术列表（isSelectable() == true）
+     */
     private List<ISpell> getSelectableSpells(SlotType slot) {
         List<ISpell> list = slot == SlotType.LEFT ? leftSpells : rightSpells;
         return list.stream().filter(ISpell::isSelectable).collect(Collectors.toList());
+    }
+
+    private boolean isSpellOnCooldownRaw(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack, ISpell spell) {
+        NBTTagCompound pageData = pageStack.getTagCompound();
+        if (pageData == null) return false;
+        NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
+        long lastUsed = cooldowns.getLong(String.valueOf(rawIndex));
+        int cooldown = spell.getCooldownTicks(player, bookStack); // 传入 bookStack
+        if (cooldown <= 0) return false;
+        long now = world.getTotalWorldTime();
+        return now - lastUsed < cooldown;
+    }
+
+    private void setSpellCooldownRaw(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack, ISpell spell) {
+        int cooldown = spell.getCooldownTicks(player, bookStack);
+        if (cooldown <= 0) return;
+        NBTTagCompound pageData = pageStack.getTagCompound();
+        if (pageData == null) pageData = new NBTTagCompound();
+        NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
+        cooldowns.setLong(String.valueOf(rawIndex), world.getTotalWorldTime());
+        pageData.setTag(TAG_COOLDOWNS, cooldowns);
+        pageStack.setTagCompound(pageData);
+    }
+
+    private boolean executeSpellWithRawIndex(ISpell spell, int rawIndex, SpellContext context, ItemStack pageStack) {
+        if (isSpellOnCooldownRaw(pageStack, rawIndex, context.world, context.player, context.bookStack, spell)) return false;
+        if (!spell.canTrigger(context)) return false;
+        boolean success = spell.execute(context);
+        if (success) {
+            setSpellCooldownRaw(pageStack, rawIndex, context.world, context.player, context.bookStack, spell);
+        }
+        return success;
     }
 
     // ==================== 实现父类抽象方法 ====================
@@ -91,25 +138,30 @@ public class UnifiedMagicPage extends MagicPageItem {
         return getSpellCooldownTicks(spellIndex, getSlotType());
     }
 
-    // ==================== 主动施法 ====================
+    // ==================== 主动施法（左右键）====================
 
     @Override
     public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData, ItemStack pageStack) {
         if (player.world.isRemote) return false;
 
-        int index = pageData.getInteger("spellIndex");
+        int selectableIndex = pageData.getInteger("spellIndex");
         List<ISpell> selectable = getSelectableSpells(SlotType.LEFT);
-        if (index < 0 || index >= selectable.size()) return false;
-        ISpell spell = selectable.get(index);
+        if (selectableIndex < 0 || selectableIndex >= selectable.size()) return false;
+        ISpell spell = selectable.get(selectableIndex);
 
-        if (isSpellOnCooldown(pageStack, index, player.world)) return false;
+        // 在原始列表中查找该法术的原始索引
+        int rawIndex = -1;
+        for (int i = 0; i < leftSpells.size(); i++) {
+            if (leftSpells.get(i) == spell) {
+                rawIndex = i;
+                break;
+            }
+        }
+        if (rawIndex == -1) return false; // 不应发生
 
         SpellContext context = new SpellContext(player.world, player, toolStack, pageStack, pageData, SlotType.LEFT, TriggerSource.leftClick(), target);
-        if (!spell.canTrigger(context)) return false;
-
-        boolean success = spell.execute(context);
+        boolean success = executeSpellWithRawIndex(spell, rawIndex, context, pageStack);
         if (success) {
-            setSpellCooldown(pageStack, index, player.world);
             pageStack.setTagCompound(pageData);
         }
         return success;
@@ -119,19 +171,24 @@ public class UnifiedMagicPage extends MagicPageItem {
     public boolean onRightClick(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, ItemStack pageStack) {
         if (world.isRemote) return false;
 
-        int index = pageData.getInteger("spellIndex");
+        int selectableIndex = pageData.getInteger("spellIndex");
         List<ISpell> selectable = getSelectableSpells(SlotType.RIGHT);
-        if (index < 0 || index >= selectable.size()) return false;
-        ISpell spell = selectable.get(index);
+        if (selectableIndex < 0 || selectableIndex >= selectable.size()) return false;
+        ISpell spell = selectable.get(selectableIndex);
 
-        if (isSpellOnCooldown(pageStack, index, world)) return false;
+        // 在原始列表中查找该法术的原始索引
+        int rawIndex = -1;
+        for (int i = 0; i < rightSpells.size(); i++) {
+            if (rightSpells.get(i) == spell) {
+                rawIndex = i;
+                break;
+            }
+        }
+        if (rawIndex == -1) return false;
 
         SpellContext context = new SpellContext(world, player, toolStack, pageStack, pageData, SlotType.RIGHT, TriggerSource.rightClick(), null);
-        if (!spell.canTrigger(context)) return false;
-
-        boolean success = spell.execute(context);
+        boolean success = executeSpellWithRawIndex(spell, rawIndex, context, pageStack);
         if (success) {
-            setSpellCooldown(pageStack, index, world);
             pageStack.setTagCompound(pageData);
         }
         return success;
@@ -142,37 +199,44 @@ public class UnifiedMagicPage extends MagicPageItem {
     @Override
     public void onHeldUpdate(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, SlotType slot, ItemStack pageStack) {
         List<ISpell> allSpells = slot == SlotType.LEFT ? leftSpells : rightSpells;
-        for (ISpell spell : allSpells) {
+        for (int rawIndex = 0; rawIndex < allSpells.size(); rawIndex++) {
+            ISpell spell = allSpells.get(rawIndex);
             SpellContext context = new SpellContext(world, player, toolStack, pageStack, pageData, slot, TriggerSource.tick(), null);
-            if (spell.canTrigger(context)) {
-                spell.execute(context);
-            }
+            // 被动法术执行，但返回结果不重要
+            executeSpellWithRawIndex(spell, rawIndex, context, pageStack);
         }
         pageStack.setTagCompound(pageData);
     }
 
-    // ==================== 事件触发（优化版）====================
+    // ==================== 事件触发 ====================
 
     public void onEvent(Event event, EntityPlayer player, ItemStack bookStack, ItemStack pageStack, NBTTagCompound pageData, SlotType slot) {
-        List<ISpell> spells = eventSpellMap.get(event.getClass());
-        if (spells == null) return;
+        List<SpellInfo> spellInfos = eventSpellMap.get(event.getClass());
+        if (spellInfos == null) return;
 
         TriggerSource source = TriggerSource.event(event);
-        for (ISpell spell : spells) {
+        for (SpellInfo info : spellInfos) {
+            if (pageData == null) pageData = new NBTTagCompound();
             SpellContext context = new SpellContext(player.world, player, bookStack, pageStack, pageData, slot, source, null);
-            if (spell.canTrigger(context)) {
-                spell.execute(context);
+
+            info.spell.onEvent(event, context, info.rawIndex);
+
+            if (info.spell.canTrigger(context)) {
+                boolean success = executeSpellWithRawIndex(info.spell, info.rawIndex, context, pageStack);
+                if (success) {
+                    pageData = pageStack.getTagCompound();
+                }
             }
         }
-        pageStack.setTagCompound(pageData);
+        if (pageData != null) {
+            pageStack.setTagCompound(pageData);
+        }
     }
 
     @Override
     public int getInitialSpellIndex(ItemStack pageStack) {
         return 0;
     }
-
-    // ==================== 显示名称 ====================
 
     @Override
     public String getCurrentSpellDisplayName(NBTTagCompound pageData, ItemStack pageStack) {
@@ -204,9 +268,8 @@ public class UnifiedMagicPage extends MagicPageItem {
         List<ISpell> leftSelectable = getSelectableSpells(SlotType.LEFT);
         if (!leftSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.left_spells") + ":");
-            for (int i = 0; i < leftSelectable.size(); i++) {
-                String name = I18n.translateToLocal(leftSelectable.get(i).getNameKey());
-                tooltip.add(" - " + name);
+            for (ISpell spell : leftSelectable) {
+                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
             }
         }
 
@@ -214,9 +277,8 @@ public class UnifiedMagicPage extends MagicPageItem {
         List<ISpell> rightSelectable = getSelectableSpells(SlotType.RIGHT);
         if (!rightSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.right_spells") + ":");
-            for (int i = 0; i < rightSelectable.size(); i++) {
-                String name = I18n.translateToLocal(rightSelectable.get(i).getNameKey());
-                tooltip.add(" - " + name);
+            for (ISpell spell : rightSelectable) {
+                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
             }
         }
 
@@ -300,7 +362,7 @@ public class UnifiedMagicPage extends MagicPageItem {
                     spell.getIcon(),
                     spell.isSelectable(),
                     spell.shouldRenderInOverlay(),
-                    i,
+                    i, // 使用原始索引
                     spell.getCooldownTicks(),
                     pageData
             ));
@@ -313,7 +375,7 @@ public class UnifiedMagicPage extends MagicPageItem {
         public final ResourceLocation icon;
         public final boolean selectable;
         public final boolean renderInOverlay;
-        public final int internalIndex;
+        public final int internalIndex; // 原始索引
         public final int cooldownTicks;
         public final NBTTagCompound pageData;
 

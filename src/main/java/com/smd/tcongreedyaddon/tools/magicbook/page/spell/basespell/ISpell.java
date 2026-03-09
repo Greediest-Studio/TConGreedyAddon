@@ -1,5 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
@@ -60,5 +62,23 @@ public interface ISpell {
      */
     default boolean shouldRenderInOverlay() {
         return true;
+    }
+
+    default void onEvent(Event event, SpellContext context, int rawIndex) {}
+
+    /**
+     * 获取冷却时间（刻），基于玩家状态和魔导书动态计算。
+     */
+    default int getCooldownTicks(EntityPlayer player, ItemStack bookStack) {
+        // 默认调用仅玩家的版本
+        return getCooldownTicks(player);
+    }
+
+    /**
+     * 获取冷却时间（刻），基于玩家状态动态计算（无魔导书）。
+     */
+    default int getCooldownTicks(EntityPlayer player) {
+        // 默认调用无参版本
+        return getCooldownTicks();
     }
 }
