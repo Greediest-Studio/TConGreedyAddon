@@ -1,6 +1,8 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
+import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import net.minecraft.block.state.IBlockState;
@@ -40,16 +42,9 @@ public class MagicBook extends TinkerToolCore {
     public static final float BEAM_RANGE = 10.0F;
     public static final int DURABILITY_COST = 1;
 
-    private static final Logger LOGGER = LogManager.getLogger("TConGreedyAddon/magicbook");
-
-    // NBT keys for slots (changed to lists)
-    public static final String TAG_LEFT_PAGES = "leftPages";
-    public static final String TAG_RIGHT_PAGES = "rightPages";
+    // NBT keys
     public static final String TAG_CUR_LEFT_INDEX = "currentLeftSpellIndex";
     public static final String TAG_CUR_RIGHT_INDEX = "currentRightSpellIndex";
-    // Keys used inside each page's compound
-    public static final String TAG_PAGE_ID = "pageId";
-    public static final String TAG_SPELL_INDEX = "spellIndex"; // internal spell index within the page
     public static final String TAG_COOLDOWNS = "cooldowns";
 
     public MagicBook() {
@@ -64,99 +59,55 @@ public class MagicBook extends TinkerToolCore {
     }
 
     /**
-     * Initialize slot lists based on material stats.
-     * Ensures list length matches max slots, filling empty slots with empty NBTTagCompound.
+     * 获取或创建该魔法书的容器
      */
-    private void initSlots(ItemStack stack) {
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
-        boolean dirty = false;
-
+    public BookInventory getInventory(ItemStack stack) {
         BookPageStats stats = getCoreBookPageStats(stack);
-        int maxLeft = (stats != null) ? stats.leftSlots : 1;
-        int maxRight = (stats != null) ? stats.rightSlots : 1;
-
-        // Left pages
-        NBTTagList leftList = tag.getTagList(TAG_LEFT_PAGES, 10);
-        // Expand if needed
-        while (leftList.tagCount() < maxLeft) {
-            leftList.appendTag(new NBTTagCompound());
-            dirty = true;
-        }
-        // Truncate if too many (should not happen, but safe)
-        if (leftList.tagCount() > maxLeft) {
-            NBTTagList newList = new NBTTagList();
-            for (int i = 0; i < maxLeft; i++) {
-                newList.appendTag(leftList.get(i));
-            }
-            tag.setTag(TAG_LEFT_PAGES, newList);
-            dirty = true;
-        } else if (dirty) {
-            tag.setTag(TAG_LEFT_PAGES, leftList);
-        }
-
-        // Right pages
-        NBTTagList rightList = tag.getTagList(TAG_RIGHT_PAGES, 10);
-        while (rightList.tagCount() < maxRight) {
-            rightList.appendTag(new NBTTagCompound());
-            dirty = true;
-        }
-        if (rightList.tagCount() > maxRight) {
-            NBTTagList newList = new NBTTagList();
-            for (int i = 0; i < maxRight; i++) {
-                newList.appendTag(rightList.get(i));
-            }
-            tag.setTag(TAG_RIGHT_PAGES, newList);
-            dirty = true;
-        } else if (dirty) {
-            tag.setTag(TAG_RIGHT_PAGES, rightList);
-        }
-
-        if (dirty) {
-            stack.setTagCompound(tag);
-        }
+        int left = (stats != null) ? stats.leftSlots : 1;
+        int right = (stats != null) ? stats.rightSlots : 1;
+        return new BookInventory(stack, left, right);
     }
 
-    /**
-     * Represents a single selectable spell from a page.
-     */
-    private static class SpellEntry {
-        final NBTTagCompound pageData;  // The NBT of the page (contains cooldowns, pageId)
-        final MagicPageItem page;
-        final int internalIndex;        // Index of this spell within the page
+    // ==================== 法术列表相关 ====================
 
-        SpellEntry(NBTTagCompound pageData, MagicPageItem page, int internalIndex) {
-            this.pageData = pageData;
+    /** 表示一个可用的法术条目 */
+    private static class SpellEntry {
+        final ItemStack pageStack;   // 书签物品
+        final MagicPageItem page;     // 页面实例
+        final int slot;               // 在容器中的槽位
+        final int internalIndex;      // 在页面内的法术索引
+
+        SpellEntry(ItemStack pageStack, MagicPageItem page, int slot, int internalIndex) {
+            this.pageStack = pageStack;
             this.page = page;
+            this.slot = slot;
             this.internalIndex = internalIndex;
         }
     }
 
     /**
-     * Build the list of all spells available in the given slot.
+     * 根据槽位类型构建当前可用的法术列表
      */
-    private List<SpellEntry> buildSpellList(ItemStack stack, MagicPageItem.SlotType slot) {
+    private List<SpellEntry> buildSpellList(ItemStack stack, MagicPageItem.SlotType slotType) {
         List<SpellEntry> list = new ArrayList<>();
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
-        String listKey = (slot == MagicPageItem.SlotType.LEFT) ? TAG_LEFT_PAGES : TAG_RIGHT_PAGES;
-        NBTTagList pageList = tag.getTagList(listKey, 10);
-        for (int i = 0; i < pageList.tagCount(); i++) {
-            NBTTagCompound pageData = pageList.getCompoundTagAt(i);
-            if (pageData.isEmpty()) continue; // empty slot
-            String pageId = pageData.getString(TAG_PAGE_ID);
-            Item item = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-            if (item instanceof MagicPageItem) {
-                MagicPageItem page = (MagicPageItem) item;
-                int spellCount = page.getSpellCount(slot); // need to add this method in MagicPageItem
-                for (int j = 0; j < spellCount; j++) {
-                    list.add(new SpellEntry(pageData, page, j));
-                }
+        BookInventory inv = getInventory(stack);
+        int start = (slotType == MagicPageItem.SlotType.LEFT) ? 0 : inv.getLeftSlots();
+        int end = (slotType == MagicPageItem.SlotType.LEFT) ? inv.getLeftSlots() : inv.getSlots();
+
+        for (int slot = start; slot < end; slot++) {
+            ItemStack pageStack = inv.getStackInSlot(slot);
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof MagicPageItem)) continue;
+            MagicPageItem page = (MagicPageItem) pageStack.getItem();
+            int spellCount = page.getSpellCount(slotType);
+            for (int j = 0; j < spellCount; j++) {
+                list.add(new SpellEntry(pageStack, page, slot, j));
             }
         }
         return list;
     }
 
     /**
-     * Ensure current spell indices are within bounds.
+     * 确保当前法术索引在合法范围内
      */
     private void validateSpellIndices(ItemStack stack) {
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
@@ -181,37 +132,51 @@ public class MagicBook extends TinkerToolCore {
         }
     }
 
-    @Override
-    public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
-        initSlots(stack);
+    // ==================== 切换法术 ====================
+
+    public void switchSpell(ItemStack stack, MagicPageItem.SlotType slot, boolean next) {
         validateSpellIndices(stack);
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
-        List<SpellEntry> spells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
-        if (spells.isEmpty()) return true; // no spells to cast
+        String key = (slot == MagicPageItem.SlotType.LEFT) ? TAG_CUR_LEFT_INDEX : TAG_CUR_RIGHT_INDEX;
+        List<SpellEntry> spells = buildSpellList(stack, slot);
+        if (spells.isEmpty()) {
+            tag.setInteger(key, 0);
+        } else {
+            int current = tag.getInteger(key);
+            if (current < 0 || current >= spells.size()) current = 0;
+            current = next ? (current + 1) % spells.size() : (current - 1 + spells.size()) % spells.size();
+            tag.setInteger(key, current);
+        }
+        stack.setTagCompound(tag);
+    }
 
+    // ==================== 左键实体 ====================
+
+    @Override
+    public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
+        validateSpellIndices(stack);
+        List<SpellEntry> spells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
+        if (spells.isEmpty()) return true; // 无左槽法术
+
+        NBTTagCompound tag = TagUtil.getTagSafe(stack);
         int index = tag.getInteger(TAG_CUR_LEFT_INDEX);
         if (index < 0 || index >= spells.size()) index = 0;
         SpellEntry entry = spells.get(index);
 
-        // Check cooldown
+        // 冷却检查
         if (isSpellOnCooldown(player.world, entry)) return true;
 
-        // Temporarily set the spell index in the page data (some pages may rely on it)
-        entry.pageData.setInteger(TAG_SPELL_INDEX, entry.internalIndex);
-        boolean result = entry.page.onLeftClick(stack, player, entity, entry.pageData);
+        // 获取页面NBT
+        NBTTagCompound pageData = entry.pageStack.getTagCompound();
+        if (pageData == null) pageData = new NBTTagCompound();
+        pageData.setInteger("spellIndex", entry.internalIndex); // 有些页面可能需要
+
+        boolean result = entry.page.onLeftClick(stack, player, entity, pageData);
         if (result) {
+            // 保存页面NBT
+            entry.pageStack.setTagCompound(pageData);
+            getInventory(stack).setStackInSlot(entry.slot, entry.pageStack); // 触发容器保存
             setSpellCooldown(player.world, entry);
-            // Write back the page data to the list
-            NBTTagList leftList = tag.getTagList(TAG_LEFT_PAGES, 10);
-            // Find the index of this page in the list (by matching the compound? we can use the same slot? but pageData may have been modified)
-            // Simpler: since we have the exact pageData object, we need to know its position in the list.
-            // We can loop to find a matching reference? Better: store slot index in SpellEntry.
-            // For simplicity, we can add slotIndex to SpellEntry when building, but that requires passing the list index.
-            // Alternative: after calling onLeftClick, we don't need to write back the whole pageData if the page modified it,
-            // because pageData is a reference to the actual compound in the list (since we got it from the list's getCompoundTagAt, which returns a reference? In Forge NBTTagList.getCompoundTagAt returns a copy? Actually it returns the tag at index, but if you modify it, the list is updated. So we can just rely on that.
-            // However, to be safe, we can mark the list as changed.
-            tag.setTag(TAG_LEFT_PAGES, leftList); // this might be redundant if leftList is the same object
-            stack.setTagCompound(tag);
             ToolHelper.damageTool(stack, DURABILITY_COST, player);
         }
         return result;
@@ -219,223 +184,195 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public boolean onBlockStartBreak(ItemStack itemstack, BlockPos pos, EntityPlayer player) {
-        return false;
+        return false; // 魔法书不用于破块
     }
+
+    // ==================== 右键空气/方块 ====================
 
     @Nonnull
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
 
-        // Sneak-right-click with a page in offhand to install
-        ItemStack offhand = player.getHeldItemOffhand();
-        if (hand == EnumHand.MAIN_HAND && player.isSneaking() && !offhand.isEmpty() && offhand.getItem() instanceof MagicPageItem) {
-            if (world.isRemote) {
-                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-            } else {
-                return handlePageInstallation(world, player, stack, offhand);
+        // 潜行右键打开GUI
+        if (player.isSneaking()) {
+            if (!world.isRemote) {
+                player.openGui(TConGreedyAddon.instance, 0, world, hand.ordinal(), 0, 0);
             }
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
 
         if (ToolHelper.isBroken(stack)) {
             return new ActionResult<>(EnumActionResult.FAIL, stack);
         }
 
-        initSlots(stack);
         validateSpellIndices(stack);
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
         List<SpellEntry> spells = buildSpellList(stack, MagicPageItem.SlotType.RIGHT);
         if (spells.isEmpty()) {
             return new ActionResult<>(EnumActionResult.FAIL, stack);
         }
 
+        NBTTagCompound tag = TagUtil.getTagSafe(stack);
         int index = tag.getInteger(TAG_CUR_RIGHT_INDEX);
         if (index < 0 || index >= spells.size()) index = 0;
         SpellEntry entry = spells.get(index);
 
         if (world.isRemote) {
-            // Client side: just indicate success if not on cooldown? But we need server to actually cast.
-            // For simplicity, return SUCCESS if can cast (client can't check cooldown? but we can approximate)
+            // 客户端：仅返回成功（实际施法由服务器处理）
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-        } else {
-            if (isSpellOnCooldown(world, entry)) {
-                return new ActionResult<>(EnumActionResult.FAIL, stack);
-            }
-            entry.pageData.setInteger(TAG_SPELL_INDEX, entry.internalIndex);
-            boolean result = entry.page.onRightClick(world, player, stack, entry.pageData);
-            if (result) {
-                setSpellCooldown(world, entry);
-                // Update list (similar to left click)
-                NBTTagList rightList = tag.getTagList(TAG_RIGHT_PAGES, 10);
-                tag.setTag(TAG_RIGHT_PAGES, rightList);
-                stack.setTagCompound(tag);
-                ToolHelper.damageTool(stack, DURABILITY_COST, player);
-                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-            }
+        }
+
+        // 服务器端施法
+        if (isSpellOnCooldown(world, entry)) {
             return new ActionResult<>(EnumActionResult.FAIL, stack);
         }
+
+        NBTTagCompound pageData = entry.pageStack.getTagCompound();
+        if (pageData == null) pageData = new NBTTagCompound();
+        pageData.setInteger("spellIndex", entry.internalIndex);
+
+        boolean result = entry.page.onRightClick(world, player, stack, pageData);
+        if (result) {
+            entry.pageStack.setTagCompound(pageData);
+            getInventory(stack).setStackInSlot(entry.slot, entry.pageStack);
+            setSpellCooldown(world, entry);
+            ToolHelper.damageTool(stack, DURABILITY_COST, player);
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+        }
+        return new ActionResult<>(EnumActionResult.FAIL, stack);
     }
 
-    /**
-     * Install a page into the book.
-     */
-    private ActionResult<ItemStack> handlePageInstallation(World world, EntityPlayer player, ItemStack toolStack, ItemStack pageStack) {
-        MagicPageItem page = (MagicPageItem) pageStack.getItem();
-        MagicPageItem.SlotType slotType = page.getSlotType();
-        BookPageStats stats = getCoreBookPageStats(toolStack);
-        int maxSlots = (slotType == MagicPageItem.SlotType.LEFT) ? (stats != null ? stats.leftSlots : 1) : (stats != null ? stats.rightSlots : 1);
-        if (maxSlots <= 0) {
-            if (!world.isRemote) {
-                player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_unavailable")));
-            }
-            return new ActionResult<>(EnumActionResult.FAIL, toolStack);
-        }
-
-        String targetListKey = (slotType == MagicPageItem.SlotType.LEFT) ? TAG_LEFT_PAGES : TAG_RIGHT_PAGES;
-        NBTTagCompound toolTag = TagUtil.getTagSafe(toolStack);
-        NBTTagList pageList = toolTag.getTagList(targetListKey, 10);
-
-        while (pageList.tagCount() < maxSlots) {
-            pageList.appendTag(new NBTTagCompound());
-        }
-
-        String newPageId = page.getPageIdentifier();
-        for (int i = 0; i < pageList.tagCount(); i++) {
-            NBTTagCompound existing = pageList.getCompoundTagAt(i);
-            if (!existing.isEmpty()) {
-                String existingId = existing.getString(TAG_PAGE_ID);
-                if (existingId.equals(newPageId)) {
-                    if (!world.isRemote) {
-                        player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.duplicate_page")));
-                    }
-                    return new ActionResult<>(EnumActionResult.FAIL, toolStack);
-                }
-            }
-        }
-
-        int targetIndex = -1;
-        for (int i = 0; i < pageList.tagCount(); i++) {
-            if (pageList.getCompoundTagAt(i).isEmpty()) {
-                targetIndex = i;
-                break;
-            }
-        }
-        if (targetIndex == -1) {
-            if (!world.isRemote) {
-                player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_full")));
-            }
-            return new ActionResult<>(EnumActionResult.FAIL, toolStack);
-        }
-
-        NBTTagCompound oldData = pageList.getCompoundTagAt(targetIndex);
-        if (!oldData.isEmpty() && !player.capabilities.isCreativeMode) {
-            String oldPageId = oldData.getString(TAG_PAGE_ID);
-            Item oldPageItem = Item.REGISTRY.getObject(new ResourceLocation(oldPageId));
-            if (oldPageItem != null) {
-                ItemStack oldStack = new ItemStack(oldPageItem);
-                if (!player.inventory.addItemStackToInventory(oldStack)) {
-                    player.dropItem(oldStack, false);
-                }
-            }
-        }
-
-        // 创建新页面数据
-        NBTTagCompound newData = new NBTTagCompound();
-        newData.setString(TAG_PAGE_ID, newPageId);
-        newData.setTag(TAG_COOLDOWNS, new NBTTagCompound());
-
-        pageList.set(targetIndex, newData);
-        toolTag.setTag(targetListKey, pageList);
-        toolStack.setTagCompound(toolTag);
-
-        if (!player.capabilities.isCreativeMode) {
-            pageStack.shrink(1);
-        }
-        if (!world.isRemote) {
-            player.sendMessage(new TextComponentString(I18n.format("page.installed", I18n.format(slotType == MagicPageItem.SlotType.LEFT ? "slot.left" : "slot.right"))));
-        }
-        return new ActionResult<>(EnumActionResult.SUCCESS, toolStack);
-    }
+    // ==================== 每 tick 更新 ====================
 
     @Override
     public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
         super.onUpdate(stack, world, entity, itemSlot, isSelected);
-        if (!(entity instanceof EntityPlayer)) return;
+        if (!(entity instanceof EntityPlayer) || !isSelected) return;
         EntityPlayer player = (EntityPlayer) entity;
-        if (!isSelected) return;
 
-        initSlots(stack);
-        validateSpellIndices(stack);
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
+        BookInventory inv = getInventory(stack);
         boolean dirty = false;
 
-        // Update left pages
-        NBTTagList leftList = tag.getTagList(TAG_LEFT_PAGES, 10);
-        for (int i = 0; i < leftList.tagCount(); i++) {
-            NBTTagCompound pageData = leftList.getCompoundTagAt(i);
-            if (pageData.isEmpty()) continue;
-            String pageId = pageData.getString(TAG_PAGE_ID);
-            Item item = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-            if (item instanceof MagicPageItem) {
-                NBTTagCompound copy = pageData.copy();
-                ((MagicPageItem) item).onHeldUpdate(world, player, stack, copy, MagicPageItem.SlotType.LEFT);
-                if (!copy.equals(pageData)) {
-                    leftList.set(i, copy);
-                    dirty = true;
-                }
-            }
-        }
+        for (int slot = 0; slot < inv.getSlots(); slot++) {
+            ItemStack pageStack = inv.getStackInSlot(slot);
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof MagicPageItem)) continue;
+            MagicPageItem page = (MagicPageItem) pageStack.getItem();
+            MagicPageItem.SlotType slotType = (slot < inv.getLeftSlots()) ? MagicPageItem.SlotType.LEFT : MagicPageItem.SlotType.RIGHT;
 
-        // Update right pages
-        NBTTagList rightList = tag.getTagList(TAG_RIGHT_PAGES, 10);
-        for (int i = 0; i < rightList.tagCount(); i++) {
-            NBTTagCompound pageData = rightList.getCompoundTagAt(i);
-            if (pageData.isEmpty()) continue;
-            String pageId = pageData.getString(TAG_PAGE_ID);
-            Item item = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-            if (item instanceof MagicPageItem) {
-                NBTTagCompound copy = pageData.copy();
-                ((MagicPageItem) item).onHeldUpdate(world, player, stack, copy, MagicPageItem.SlotType.RIGHT);
-                if (!copy.equals(pageData)) {
-                    rightList.set(i, copy);
-                    dirty = true;
-                }
+            NBTTagCompound oldData = pageStack.getTagCompound();
+            if (oldData == null) oldData = new NBTTagCompound();
+            NBTTagCompound newData = oldData.copy();
+
+            page.onHeldUpdate(world, player, stack, newData, slotType);
+            if (!newData.equals(oldData)) {
+                pageStack.setTagCompound(newData);
+                inv.setStackInSlot(slot, pageStack);
+                dirty = true;
             }
         }
 
         if (dirty) {
-            tag.setTag(TAG_LEFT_PAGES, leftList);
-            tag.setTag(TAG_RIGHT_PAGES, rightList);
-            stack.setTagCompound(tag);
+            // inv 已在 setStackInSlot 时自动保存，无需额外操作
         }
     }
 
-    /**
-     * Switch to next/previous spell in the given slot.
-     * This method should be called from an external key handler.
-     */
-    public void switchSpell(ItemStack stack, MagicPageItem.SlotType slot, boolean next) {
-        initSlots(stack);
-        validateSpellIndices(stack);
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
-        String key = (slot == MagicPageItem.SlotType.LEFT) ? TAG_CUR_LEFT_INDEX : TAG_CUR_RIGHT_INDEX;
-        int current = tag.getInteger(key);
-        List<SpellEntry> spells = buildSpellList(stack, slot);
-        if (spells.isEmpty()) {
-            tag.setInteger(key, 0);
-        } else {
-            int max = spells.size();
-            current = next ? (current + 1) % max : (current - 1 + max) % max;
-            tag.setInteger(key, current);
+    // ==================== 工具提示 ====================
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+
+        // 显示材料属性
+        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
+        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
+        if (materials.size() >= 4) {
+            Material pageMat = materials.get(2);
+            Material coreMat = materials.get(3);
+            BookPageStats pageStats = pageMat.getStats(BookPageStats.TYPE);
+            if (pageStats != null) {
+                for (String line : pageStats.getLocalizedInfo()) {
+                    tooltip.add(TextFormatting.GOLD + line);
+                }
+            }
+            MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
+            if (coreStats != null) {
+                for (String infoLine : coreStats.getLocalizedInfo()) {
+                    tooltip.add(TextFormatting.GOLD + infoLine);
+                }
+            }
         }
-        stack.setTagCompound(tag);
+
+        NBTTagCompound tag = TagUtil.getTagSafe(stack);
+
+        // 左槽法术
+        List<SpellEntry> leftSpells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
+        int curLeft = tag.getInteger(TAG_CUR_LEFT_INDEX);
+        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
+        if (leftSpells.isEmpty()) {
+            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
+        } else {
+            for (int i = 0; i < leftSpells.size(); i++) {
+                SpellEntry entry = leftSpells.get(i);
+                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.LEFT);
+                if (i == curLeft) {
+                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                } else {
+                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
+                }
+            }
+        }
+
+        // 右槽法术
+        List<SpellEntry> rightSpells = buildSpellList(stack, MagicPageItem.SlotType.RIGHT);
+        int curRight = tag.getInteger(TAG_CUR_RIGHT_INDEX);
+        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ":");
+        if (rightSpells.isEmpty()) {
+            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
+        } else {
+            for (int i = 0; i < rightSpells.size(); i++) {
+                SpellEntry entry = rightSpells.get(i);
+                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.RIGHT);
+                if (i == curRight) {
+                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                } else {
+                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
+                }
+            }
+        }
     }
+
+    // ==================== 冷却处理 ====================
+
+    private boolean isSpellOnCooldown(World world, SpellEntry entry) {
+        NBTTagCompound pageData = entry.pageStack.getTagCompound();
+        if (pageData == null) return false;
+        NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
+        long lastUsed = cooldowns.getLong(String.valueOf(entry.internalIndex));
+        int cooldown = entry.page.getSpellCooldownTicks(entry.internalIndex, entry.page.getSlotType());
+        if (cooldown <= 0) return false;
+        long now = world.getTotalWorldTime();
+        return now - lastUsed < cooldown;
+    }
+
+    private void setSpellCooldown(World world, SpellEntry entry) {
+        int cooldown = entry.page.getSpellCooldownTicks(entry.internalIndex, entry.page.getSlotType());
+        if (cooldown > 0) {
+            NBTTagCompound pageData = entry.pageStack.getTagCompound();
+            if (pageData == null) pageData = new NBTTagCompound();
+            NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
+            cooldowns.setLong(String.valueOf(entry.internalIndex), world.getTotalWorldTime());
+            pageData.setTag(TAG_COOLDOWNS, cooldowns);
+            entry.pageStack.setTagCompound(pageData);
+        }
+    }
+
+    // ==================== 工具属性 ====================
 
     @Override
     protected ToolNBT buildTagData(List<Material> materials) {
         HeadMaterialStats head = materials.get(0).getStatsOrUnknown(HeadMaterialStats.TYPE);
         HandleMaterialStats handle = materials.get(1).getStatsOrUnknown(HandleMaterialStats.TYPE);
-
         ToolNBT data = new ToolNBT();
         data.head(head);
         data.handle(handle);
@@ -464,88 +401,7 @@ public class MagicBook extends TinkerToolCore {
         return "magicbook";
     }
 
-    @SideOnly(Side.CLIENT)
-    @Override
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        super.addInformation(stack, worldIn, tooltip, flagIn);
-
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-
-        if (materials.size() >= 4) {
-            Material pageMat = materials.get(2);
-            Material coreMat = materials.get(3);
-            BookPageStats pageStats = pageMat.getStats(BookPageStats.TYPE);
-            if (pageStats != null) {
-                for (String line : pageStats.getLocalizedInfo()) {
-                    tooltip.add(TextFormatting.GOLD + line);
-                }
-            }
-            MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
-            if (coreStats != null) {
-                for (String infoLine : coreStats.getLocalizedInfo()) {
-                    tooltip.add(TextFormatting.GOLD + infoLine);
-                }
-            }
-        }
-
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
-
-        // Left slot spells
-        List<SpellEntry> leftSpells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
-        int curLeft = tag.getInteger(TAG_CUR_LEFT_INDEX);
-        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
-        if (leftSpells.isEmpty()) {
-            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
-        } else {
-            for (int i = 0; i < leftSpells.size(); i++) {
-                SpellEntry entry = leftSpells.get(i);
-                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.LEFT); // need new method
-                if (i == curLeft) {
-                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
-                } else {
-                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
-                }
-            }
-        }
-
-        // Right slot spells
-        List<SpellEntry> rightSpells = buildSpellList(stack, MagicPageItem.SlotType.RIGHT);
-        int curRight = tag.getInteger(TAG_CUR_RIGHT_INDEX);
-        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ":");
-        if (rightSpells.isEmpty()) {
-            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
-        } else {
-            for (int i = 0; i < rightSpells.size(); i++) {
-                SpellEntry entry = rightSpells.get(i);
-                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.RIGHT);
-                if (i == curRight) {
-                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
-                } else {
-                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
-                }
-            }
-        }
-    }
-
-    // Cooldown helpers
-    private boolean isSpellOnCooldown(World world, SpellEntry entry) {
-        NBTTagCompound cooldowns = entry.pageData.getCompoundTag(TAG_COOLDOWNS);
-        long lastUsed = cooldowns.getLong(String.valueOf(entry.internalIndex));
-        int cooldown = entry.page.getSpellCooldownTicks(entry.internalIndex, entry.page.getSlotType()); // need new method
-        if (cooldown <= 0) return false;
-        long now = world.getTotalWorldTime();
-        return now - lastUsed < cooldown;
-    }
-
-    private void setSpellCooldown(World world, SpellEntry entry) {
-        int cooldown = entry.page.getSpellCooldownTicks(entry.internalIndex, entry.page.getSlotType());
-        if (cooldown > 0) {
-            NBTTagCompound cooldowns = entry.pageData.getCompoundTag(TAG_COOLDOWNS);
-            cooldowns.setLong(String.valueOf(entry.internalIndex), world.getTotalWorldTime());
-            entry.pageData.setTag(TAG_COOLDOWNS, cooldowns);
-        }
-    }
+    // ==================== 辅助方法 ====================
 
     public static float getBeamRangeFromBook(ItemStack bookStack) {
         if (!(bookStack.getItem() instanceof MagicBook)) return MagicBook.BEAM_RANGE;
@@ -562,9 +418,7 @@ public class MagicBook extends TinkerToolCore {
         NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(toolStack);
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
         if (materials.size() < 3) return null;
-        // BookPageStats is from the third material (bookpage)
         Material pageMat = materials.get(2);
         return pageMat.getStats(BookPageStats.TYPE);
     }
-
 }

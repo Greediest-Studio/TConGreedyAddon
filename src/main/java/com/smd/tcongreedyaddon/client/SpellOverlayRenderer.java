@@ -2,6 +2,7 @@ package com.smd.tcongreedyaddon.client;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
+import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -13,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -60,11 +60,9 @@ public class SpellOverlayRenderer {
         ItemStack mainHand = player.getHeldItemMainhand();
         if (!(mainHand.getItem() instanceof MagicBook)) return;
 
-        NBTTagCompound tag = mainHand.getTagCompound();
-        if (tag == null) return;
-
-        List<SpellDisplayInfo> leftSpells = buildSpellList(tag, MagicPageItem.SlotType.LEFT);
-        List<SpellDisplayInfo> rightSpells = buildSpellList(tag, MagicPageItem.SlotType.RIGHT);
+        // 直接从主手物品构建法术列表
+        List<SpellDisplayInfo> leftSpells = buildSpellList(mainHand, MagicPageItem.SlotType.LEFT);
+        List<SpellDisplayInfo> rightSpells = buildSpellList(mainHand, MagicPageItem.SlotType.RIGHT);
 
         int leftRows = getRows(leftSpells.size());
         int rightRows = getRows(rightSpells.size());
@@ -74,6 +72,8 @@ public class SpellOverlayRenderer {
         int screenHeight = event.getResolution().getScaledHeight();
         int startY = screenHeight - Y_OFFSET - visibleRows * SLOT_SIZE;
 
+        NBTTagCompound tag = mainHand.getTagCompound();
+        if (tag == null) tag = new NBTTagCompound();
         int leftCurrentIndex = tag.getInteger(MagicBook.TAG_CUR_LEFT_INDEX);
         int rightCurrentIndex = tag.getInteger(MagicBook.TAG_CUR_RIGHT_INDEX);
         long worldTime = player.world.getTotalWorldTime();
@@ -110,25 +110,32 @@ public class SpellOverlayRenderer {
         GlStateManager.popMatrix();
     }
 
-    private List<SpellDisplayInfo> buildSpellList(NBTTagCompound toolTag, MagicPageItem.SlotType slotType) {
+    /**
+     * 从魔法书物品构建法术列表（客户端只读）
+     */
+    private List<SpellDisplayInfo> buildSpellList(ItemStack bookStack, MagicPageItem.SlotType slotType) {
         List<SpellDisplayInfo> list = new ArrayList<>();
-        String listKey = (slotType == MagicPageItem.SlotType.LEFT) ? MagicBook.TAG_LEFT_PAGES : MagicBook.TAG_RIGHT_PAGES;
-        NBTTagList pageList = toolTag.getTagList(listKey, 10);
+        if (!(bookStack.getItem() instanceof MagicBook)) return list;
 
-        for (int i = 0; i < pageList.tagCount(); i++) {
-            NBTTagCompound pageData = pageList.getCompoundTagAt(i);
-            if (pageData.isEmpty()) continue;
+        MagicBook book = (MagicBook) bookStack.getItem();
+        BookInventory inv = book.getInventory(bookStack); // 客户端可安全使用，仅读取数据
 
-            String pageId = pageData.getString(MagicBook.TAG_PAGE_ID);
-            Item item = Item.REGISTRY.getObject(new ResourceLocation(pageId));
-            if (!(item instanceof UnifiedMagicPage)) continue;
+        int start = (slotType == MagicPageItem.SlotType.LEFT) ? 0 : inv.getLeftSlots();
+        int end = (slotType == MagicPageItem.SlotType.LEFT) ? inv.getLeftSlots() : inv.getSlots();
 
-            UnifiedMagicPage page = (UnifiedMagicPage) item;
+        for (int slot = start; slot < end; slot++) {
+            ItemStack pageStack = inv.getStackInSlot(slot);
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) continue; // 只处理 UnifiedMagicPage 类型
+
+            UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
+            NBTTagCompound pageData = pageStack.getTagCompound();
+            if (pageData == null) pageData = new NBTTagCompound();
+
             List<String> names = page.getAllSpellNames(pageData);
             List<ResourceLocation> icons = page.getSpellIcons(pageData);
-            int spellCount = Math.min(names.size(), icons.size()); // 确保一致
-            for (int j = 0; j < spellCount; j++) {
-                list.add(new SpellDisplayInfo(names.get(j), icons.get(j), pageData, j, page));
+            int spellCount = Math.min(names.size(), icons.size());
+            for (int i = 0; i < spellCount; i++) {
+                list.add(new SpellDisplayInfo(names.get(i), icons.get(i), pageData, i, page));
             }
         }
         return list;

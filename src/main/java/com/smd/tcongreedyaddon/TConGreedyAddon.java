@@ -3,6 +3,7 @@ package com.smd.tcongreedyaddon;
 import com.smd.tcongreedyaddon.init.SoundsHandler;
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
 import com.smd.tcongreedyaddon.plugin.something.something;
+import com.smd.tcongreedyaddon.tools.magicbook.gui.MagicBookGuiHandler;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.AbyssalCraft.AbyssalCraft;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
@@ -19,6 +20,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import com.smd.tcongreedyaddon.proxy.CommonProxy;
 
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,6 +31,9 @@ public class TConGreedyAddon {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);
     public static Configuration config;
+
+    @Mod.Instance(Tags.MOD_ID)
+    public static TConGreedyAddon instance;
 
     @SidedProxy(serverSide = "com.smd.tcongreedyaddon.proxy.CommonProxy",
                 clientSide = "com.smd.tcongreedyaddon.proxy.ClientProxy")
@@ -60,6 +65,7 @@ public class TConGreedyAddon {
     public void init(FMLInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Initialization");
         ModuleManager.initActiveModules();
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, new MagicBookGuiHandler());
         proxy.initToolGuis();
         proxy.init();
     }
