@@ -147,8 +147,6 @@ public class MagicBook extends TinkerToolCore {
         stack.setTagCompound(tag);
     }
 
-    // ==================== 左键实体 ====================
-
     @Override
     public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
         validateSpellIndices(stack);
@@ -160,10 +158,8 @@ public class MagicBook extends TinkerToolCore {
         if (index < 0 || index >= spells.size()) index = 0;
         SpellEntry entry = spells.get(index);
 
-        // 冷却检查
         if (isSpellOnCooldown(player.world, entry)) return true;
 
-        // 获取页面NBT
         NBTTagCompound pageData = entry.pageStack.getTagCompound();
         if (pageData == null) pageData = new NBTTagCompound();
         pageData.setInteger("spellIndex", entry.internalIndex); // 有些页面可能需要
@@ -180,7 +176,7 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     public boolean onBlockStartBreak(ItemStack itemstack, BlockPos pos, EntityPlayer player) {
-        return false; // 魔法书不用于破块
+        return false;
     }
 
     @Nonnull
@@ -210,14 +206,12 @@ public class MagicBook extends TinkerToolCore {
         if (index < 0 || index >= spells.size()) index = 0;
         SpellEntry entry = spells.get(index);
 
-        if (world.isRemote) {
-            // 客户端：仅返回成功（实际施法由服务器处理）
-            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-        }
-
-        // 服务器端施法
         if (isSpellOnCooldown(world, entry)) {
             return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+
+        if (world.isRemote) {
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
 
         NBTTagCompound pageData = entry.pageStack.getTagCompound();
@@ -230,6 +224,7 @@ public class MagicBook extends TinkerToolCore {
             entry.pageStack.setTagCompound(pageData);
             getInventory(stack).setStackInSlot(entry.slot, entry.pageStack);
             ToolHelper.damageTool(stack, DURABILITY_COST, player);
+            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
         return new ActionResult<>(EnumActionResult.FAIL, stack);
     }
@@ -266,20 +261,13 @@ public class MagicBook extends TinkerToolCore {
                 dirty = true;
             }
         }
-
-        if (dirty) {
-            // inv 已在 setStackInSlot 时自动保存，无需额外操作
-        }
     }
-
-    // ==================== 工具提示 ====================
 
     @SideOnly(Side.CLIENT)
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
-        // 显示材料属性
         NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
         List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
         if (materials.size() >= 4) {
@@ -301,7 +289,6 @@ public class MagicBook extends TinkerToolCore {
 
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
 
-        // 左槽法术
         List<SpellEntry> leftSpells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
         int curLeft = tag.getInteger(TAG_CUR_LEFT_INDEX);
         tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");

@@ -4,6 +4,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
@@ -51,14 +52,25 @@ public class ContainerMagicBook extends Container {
 
         int playerInvStartY = 14 + customRows * SLOT_SPACING + 17;
 
-        // 玩家背包
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlotToContainer(new Slot(playerInv, col + row * 9 + 9, 8 + col * SLOT_SPACING, playerInvStartY + row * SLOT_SPACING));
+        for (int row = 0; row < 3; ++row) {
+            for (int col = 0; col < 9; ++col) {
+                int slotIndex = col + row * 9 + 9;
+                addSlotToContainer(new Slot(playerInv, slotIndex,
+                        8 + col * SLOT_SPACING, playerInvStartY + row * SLOT_SPACING));
             }
         }
-        for (int col = 0; col < 9; col++) {
-            addSlotToContainer(new Slot(playerInv, col, 8 + col * SLOT_SPACING, playerInvStartY + 58));
+
+        int currentItemSlot = playerInv.currentItem;
+        for (int col = 0; col < 9; ++col) {
+            int slotIndex = col;
+            ItemStack stackInSlot = playerInv.getStackInSlot(slotIndex);
+            if (col == currentItemSlot && ItemStack.areItemStacksEqual(bookStack, stackInSlot)) {
+                addSlotToContainer(new LockedSlot(playerInv, slotIndex,
+                        8 + col * SLOT_SPACING, playerInvStartY + 58));
+            } else {
+                addSlotToContainer(new Slot(playerInv, slotIndex,
+                        8 + col * SLOT_SPACING, playerInvStartY + 58));
+            }
         }
     }
 
@@ -66,11 +78,6 @@ public class ContainerMagicBook extends Container {
         return (slots + 1) / 2;
     }
 
-    /**
-     * Compute slot X for a given index within one side.
-     * Slots within the same side are adjacent (no gap between them).
-     * A partial last row (1 slot) is centered: center-9.
-     */
     private static int getSlotX(int slotIndex, int totalSlots, int sideCenter) {
         int row = slotIndex / 2;
         int col = slotIndex % 2;
@@ -108,5 +115,24 @@ public class ContainerMagicBook extends Container {
             }
         }
         return itemstack;
+    }
+
+    /**
+     * 锁定槽位：禁止玩家取出或放入物品，但允许容器内部更新。
+     */
+    private static class LockedSlot extends Slot {
+        public LockedSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
+            super(inventoryIn, index, xPosition, yPosition);
+        }
+
+        @Override
+        public boolean canTakeStack(EntityPlayer playerIn) {
+            return false;
+        }
+
+        @Override
+        public boolean isItemValid(ItemStack stack) {
+            return false;
+        }
     }
 }

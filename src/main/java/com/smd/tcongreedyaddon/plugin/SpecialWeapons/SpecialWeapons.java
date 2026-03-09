@@ -133,7 +133,7 @@ public class SpecialWeapons implements IModule {
         String id = material.getIdentifier();
         switch (id) {
             case "iron":
-                return new BookPageStats(6, 6, 5);
+                return new BookPageStats(10, 7, 5);
             case "diamond":
             case "manyullyn":
                 return new BookPageStats(2, 2, 5);
