@@ -39,31 +39,36 @@ public abstract class MagicPageItem extends Item {
         return 0;
     }
 
-    public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData) {
+    // 修改：增加 pageStack 参数
+    public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData, ItemStack pageStack) {
         return false;
     }
 
-    public boolean onRightClick(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound modifierData) {
+    // 修改：增加 pageStack 参数
+    public boolean onRightClick(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound modifierData, ItemStack pageStack) {
         return false;
     }
 
-    public void onHeldUpdate(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, SlotType slot) {
+    // 修改：增加 pageStack 参数
+    public void onHeldUpdate(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, SlotType slot, ItemStack pageStack) {
     }
 
-    public void nextSpell(ItemStack toolStack, NBTTagCompound modifierData) {}
+    // 修改：增加 pageStack 参数
+    public void nextSpell(ItemStack toolStack, NBTTagCompound modifierData, ItemStack pageStack) {}
 
     public int getInitialSpellIndex(ItemStack pageStack) {
         return 0;
     }
 
-    public String getCurrentSpellDisplayName(NBTTagCompound pageData) {
+    // 可选：增加 pageStack 参数
+    public String getCurrentSpellDisplayName(NBTTagCompound pageData, ItemStack pageStack) {
         return "Spell " + (pageData.getInteger("spellIndex") + 1);
     }
 
-    public List<String> getAllSpellNames(NBTTagCompound pageData) {
+    // 可选：增加 pageStack 参数
+    public List<String> getAllSpellNames(NBTTagCompound pageData, ItemStack pageStack) {
         return Collections.emptyList();
     }
-
 
     public abstract int getSpellCount(SlotType slotType);
 
