@@ -16,7 +16,7 @@ public class ContainerMagicBook extends Container {
         this.inventory = ((MagicBook) bookStack.getItem()).getInventory(bookStack);
         this.leftSlots = inventory.getLeftSlots();
 
-// 左槽
+        // 左槽
         for (int i = 0; i < leftSlots; i++) {
             addSlotToContainer(new SlotItemHandler(inventory, i, 34 + (i % 2) * 18, 18 + (i / 2) * 18) {
                 @Override
@@ -25,7 +25,7 @@ public class ContainerMagicBook extends Container {
                 }
             });
         }
-// 右槽
+        // 右槽
         for (int i = 0; i < inventory.getRightSlots(); i++) {
             int idx = leftSlots + i;
             addSlotToContainer(new SlotItemHandler(inventory, idx, 106 + (i % 2) * 18, 18 + (i / 2) * 18) {
@@ -36,7 +36,7 @@ public class ContainerMagicBook extends Container {
             });
         }
 
-        // 玩家背包 (0-8 热键栏, 9-35 背包)
+        // 玩家背包
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlotToContainer(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
@@ -62,13 +62,10 @@ public class ContainerMagicBook extends Container {
 
             int totalCustomSlots = leftSlots + inventory.getRightSlots();
 
-            // 从自定义槽位移到玩家背包
             if (index < totalCustomSlots) {
                 if (!mergeItemStack(stack, totalCustomSlots, inventorySlots.size(), true))
                     return ItemStack.EMPTY;
-            }
-            // 从玩家背包移到自定义槽位
-            else {
+            } else {
                 if (!mergeItemStack(stack, 0, totalCustomSlots, false))
                     return ItemStack.EMPTY;
             }

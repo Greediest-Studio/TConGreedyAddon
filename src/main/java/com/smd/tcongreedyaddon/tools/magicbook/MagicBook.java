@@ -21,6 +21,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import slimeknights.tconstruct.library.materials.*;
@@ -58,9 +59,6 @@ public class MagicBook extends TinkerToolCore {
         setTranslationKey("magicbook").setRegistryName("magicbook");
     }
 
-    /**
-     * 获取或创建该魔法书的容器
-     */
     public BookInventory getInventory(ItemStack stack) {
         BookPageStats stats = getCoreBookPageStats(stack);
         int left = (stats != null) ? stats.leftSlots : 1;
@@ -68,7 +66,6 @@ public class MagicBook extends TinkerToolCore {
         return new BookInventory(stack, left, right);
     }
 
-    // ==================== 法术列表相关 ====================
 
     /** 表示一个可用的法术条目 */
     private static class SpellEntry {
@@ -173,10 +170,9 @@ public class MagicBook extends TinkerToolCore {
 
         boolean result = entry.page.onLeftClick(stack, player, entity, pageData);
         if (result) {
-            // 保存页面NBT
-            entry.pageStack.setTagCompound(pageData);
-            getInventory(stack).setStackInSlot(entry.slot, entry.pageStack); // 触发容器保存
             setSpellCooldown(player.world, entry);
+            entry.pageStack.setTagCompound(pageData);
+            getInventory(stack).setStackInSlot(entry.slot, entry.pageStack);
             ToolHelper.damageTool(stack, DURABILITY_COST, player);
         }
         return result;
@@ -187,14 +183,11 @@ public class MagicBook extends TinkerToolCore {
         return false; // 魔法书不用于破块
     }
 
-    // ==================== 右键空气/方块 ====================
-
     @Nonnull
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
 
-        // 潜行右键打开GUI
         if (player.isSneaking()) {
             if (!world.isRemote) {
                 player.openGui(TConGreedyAddon.instance, 0, world, hand.ordinal(), 0, 0);
@@ -233,11 +226,10 @@ public class MagicBook extends TinkerToolCore {
 
         boolean result = entry.page.onRightClick(world, player, stack, pageData);
         if (result) {
+            setSpellCooldown(world, entry);
             entry.pageStack.setTagCompound(pageData);
             getInventory(stack).setStackInSlot(entry.slot, entry.pageStack);
-            setSpellCooldown(world, entry);
             ToolHelper.damageTool(stack, DURABILITY_COST, player);
-            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
         return new ActionResult<>(EnumActionResult.FAIL, stack);
     }
@@ -249,6 +241,10 @@ public class MagicBook extends TinkerToolCore {
         super.onUpdate(stack, world, entity, itemSlot, isSelected);
         if (!(entity instanceof EntityPlayer) || !isSelected) return;
         EntityPlayer player = (EntityPlayer) entity;
+
+        if (!world.isRemote) {
+            cleanupExcessPages(stack, player);
+        }
 
         BookInventory inv = getInventory(stack);
         boolean dirty = false;
@@ -420,5 +416,92 @@ public class MagicBook extends TinkerToolCore {
         if (materials.size() < 3) return null;
         Material pageMat = materials.get(2);
         return pageMat.getStats(BookPageStats.TYPE);
+    }
+
+    public int[] getSlotCounts(ItemStack stack) {
+        BookPageStats stats = getCoreBookPageStats(stack);
+        int left = (stats != null) ? stats.leftSlots : 1;
+        int right = (stats != null) ? stats.rightSlots : 1;
+        return new int[]{left, right};
+    }
+
+    private void cleanupExcessPages(ItemStack stack, @Nullable EntityPlayer player) {
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null || !tag.hasKey("BookInventory", 10)) return;
+
+        // 获取当前容量
+        BookPageStats stats = getCoreBookPageStats(stack);
+        int leftSlots = (stats != null) ? stats.leftSlots : 1;
+        int rightSlots = (stats != null) ? stats.rightSlots : 1;
+
+        // 检查容量是否变化
+        int lastLeft = tag.getInteger("LastLeftSlots");
+        int lastRight = tag.getInteger("LastRightSlots");
+        if (lastLeft == leftSlots && lastRight == rightSlots) return;
+
+        NBTTagCompound invTag = tag.getCompoundTag("BookInventory");
+        List<ItemStack> excess = new ArrayList<>();
+
+        // 处理左槽
+        if (invTag.hasKey("Left", 10)) {
+            ItemStackHandler tempLeft = new ItemStackHandler(leftSlots);
+            tempLeft.deserializeNBT(invTag.getCompoundTag("Left"));
+            for (int i = leftSlots; i < tempLeft.getSlots(); i++) {
+                ItemStack s = tempLeft.getStackInSlot(i);
+                if (!s.isEmpty()) excess.add(s);
+            }
+            // 截断左槽数据
+            NBTTagList leftItems = new NBTTagList();
+            for (int i = 0; i < Math.min(tempLeft.getSlots(), leftSlots); i++) {
+                ItemStack s = tempLeft.getStackInSlot(i);
+                if (!s.isEmpty()) {
+                    NBTTagCompound slotTag = new NBTTagCompound();
+                    slotTag.setInteger("Slot", i);
+                    s.writeToNBT(slotTag);
+                    leftItems.appendTag(slotTag);
+                }
+            }
+            NBTTagCompound newLeft = new NBTTagCompound();
+            newLeft.setTag("Items", leftItems);
+            newLeft.setInteger("Size", leftSlots);
+            invTag.setTag("Left", newLeft);
+        }
+
+        // 处理右槽
+        if (invTag.hasKey("Right", 10)) {
+            ItemStackHandler tempRight = new ItemStackHandler(rightSlots);
+            tempRight.deserializeNBT(invTag.getCompoundTag("Right"));
+            for (int i = rightSlots; i < tempRight.getSlots(); i++) {
+                ItemStack s = tempRight.getStackInSlot(i);
+                if (!s.isEmpty()) excess.add(s);
+            }
+            NBTTagList rightItems = new NBTTagList();
+            for (int i = 0; i < Math.min(tempRight.getSlots(), rightSlots); i++) {
+                ItemStack s = tempRight.getStackInSlot(i);
+                if (!s.isEmpty()) {
+                    NBTTagCompound slotTag = new NBTTagCompound();
+                    slotTag.setInteger("Slot", i);
+                    s.writeToNBT(slotTag);
+                    rightItems.appendTag(slotTag);
+                }
+            }
+            NBTTagCompound newRight = new NBTTagCompound();
+            newRight.setTag("Items", rightItems);
+            newRight.setInteger("Size", rightSlots);
+            invTag.setTag("Right", newRight);
+        }
+
+        // 更新标记
+        tag.setInteger("LastLeftSlots", leftSlots);
+        tag.setInteger("LastRightSlots", rightSlots);
+        tag.setTag("BookInventory", invTag);
+        stack.setTagCompound(tag);
+
+        // 弹出多余物品
+        if (!excess.isEmpty() && player != null && !player.world.isRemote) {
+            for (ItemStack s : excess) {
+                player.dropItem(s, false, true);
+            }
+        }
     }
 }
