@@ -15,19 +15,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import slimeknights.tconstruct.library.TinkerRegistry;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class UnifiedMagicPage extends MagicPageItem {
 
-    // 内部类，用于事件映射存储法术及其原始索引
     private static class SpellInfo {
         final ISpell spell;
-        final int rawIndex; // 在 leftSpells 或 rightSpells 中的原始索引
+        final int rawIndex;
         SpellInfo(ISpell spell, int rawIndex) {
             this.spell = spell;
             this.rawIndex = rawIndex;
@@ -35,19 +29,34 @@ public class UnifiedMagicPage extends MagicPageItem {
     }
 
     private final SlotType slotType;
-    private final List<ISpell> leftSpells = new ArrayList<>();
-    private final List<ISpell> rightSpells = new ArrayList<>();
+    private final List<ISpell> leftSpells;
+    private final List<ISpell> rightSpells;
+    private final List<ISpell> leftSelectable;
+    private final List<ISpell> rightSelectable;
     // 事件映射：事件类 -> 法术信息列表
     private final Map<Class<? extends Event>, List<SpellInfo>> eventSpellMap = new HashMap<>();
     private String displayNameKey = "unified.page.default";
 
     protected UnifiedMagicPage(Builder builder) {
         this.slotType = builder.slotType;
-        this.leftSpells.addAll(builder.leftSpells);
-        this.rightSpells.addAll(builder.rightSpells);
+
+        this.leftSpells = Collections.unmodifiableList(new ArrayList<>(builder.leftSpells));
+        this.rightSpells = Collections.unmodifiableList(new ArrayList<>(builder.rightSpells));
+
+        List<ISpell> leftSel = new ArrayList<>();
+        for (ISpell s : leftSpells) {
+            if (s.isSelectable()) leftSel.add(s);
+        }
+        this.leftSelectable = Collections.unmodifiableList(leftSel);
+
+        List<ISpell> rightSel = new ArrayList<>();
+        for (ISpell s : rightSpells) {
+            if (s.isSelectable()) rightSel.add(s);
+        }
+        this.rightSelectable = Collections.unmodifiableList(rightSel);
+
         if (builder.displayNameKey != null) this.displayNameKey = builder.displayNameKey;
 
-        // 构建事件映射
         buildEventSpellMap(leftSpells);
         buildEventSpellMap(rightSpells);
 
@@ -73,11 +82,10 @@ public class UnifiedMagicPage extends MagicPageItem {
     // ==================== 索引管理 ====================
 
     /**
-     * 获取指定槽位中可切换的法术列表（isSelectable() == true）
+     * 获取指定槽位中可切换的法术列表
      */
     private List<ISpell> getSelectableSpells(SlotType slot) {
-        List<ISpell> list = slot == SlotType.LEFT ? leftSpells : rightSpells;
-        return list.stream().filter(ISpell::isSelectable).collect(Collectors.toList());
+        return slot == SlotType.LEFT ? leftSelectable : rightSelectable;
     }
 
     private boolean isSpellOnCooldownRaw(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack, ISpell spell) {
@@ -253,9 +261,11 @@ public class UnifiedMagicPage extends MagicPageItem {
     @Override
     public List<String> getAllSpellNames(NBTTagCompound pageData, ItemStack pageStack) {
         SlotType slot = getSlotType();
-        return getSelectableSpells(slot).stream()
-                .map(s -> I18n.translateToLocal(s.getNameKey()))
-                .collect(Collectors.toList());
+        List<String> names = new ArrayList<>();
+        for (ISpell spell : getSelectableSpells(slot)) {
+            names.add(I18n.translateToLocal(spell.getNameKey()));
+        }
+        return names;
     }
 
     // ==================== 工具提示 ====================
@@ -264,8 +274,7 @@ public class UnifiedMagicPage extends MagicPageItem {
     public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
-        // 左槽法术（可切换）
-        List<ISpell> leftSelectable = getSelectableSpells(SlotType.LEFT);
+        // 左槽可切换法术
         if (!leftSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.left_spells") + ":");
             for (ISpell spell : leftSelectable) {
@@ -273,8 +282,7 @@ public class UnifiedMagicPage extends MagicPageItem {
             }
         }
 
-        // 右槽法术（可切换）
-        List<ISpell> rightSelectable = getSelectableSpells(SlotType.RIGHT);
+        // 右槽可切换法术
         if (!rightSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.right_spells") + ":");
             for (ISpell spell : rightSelectable) {
@@ -282,9 +290,11 @@ public class UnifiedMagicPage extends MagicPageItem {
             }
         }
 
-        // 不可切换的法术（被动/事件）
-        List<ISpell> leftAll = leftSpells;
-        List<ISpell> leftNonSelectable = leftAll.stream().filter(s -> !s.isSelectable()).collect(Collectors.toList());
+        // 左槽不可切换法术（被动）
+        List<ISpell> leftNonSelectable = new ArrayList<>();
+        for (ISpell spell : leftSpells) {
+            if (!spell.isSelectable()) leftNonSelectable.add(spell);
+        }
         if (!leftNonSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.left_passive") + ":");
             for (ISpell s : leftNonSelectable) {
@@ -292,8 +302,11 @@ public class UnifiedMagicPage extends MagicPageItem {
             }
         }
 
-        List<ISpell> rightAll = rightSpells;
-        List<ISpell> rightNonSelectable = rightAll.stream().filter(s -> !s.isSelectable()).collect(Collectors.toList());
+        // 右槽不可切换法术（被动）
+        List<ISpell> rightNonSelectable = new ArrayList<>();
+        for (ISpell spell : rightSpells) {
+            if (!spell.isSelectable()) rightNonSelectable.add(spell);
+        }
         if (!rightNonSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.right_passive") + ":");
             for (ISpell s : rightNonSelectable) {
@@ -304,9 +317,11 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     public List<ResourceLocation> getSpellIcons(NBTTagCompound pageData, ItemStack pageStack) {
         SlotType slot = getSlotType();
-        return getSelectableSpells(slot).stream()
-                .map(ISpell::getIcon)
-                .collect(Collectors.toList());
+        List<ResourceLocation> icons = new ArrayList<>();
+        for (ISpell spell : getSelectableSpells(slot)) {
+            icons.add(spell.getIcon());
+        }
+        return icons;
     }
 
     // ==================== 建造者 ====================

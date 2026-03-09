@@ -31,6 +31,7 @@ import slimeknights.tconstruct.library.utils.ToolHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,6 +39,8 @@ public class MagicBook extends TinkerToolCore {
 
     public static final float BEAM_RANGE = 10.0F;
     public static final int DURABILITY_COST = 1;
+
+    private final Map<Integer, WeakReference<BookInventory>> inventoryCache = new WeakHashMap<>();
 
     private static final Set<UUID> EXECUTING_PLAYERS = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -58,10 +61,20 @@ public class MagicBook extends TinkerToolCore {
     }
 
     public BookInventory getInventory(ItemStack stack) {
+        int key = stack.hashCode();
+        WeakReference<BookInventory> ref = inventoryCache.get(key);
+        BookInventory inv = (ref != null) ? ref.get() : null;
+
+        if (inv != null && inv.getBookStack() == stack) {
+            return inv;
+        }
+
         BookPageStats stats = getCoreBookPageStats(stack);
         int left = (stats != null) ? stats.leftSlots : 1;
         int right = (stats != null) ? stats.rightSlots : 1;
-        return new BookInventory(stack, left, right);
+        inv = new BookInventory(stack, left, right);
+        inventoryCache.put(key, new WeakReference<>(inv));
+        return inv;
     }
 
 

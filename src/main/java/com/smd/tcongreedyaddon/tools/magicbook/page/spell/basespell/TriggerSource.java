@@ -2,10 +2,6 @@ package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
 import net.minecraftforge.fml.common.eventhandler.Event;
 
-/**
- * 触发源，表示法术被调用的时机。
- * 可以是预定义的类型，也可以是具体的 Forge 事件。
- */
 public class TriggerSource {
     public enum Type {
         LEFT_CLICK,
@@ -13,8 +9,12 @@ public class TriggerSource {
         TICK
     }
 
+    private static final TriggerSource LEFT_CLICK = new TriggerSource(Type.LEFT_CLICK, null);
+    private static final TriggerSource RIGHT_CLICK = new TriggerSource(Type.RIGHT_CLICK, null);
+    private static final TriggerSource TICK = new TriggerSource(Type.TICK, null);
+
     private final Type type;
-    private final Event event; // 当 type == null 时，表示这是一个自定义事件
+    private final Event event;
 
     private TriggerSource(Type type, Event event) {
         this.type = type;
@@ -22,15 +22,15 @@ public class TriggerSource {
     }
 
     public static TriggerSource leftClick() {
-        return new TriggerSource(Type.LEFT_CLICK, null);
+        return LEFT_CLICK;
     }
 
     public static TriggerSource rightClick() {
-        return new TriggerSource(Type.RIGHT_CLICK, null);
+        return RIGHT_CLICK;
     }
 
     public static TriggerSource tick() {
-        return new TriggerSource(Type.TICK, null);
+        return TICK;
     }
 
     public static TriggerSource event(Event event) {

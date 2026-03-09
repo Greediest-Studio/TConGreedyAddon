@@ -166,4 +166,8 @@ public class BookInventory implements IItemHandlerModifiable {
         }
         return false;
     }
+
+    public ItemStack getBookStack() {
+        return bookStack;
+    }
 }
