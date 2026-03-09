@@ -9,6 +9,7 @@ public class PassiveSpell implements IPassiveSpell {
     private final HeldUpdateAction action;
     private final int interval;
     private final boolean runOnClient;
+    private final String nameKey;
 
     @FunctionalInterface
     public interface HeldUpdateAction {
@@ -19,6 +20,7 @@ public class PassiveSpell implements IPassiveSpell {
         this.action = builder.action;
         this.interval = builder.interval;
         this.runOnClient = builder.runOnClient;
+        this.nameKey = builder.nameKey;
     }
 
     @Override
@@ -32,14 +34,22 @@ public class PassiveSpell implements IPassiveSpell {
     @Override
     public boolean runOnClient() { return runOnClient; }
 
+    @Override
+    public String getNameKey() {
+        return nameKey;
+    }
+
     public static class Builder {
         private HeldUpdateAction action;
         private int interval = 0;
         private boolean runOnClient = false;
+        private String nameKey = "spell.unknown";
 
         public Builder action(HeldUpdateAction action) { this.action = action; return this; }
         public Builder interval(int ticks) { this.interval = ticks; return this; }
         public Builder runOnClient(boolean runOnClient) { this.runOnClient = runOnClient; return this; }
+        public Builder name(String nameKey) { this.nameKey = nameKey; return this; }
+
         public PassiveSpell build() {
             if (action == null) throw new IllegalStateException("Passive spell must have an action");
             return new PassiveSpell(this);

@@ -93,6 +93,7 @@ public class DefaultAttackPage extends UnifiedMagicPage {
                         .build())
 
                 .addPassive(new PassiveSpell.Builder()
+                        .name("spell.6666")
                         .interval(40)
                         .action((world, player, toolStack, pageData) -> {
                             if (!world.isRemote) {

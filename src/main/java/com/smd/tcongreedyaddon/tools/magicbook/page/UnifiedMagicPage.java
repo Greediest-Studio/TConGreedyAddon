@@ -4,6 +4,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ILeftClickSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IPassiveSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IRightClickSpell;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -127,6 +128,35 @@ public class UnifiedMagicPage extends MagicPageItem {
     }
 
     @Override
+    public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+
+        // 左键法术
+        if (!leftSpells.isEmpty()) {
+            tooltip.add(I18n.translateToLocal("tooltip.left_spells") + ":");
+            for (ILeftClickSpell spell : leftSpells) {
+                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
+            }
+        }
+
+        // 右键法术
+        if (!rightSpells.isEmpty()) {
+            tooltip.add(I18n.translateToLocal("tooltip.right_spells") + ":");
+            for (IRightClickSpell spell : rightSpells) {
+                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
+            }
+        }
+
+        // 被动法术
+        if (!passives.isEmpty()) {
+            tooltip.add(I18n.translateToLocal("tooltip.passive_spells") + ":");
+            for (IPassiveSpell spell : passives) {
+                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
+            }
+        }
+    }
+
+    @Override
     public List<String> getAllSpellNames(NBTTagCompound pageData) {
         List<?> spells = slotType == SlotType.LEFT ? leftSpells : rightSpells;
         List<String> names = new ArrayList<>();
@@ -177,7 +207,6 @@ public class UnifiedMagicPage extends MagicPageItem {
         }
 
         public UnifiedMagicPage build() {
-            // 验证：左槽不能有右键法术，右槽不能有左键法术
             if (slotType == SlotType.LEFT && !rightSpells.isEmpty()) {
                 throw new IllegalStateException("Left page cannot have right spells");
             }

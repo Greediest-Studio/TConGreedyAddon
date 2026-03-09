@@ -7,6 +7,7 @@ import net.minecraft.world.World;
 
 public interface IPassiveSpell {
     void onHeldUpdate(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData);
-    int getInterval(); // 0表示每tick
+    int getInterval();
     boolean runOnClient();
+    String getNameKey();
 }

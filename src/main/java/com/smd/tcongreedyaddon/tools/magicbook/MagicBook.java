@@ -325,29 +325,12 @@ public class MagicBook extends TinkerToolCore {
         }
     }
 
-    // ==================== 冷却处理 ====================
-
     private boolean isSpellOnCooldown(World world, SpellEntry entry) {
-        NBTTagCompound pageData = entry.pageStack.getTagCompound();
-        if (pageData == null) return false;
-        NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
-        long lastUsed = cooldowns.getLong(String.valueOf(entry.internalIndex));
-        int cooldown = entry.page.getSpellCooldownTicks(entry.internalIndex, entry.page.getSlotType());
-        if (cooldown <= 0) return false;
-        long now = world.getTotalWorldTime();
-        return now - lastUsed < cooldown;
+        return entry.page.isSpellOnCooldown(entry.pageStack, entry.internalIndex, world);
     }
 
     private void setSpellCooldown(World world, SpellEntry entry) {
-        int cooldown = entry.page.getSpellCooldownTicks(entry.internalIndex, entry.page.getSlotType());
-        if (cooldown > 0) {
-            NBTTagCompound pageData = entry.pageStack.getTagCompound();
-            if (pageData == null) pageData = new NBTTagCompound();
-            NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
-            cooldowns.setLong(String.valueOf(entry.internalIndex), world.getTotalWorldTime());
-            pageData.setTag(TAG_COOLDOWNS, cooldowns);
-            entry.pageStack.setTagCompound(pageData);
-        }
+        entry.page.setSpellCooldown(entry.pageStack, entry.internalIndex, world);
     }
 
     // ==================== 工具属性 ====================
