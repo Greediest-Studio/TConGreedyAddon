@@ -14,17 +14,18 @@ public class TraitSoundEffect extends AbstractTrait {
         super("soundeffects", 0xffffff);
     }
 
+    SoundEvent[] sounds = {
+            SoundsHandler.SUCAI_1,
+            SoundsHandler.SUCAI_2,
+            SoundsHandler.SUCAI_3,
+            SoundsHandler.SUCAI_4,
+            SoundsHandler.SUCAI_5,
+            SoundsHandler.SUCAI_6,
+            SoundsHandler.SUCAI_7
+    };
+
     @Override
     public void onHit(ItemStack tool, EntityLivingBase player, EntityLivingBase target, float damage, boolean isCritical) {
-        SoundEvent[] sounds = {
-                SoundsHandler.SUCAI_1,
-                SoundsHandler.SUCAI_2,
-                SoundsHandler.SUCAI_3,
-                SoundsHandler.SUCAI_4,
-                SoundsHandler.SUCAI_5,
-                SoundsHandler.SUCAI_6,
-                SoundsHandler.SUCAI_7
-        };
         SoundEvent randomSound = sounds[target.world.rand.nextInt(sounds.length)];
         target.world.playSound(
                 null,
@@ -37,15 +38,6 @@ public class TraitSoundEffect extends AbstractTrait {
 
     @Override
     public void onPlayerHurt(ItemStack tool, EntityPlayer player, EntityLivingBase attacker, LivingHurtEvent event) {
-        SoundEvent[] sounds = {
-                SoundsHandler.SUCAI_1,
-                SoundsHandler.SUCAI_2,
-                SoundsHandler.SUCAI_3,
-                SoundsHandler.SUCAI_4,
-                SoundsHandler.SUCAI_5,
-                SoundsHandler.SUCAI_6,
-                SoundsHandler.SUCAI_7
-        };
         SoundEvent randomSound = sounds[attacker.world.rand.nextInt(sounds.length)];
         attacker.world.playSound(
                 null,

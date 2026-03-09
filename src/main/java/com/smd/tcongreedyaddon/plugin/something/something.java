@@ -21,6 +21,7 @@ public class something implements IModule {
     public static final AbstractTrait autobow = new TraitAutoBow();
     public static final AbstractTrait overcharge = new TraitOvercharge();
     public static final AbstractTrait deathboost = new TraitDeathBoost();
+    public static final AbstractTrait speed = new TraitSpeed();
 
     public static String baiduAppId = "";
     public static String baiduAppKey = "";
@@ -65,6 +66,7 @@ public class something implements IModule {
         TinkerRegistry.addTrait(autobow);
         TinkerRegistry.addTrait(overcharge);
         TinkerRegistry.addTrait(deathboost);
+        TinkerRegistry.addTrait(speed);
     }
 
     @Override
