@@ -9,16 +9,27 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class ContainerMagicBook extends Container {
+    private static final int LEFT_CENTER_X = 52;
+    private static final int RIGHT_CENTER_X = 124;
+    private static final int CUSTOM_SLOT_START_Y = 18;
+    private static final int SLOT_SPACING = 18;
+
     private final BookInventory inventory;
     private final int leftSlots;
+    private final int rightSlots;
+    private final int customRows;
 
     public ContainerMagicBook(InventoryPlayer playerInv, ItemStack bookStack) {
         this.inventory = ((MagicBook) bookStack.getItem()).getInventory(bookStack);
         this.leftSlots = inventory.getLeftSlots();
+        this.rightSlots = inventory.getRightSlots();
+        this.customRows = Math.max(getRows(leftSlots), getRows(rightSlots));
 
         // 左槽
         for (int i = 0; i < leftSlots; i++) {
-            addSlotToContainer(new SlotItemHandler(inventory, i, 34 + (i % 2) * 18, 18 + (i / 2) * 18) {
+            final int slotX = getSlotX(i, leftSlots, LEFT_CENTER_X);
+            final int slotY = CUSTOM_SLOT_START_Y + (i / 2) * SLOT_SPACING;
+            addSlotToContainer(new SlotItemHandler(inventory, i, slotX, slotY) {
                 @Override
                 public boolean isItemValid(ItemStack stack) {
                     return getItemHandler().isItemValid(getSlotIndex(), stack);
@@ -28,7 +39,9 @@ public class ContainerMagicBook extends Container {
         // 右槽
         for (int i = 0; i < inventory.getRightSlots(); i++) {
             int idx = leftSlots + i;
-            addSlotToContainer(new SlotItemHandler(inventory, idx, 106 + (i % 2) * 18, 18 + (i / 2) * 18) {
+            final int slotX = getSlotX(i, rightSlots, RIGHT_CENTER_X);
+            final int slotY = CUSTOM_SLOT_START_Y + (i / 2) * SLOT_SPACING;
+            addSlotToContainer(new SlotItemHandler(inventory, idx, slotX, slotY) {
                 @Override
                 public boolean isItemValid(ItemStack stack) {
                     return getItemHandler().isItemValid(getSlotIndex(), stack);
@@ -36,15 +49,33 @@ public class ContainerMagicBook extends Container {
             });
         }
 
+        int playerInvStartY = 14 + customRows * SLOT_SPACING + 17;
+
         // 玩家背包
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlotToContainer(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+                addSlotToContainer(new Slot(playerInv, col + row * 9 + 9, 8 + col * SLOT_SPACING, playerInvStartY + row * SLOT_SPACING));
             }
         }
         for (int col = 0; col < 9; col++) {
-            addSlotToContainer(new Slot(playerInv, col, 8 + col * 18, 142));
+            addSlotToContainer(new Slot(playerInv, col, 8 + col * SLOT_SPACING, playerInvStartY + 58));
         }
+    }
+
+    private static int getRows(int slots) {
+        return (slots + 1) / 2;
+    }
+
+    /**
+     * Compute slot X for a given index within one side.
+     * Slots within the same side are adjacent (no gap between them).
+     * A partial last row (1 slot) is centered: center-9.
+     */
+    private static int getSlotX(int slotIndex, int totalSlots, int sideCenter) {
+        int row = slotIndex / 2;
+        int col = slotIndex % 2;
+        int slotsInRow = Math.min(2, totalSlots - row * 2);
+        return (slotsInRow == 2) ? sideCenter - 18 + col * 18 : sideCenter - 9;
     }
 
     @Override
@@ -60,7 +91,7 @@ public class ContainerMagicBook extends Container {
             ItemStack stack = slot.getStack();
             itemstack = stack.copy();
 
-            int totalCustomSlots = leftSlots + inventory.getRightSlots();
+            int totalCustomSlots = leftSlots + rightSlots;
 
             if (index < totalCustomSlots) {
                 if (!mergeItemStack(stack, totalCustomSlots, inventorySlots.size(), true))
