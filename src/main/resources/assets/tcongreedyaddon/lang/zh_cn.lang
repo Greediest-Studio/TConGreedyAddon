@@ -90,4 +90,6 @@ page.installed=已安装至%s书签槽
 slot.left=左
 slot.right=右
 
+message.duplicate_page=你不能安装两个相同类型的书签！
+
 

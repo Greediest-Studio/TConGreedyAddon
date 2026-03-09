@@ -282,12 +282,12 @@ public class MagicBook extends TinkerToolCore {
     private ActionResult<ItemStack> handlePageInstallation(World world, EntityPlayer player, ItemStack toolStack, ItemStack pageStack) {
         MagicPageItem page = (MagicPageItem) pageStack.getItem();
         MagicPageItem.SlotType slotType = page.getSlotType();
-
-        // Check if slot type is available (based on material stats)
         BookPageStats stats = getCoreBookPageStats(toolStack);
         int maxSlots = (slotType == MagicPageItem.SlotType.LEFT) ? (stats != null ? stats.leftSlots : 1) : (stats != null ? stats.rightSlots : 1);
         if (maxSlots <= 0) {
-            player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_unavailable")));
+            if (!world.isRemote) {
+                player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_unavailable")));
+            }
             return new ActionResult<>(EnumActionResult.FAIL, toolStack);
         }
 
@@ -295,12 +295,24 @@ public class MagicBook extends TinkerToolCore {
         NBTTagCompound toolTag = TagUtil.getTagSafe(toolStack);
         NBTTagList pageList = toolTag.getTagList(targetListKey, 10);
 
-        // Ensure list length matches maxSlots (should have been done by initSlots, but just in case)
         while (pageList.tagCount() < maxSlots) {
             pageList.appendTag(new NBTTagCompound());
         }
 
-        // Find first empty slot
+        String newPageId = page.getPageIdentifier();
+        for (int i = 0; i < pageList.tagCount(); i++) {
+            NBTTagCompound existing = pageList.getCompoundTagAt(i);
+            if (!existing.isEmpty()) {
+                String existingId = existing.getString(TAG_PAGE_ID);
+                if (existingId.equals(newPageId)) {
+                    if (!world.isRemote) {
+                        player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.duplicate_page")));
+                    }
+                    return new ActionResult<>(EnumActionResult.FAIL, toolStack);
+                }
+            }
+        }
+
         int targetIndex = -1;
         for (int i = 0; i < pageList.tagCount(); i++) {
             if (pageList.getCompoundTagAt(i).isEmpty()) {
@@ -309,11 +321,12 @@ public class MagicBook extends TinkerToolCore {
             }
         }
         if (targetIndex == -1) {
-            player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_full")));
+            if (!world.isRemote) {
+                player.sendMessage(new TextComponentString(TextFormatting.RED + I18n.format("message.slot_full")));
+            }
             return new ActionResult<>(EnumActionResult.FAIL, toolStack);
         }
 
-        // If slot already contains a page (should not happen because empty), but if non-empty, drop old page
         NBTTagCompound oldData = pageList.getCompoundTagAt(targetIndex);
         if (!oldData.isEmpty() && !player.capabilities.isCreativeMode) {
             String oldPageId = oldData.getString(TAG_PAGE_ID);
@@ -326,14 +339,11 @@ public class MagicBook extends TinkerToolCore {
             }
         }
 
-        // Create new page data
+        // 创建新页面数据
         NBTTagCompound newData = new NBTTagCompound();
-        newData.setString(TAG_PAGE_ID, page.getPageIdentifier());
-        // Initialize cooldowns
+        newData.setString(TAG_PAGE_ID, newPageId);
         newData.setTag(TAG_COOLDOWNS, new NBTTagCompound());
-        // Do not set spellIndex here; it will be set when casting based on global index.
 
-        // Place in list
         pageList.set(targetIndex, newData);
         toolTag.setTag(targetListKey, pageList);
         toolStack.setTagCompound(toolTag);
@@ -341,7 +351,9 @@ public class MagicBook extends TinkerToolCore {
         if (!player.capabilities.isCreativeMode) {
             pageStack.shrink(1);
         }
-        player.sendMessage(new TextComponentString(I18n.format("page.installed", I18n.format(slotType == MagicPageItem.SlotType.LEFT ? "slot.left" : "slot.right"))));
+        if (!world.isRemote) {
+            player.sendMessage(new TextComponentString(I18n.format("page.installed", I18n.format(slotType == MagicPageItem.SlotType.LEFT ? "slot.left" : "slot.right"))));
+        }
         return new ActionResult<>(EnumActionResult.SUCCESS, toolStack);
     }
 
