@@ -13,6 +13,11 @@ public class SwitchSpellPacketHandler implements IMessageHandler<SwitchSpellPack
     public IMessage onMessage(SwitchSpellPacket message, MessageContext ctx) {
         EntityPlayerMP player = ctx.getServerHandler().player;
         player.getServerWorld().addScheduledTask(() -> {
+
+            if (message.slot != 0 && message.slot != 1) {
+                return;
+            }
+
             ItemStack held = player.getHeldItemMainhand();
             if (!(held.getItem() instanceof MagicBook)) return;
 

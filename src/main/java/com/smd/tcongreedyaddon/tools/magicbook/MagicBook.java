@@ -42,8 +42,6 @@ public class MagicBook extends TinkerToolCore {
 
     private final Map<Integer, WeakReference<BookInventory>> inventoryCache = new WeakHashMap<>();
 
-    private static final Set<UUID> EXECUTING_PLAYERS = Collections.newSetFromMap(new ConcurrentHashMap<>());
-
     // NBT keys
     public static final String TAG_CUR_LEFT_INDEX = "currentLeftSpellIndex";
     public static final String TAG_CUR_RIGHT_INDEX = "currentRightSpellIndex";
@@ -152,8 +150,6 @@ public class MagicBook extends TinkerToolCore {
         if (index < 0 || index >= spells.size()) index = 0;
         SpellEntry entry = spells.get(index);
 
-        if (entry.page.isSpellOnCooldown(entry.pageStack, entry.internalIndex, player.world)) return false;
-
         NBTTagCompound pageData = entry.pageStack.getTagCompound();
         if (pageData == null) pageData = new NBTTagCompound();
         pageData.setInteger("spellIndex", entry.internalIndex);
@@ -166,7 +162,6 @@ public class MagicBook extends TinkerToolCore {
         }
 
         if (result) {
-            entry.page.setSpellCooldown(entry.pageStack, entry.internalIndex, player.world);
             entry.pageStack.setTagCompound(pageData);
             getInventory(bookStack).setStackInSlot(entry.slot, entry.pageStack);
             ToolHelper.damageTool(bookStack, DURABILITY_COST, player);

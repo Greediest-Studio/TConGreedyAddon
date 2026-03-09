@@ -20,8 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @SideOnly(Side.CLIENT)
 public class SpellOverlayRenderer {
@@ -53,6 +52,28 @@ public class SpellOverlayRenderer {
         }
     }
 
+    private static class RenderCache {
+        final ItemStack bookStack;
+        final int structureHash;
+        final List<SpellRenderInfo> leftSelectable;
+        final List<SpellRenderInfo> leftNonSelectable;
+        final List<SpellRenderInfo> rightSelectable;
+        final List<SpellRenderInfo> rightNonSelectable;
+
+        RenderCache(ItemStack bookStack, int structureHash,
+                    List<SpellRenderInfo> leftSel, List<SpellRenderInfo> leftNon,
+                    List<SpellRenderInfo> rightSel, List<SpellRenderInfo> rightNon) {
+            this.bookStack = bookStack;
+            this.structureHash = structureHash;
+            this.leftSelectable = leftSel;
+            this.leftNonSelectable = leftNon;
+            this.rightSelectable = rightSel;
+            this.rightNonSelectable = rightNon;
+        }
+    }
+
+    private RenderCache cachedRender = null; // 缓存实例
+
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
         if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
@@ -64,13 +85,60 @@ public class SpellOverlayRenderer {
         ItemStack mainHand = player.getHeldItemMainhand();
         if (!(mainHand.getItem() instanceof MagicBook)) return;
 
-        List<SpellRenderInfo> leftSelectable = new ArrayList<>();
-        List<SpellRenderInfo> leftNonSelectable = new ArrayList<>();
-        List<SpellRenderInfo> rightSelectable = new ArrayList<>();
-        List<SpellRenderInfo> rightNonSelectable = new ArrayList<>();
+        int currentHash = computeStructureHash(mainHand);
 
-        buildSpellLists(mainHand, MagicPageItem.SlotType.LEFT, leftSelectable, leftNonSelectable);
-        buildSpellLists(mainHand, MagicPageItem.SlotType.RIGHT, rightSelectable, rightNonSelectable);
+        if (cachedRender != null && cachedRender.bookStack == mainHand && cachedRender.structureHash == currentHash) {
+
+            renderLists(event, cachedRender.leftSelectable, cachedRender.leftNonSelectable,
+                    cachedRender.rightSelectable, cachedRender.rightNonSelectable);
+        } else {
+            // 缓存失效，重新构建列表
+            List<SpellRenderInfo> leftSelectable = new ArrayList<>();
+            List<SpellRenderInfo> leftNonSelectable = new ArrayList<>();
+            List<SpellRenderInfo> rightSelectable = new ArrayList<>();
+            List<SpellRenderInfo> rightNonSelectable = new ArrayList<>();
+
+            buildSpellLists(mainHand, MagicPageItem.SlotType.LEFT, leftSelectable, leftNonSelectable);
+            buildSpellLists(mainHand, MagicPageItem.SlotType.RIGHT, rightSelectable, rightNonSelectable);
+
+            cachedRender = new RenderCache(mainHand, currentHash,
+                    leftSelectable, leftNonSelectable, rightSelectable, rightNonSelectable);
+
+            renderLists(event, leftSelectable, leftNonSelectable, rightSelectable, rightNonSelectable);
+        }
+    }
+
+    private int computeStructureHash(ItemStack bookStack) {
+        if (!(bookStack.getItem() instanceof MagicBook)) return 0;
+        MagicBook book = (MagicBook) bookStack.getItem();
+        BookInventory inv = book.getInventory(bookStack);
+        int hash = 1;
+        for (int i = 0; i < inv.getSlots(); i++) {
+            ItemStack pageStack = inv.getStackInSlot(i);
+            if (!pageStack.isEmpty() && pageStack.getItem() instanceof UnifiedMagicPage) {
+
+                hash = 31 * hash + pageStack.getItem().getRegistryName().hashCode();
+                hash = 31 * hash + i;
+            }
+        }
+        return hash;
+    }
+
+    /**
+     * 渲染所有列表
+     */
+    private void renderLists(RenderGameOverlayEvent.Post event,
+                             List<SpellRenderInfo> leftSelectable,
+                             List<SpellRenderInfo> leftNonSelectable,
+                             List<SpellRenderInfo> rightSelectable,
+                             List<SpellRenderInfo> rightNonSelectable) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayer player = mc.player;
+        NBTTagCompound bookTag = player.getHeldItemMainhand().getTagCompound();
+        if (bookTag == null) bookTag = new NBTTagCompound();
+        int leftCurrentIndex = bookTag.getInteger(MagicBook.TAG_CUR_LEFT_INDEX);
+        int rightCurrentIndex = bookTag.getInteger(MagicBook.TAG_CUR_RIGHT_INDEX);
+        long worldTime = player.world.getTotalWorldTime();
 
         int leftSelectableRows = getRows(leftSelectable.size());
         int rightSelectableRows = getRows(rightSelectable.size());
@@ -84,12 +152,6 @@ public class SpellOverlayRenderer {
 
         int screenHeight = event.getResolution().getScaledHeight();
         int startY = screenHeight - Y_OFFSET - (maxSelectableRows + maxNonSelectableRows) * SLOT_SIZE;
-
-        NBTTagCompound bookTag = mainHand.getTagCompound();
-        if (bookTag == null) bookTag = new NBTTagCompound();
-        int leftCurrentIndex = bookTag.getInteger(MagicBook.TAG_CUR_LEFT_INDEX);
-        int rightCurrentIndex = bookTag.getInteger(MagicBook.TAG_CUR_RIGHT_INDEX);
-        long worldTime = player.world.getTotalWorldTime();
 
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
@@ -117,6 +179,7 @@ public class SpellOverlayRenderer {
             }
         }
 
+        // 绘制不可切换法术（被动）
         int nonSelectableStartY = startY + maxSelectableRows * SLOT_SIZE;
         for (int row = 0; row < maxNonSelectableRows; row++) {
             for (int col = 0; col < COLUMNS_PER_SIDE; col++) {
@@ -126,7 +189,7 @@ public class SpellOverlayRenderer {
                 int leftX = X_OFFSET + col * SLOT_SIZE;
                 if (localIndex < leftNonSelectable.size()) {
                     SpellRenderInfo info = leftNonSelectable.get(localIndex);
-                    drawSpellSlot(mc, leftX, y, info, false, worldTime); // 永远不是当前选中
+                    drawSpellSlot(mc, leftX, y, info, false, worldTime);
                 }
 
                 int rightStartX = X_OFFSET + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
@@ -161,10 +224,9 @@ public class SpellOverlayRenderer {
             if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) continue;
 
             UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
-            // 使用我们新添加的方法获取所有法术的显示数据
             List<UnifiedMagicPage.SpellDisplayData> allData = page.getAllSpellDisplayData(pageStack);
             for (UnifiedMagicPage.SpellDisplayData data : allData) {
-                if (!data.renderInOverlay) continue; // 完全不显示
+                if (!data.renderInOverlay) continue;
                 SpellRenderInfo info = new SpellRenderInfo(
                         data.name, data.icon, data.pageData, data.internalIndex,
                         page, data.selectable, data.cooldownTicks
@@ -184,7 +246,6 @@ public class SpellOverlayRenderer {
 
     private void drawSpellSlot(Minecraft mc, int x, int y, SpellRenderInfo info,
                                boolean isCurrent, long worldTime) {
-        // 绘制背景
         Gui.drawRect(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0x80000000);
 
         if (info.icon != null) {
@@ -211,7 +272,6 @@ public class SpellOverlayRenderer {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-            // 冷却遮罩
             if (info.cooldownTicks > 0) {
                 NBTTagCompound cooldowns = info.pageData.getCompoundTag(MagicBook.TAG_COOLDOWNS);
                 long lastUsed = cooldowns.getLong(String.valueOf(info.internalIndex));

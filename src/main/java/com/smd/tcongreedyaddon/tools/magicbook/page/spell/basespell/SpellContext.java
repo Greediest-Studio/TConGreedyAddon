@@ -1,5 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
+import com.smd.tcongreedyaddon.util.MagicBookHelper;
+import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,18 +11,21 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-/**
- * 法术执行时的上下文信息。
- */
 public class SpellContext {
     public final World world;
     public final EntityPlayer player;
-    public final ItemStack bookStack;      // 魔导书物品
-    public final ItemStack pageStack;       // 当前书页物品
-    public final NBTTagCompound pageData;   // 书页的 NBT 数据
-    public final MagicPageItem.SlotType slot; // 书页所在的槽位（左/右）
-    public final TriggerSource trigger;      // 触发源
-    @Nullable public final Entity target;    // 仅左键点击时可能使用
+    public final ItemStack bookStack;
+    public final ItemStack pageStack;
+    public final NBTTagCompound pageData;
+    public final MagicPageItem.SlotType slot;
+    public final TriggerSource trigger;
+    @Nullable public final Entity target;
+
+    private Float cachedRange;
+    private Float cachedCritChance;
+    private Integer cachedSpellSpeed;
+    private Integer cachedLeftSlots;
+    private Integer cachedRightSlots;
 
     public SpellContext(World world, EntityPlayer player, ItemStack bookStack,
                         ItemStack pageStack, NBTTagCompound pageData,
@@ -34,5 +39,57 @@ public class SpellContext {
         this.slot = slot;
         this.trigger = trigger;
         this.target = target;
+    }
+
+    public float getRange() {
+        if (cachedRange == null) {
+            Float range = MagicBookHelper.getRange(bookStack);
+            cachedRange = range != null ? range : MagicBook.BEAM_RANGE;
+        }
+        return cachedRange;
+    }
+
+    public float getCritChance() {
+        if (cachedCritChance == null) {
+            Float chance = MagicBookHelper.getCritChance(bookStack);
+            cachedCritChance = chance != null ? chance : 0.0f;
+        }
+        return cachedCritChance;
+    }
+
+    public int getSpellSpeed() {
+        if (cachedSpellSpeed == null) {
+            Integer speed = MagicBookHelper.getSpellSpeed(bookStack);
+            cachedSpellSpeed = speed != null ? speed : 1;
+        }
+        return cachedSpellSpeed;
+    }
+
+    public int getLeftSlotCount() {
+        if (cachedLeftSlots == null) {
+            Integer count = MagicBookHelper.getLeftSlotCount(bookStack);
+            cachedLeftSlots = count != null ? count : 1;
+        }
+        return cachedLeftSlots;
+    }
+
+    public int getRightSlotCount() {
+        if (cachedRightSlots == null) {
+            Integer count = MagicBookHelper.getRightSlotCount(bookStack);
+            cachedRightSlots = count != null ? count : 1;
+        }
+        return cachedRightSlots;
+    }
+
+    public boolean isLeftSlot() {
+        return slot == MagicPageItem.SlotType.LEFT;
+    }
+
+    public boolean isRightSlot() {
+        return slot == MagicPageItem.SlotType.RIGHT;
+    }
+
+    public int getCurrentSlotCount() {
+        return isLeftSlot() ? getLeftSlotCount() : getRightSlotCount();
     }
 }
