@@ -60,4 +60,11 @@ public abstract class MagicPageItem extends Item {
     public List<String> getAllSpellNames(NBTTagCompound pageData) {
         return Collections.emptyList();
     }
+
+
+    public abstract int getSpellCount(SlotType slotType);
+
+    public abstract String getSpellDisplayName(int internalIndex, SlotType slotType);
+
+    public abstract int getSpellCooldownTicks(int internalIndex, SlotType slotType);
 }

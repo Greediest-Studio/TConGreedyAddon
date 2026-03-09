@@ -20,17 +20,16 @@ public class ClientEventHandler {
             if (KeyBindings.leftpage.isPressed()) {
                 ItemStack held = player.getHeldItemMainhand();
                 if (held.getItem() instanceof MagicBook) {
-                    int slot = 0;
-                    NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(slot));
+                    NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(0, true));
                 }
             }
             if (KeyBindings.rightpage.isPressed()) {
                 ItemStack held = player.getHeldItemMainhand();
                 if (held.getItem() instanceof MagicBook) {
-                    int slot = 1;
-                    NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(slot));
+                    NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(1, true));
                 }
             }
+            // 如需切换上一个，可定义新的按键并发送 next=false 的包
         }
     }
 }

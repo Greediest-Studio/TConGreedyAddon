@@ -12,25 +12,24 @@ public class BookPageStats extends AbstractMaterialStats {
 
     public static final String TYPE = TConGreedyTypes.BOOKPAGE;
 
-    public final boolean hasLeft;
-    public final boolean hasRight;
+    public final int leftSlots;
+    public final int rightSlots;
     public final int spellspeed;
 
-    public BookPageStats(boolean hasLeft, boolean hasRight, int spellspeed) {
+
+    public BookPageStats(int leftSlots, int rightSlots, int spellspeed) {
         super(TConGreedyTypes.BOOKPAGE);
-        this.hasLeft = hasLeft;
-        this.hasRight = hasRight;
+        this.leftSlots = leftSlots;
+        this.rightSlots = rightSlots;
         this.spellspeed = spellspeed;
     }
 
     @Override
     public List<String> getLocalizedInfo() {
         List<String> info = Lists.newArrayList();
-        String left = hasLeft ? Util.translate("stat.slot.available") : Util.translate("stat.slot.unavailable");
-        String right = hasRight ? Util.translate("stat.slot.available") : Util.translate("stat.slot.unavailable");
+        info.add(Util.translateFormatted("stat.slot.left", leftSlots));
+        info.add(Util.translateFormatted("stat.slot.right", rightSlots));
         info.add(Util.translateFormatted("stat.spellspeed.value", Util.df.format(spellspeed)));
-        info.add(Util.translateFormatted("stat.slot.left", left));
-        info.add(Util.translateFormatted("stat.slot.right", right));
 
         return info;
     }

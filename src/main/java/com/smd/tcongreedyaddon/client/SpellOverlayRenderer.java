@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.client;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -12,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -19,6 +21,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
@@ -29,6 +32,22 @@ public class SpellOverlayRenderer {
     private static final int X_OFFSET = 40;
     private static final int Y_OFFSET = 10;
     private static final int GROUP_GAP = SLOT_SIZE;
+
+    private static class SpellDisplayInfo {
+        final String name;
+        final ResourceLocation icon;
+        final NBTTagCompound pageData;
+        final int internalIndex;
+        final MagicPageItem page;
+
+        SpellDisplayInfo(String name, ResourceLocation icon, NBTTagCompound pageData, int internalIndex, MagicPageItem page) {
+            this.name = name;
+            this.icon = icon;
+            this.pageData = pageData;
+            this.internalIndex = internalIndex;
+            this.page = page;
+        }
+    }
 
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
@@ -44,50 +63,19 @@ public class SpellOverlayRenderer {
         NBTTagCompound tag = mainHand.getTagCompound();
         if (tag == null) return;
 
-        NBTTagCompound leftPageData = tag.getCompoundTag(MagicBook.TAG_LEFT_PAGE);
-        NBTTagCompound rightPageData = tag.getCompoundTag(MagicBook.TAG_RIGHT_PAGE);
+        List<SpellDisplayInfo> leftSpells = buildSpellList(tag, MagicPageItem.SlotType.LEFT);
+        List<SpellDisplayInfo> rightSpells = buildSpellList(tag, MagicPageItem.SlotType.RIGHT);
 
-        UnifiedMagicPage leftPage = null;
-        UnifiedMagicPage rightPage = null;
-
-        if (!leftPageData.isEmpty()) {
-            String leftPageId = leftPageData.getString(MagicBook.TAG_PAGE_ID);
-            Item leftItem = Item.REGISTRY.getObject(new ResourceLocation(leftPageId));
-            if (leftItem instanceof UnifiedMagicPage) {
-                leftPage = (UnifiedMagicPage) leftItem;
-            }
-        }
-
-        if (!rightPageData.isEmpty()) {
-            String rightPageId = rightPageData.getString(MagicBook.TAG_PAGE_ID);
-            Item rightItem = Item.REGISTRY.getObject(new ResourceLocation(rightPageId));
-            if (rightItem instanceof UnifiedMagicPage) {
-                rightPage = (UnifiedMagicPage) rightItem;
-            }
-        }
-
-        List<String> leftSpellNames = leftPage != null ? leftPage.getAllSpellNames(leftPageData) : null;
-        List<ResourceLocation> leftSpellIcons = leftPage != null ? leftPage.getSpellIcons(leftPageData) : null;
-        int leftSpellCount = leftSpellNames != null ? leftSpellNames.size() : 0;
-        int leftRows = getRows(leftSpellCount);
-
-        List<String> rightSpellNames = rightPage != null ? rightPage.getAllSpellNames(rightPageData) : null;
-        List<ResourceLocation> rightSpellIcons = rightPage != null ? rightPage.getSpellIcons(rightPageData) : null;
-        int rightSpellCount = rightSpellNames != null ? rightSpellNames.size() : 0;
-        int rightRows = getRows(rightSpellCount);
-
+        int leftRows = getRows(leftSpells.size());
+        int rightRows = getRows(rightSpells.size());
         int visibleRows = Math.max(leftRows, rightRows);
-        if (visibleRows <= 0) {
-            return;
-        }
+        if (visibleRows <= 0) return;
 
         int screenHeight = event.getResolution().getScaledHeight();
         int startY = screenHeight - Y_OFFSET - visibleRows * SLOT_SIZE;
 
-        int leftCurrentIndex = leftPageData.getInteger(MagicBook.TAG_SPELL_INDEX);
-        int rightCurrentIndex = rightPageData.getInteger(MagicBook.TAG_SPELL_INDEX);
-        NBTTagCompound leftCooldowns = leftPageData.getCompoundTag("cooldowns");
-        NBTTagCompound rightCooldowns = rightPageData.getCompoundTag("cooldowns");
+        int leftCurrentIndex = tag.getInteger(MagicBook.TAG_CUR_LEFT_INDEX);
+        int rightCurrentIndex = tag.getInteger(MagicBook.TAG_CUR_RIGHT_INDEX);
         long worldTime = player.world.getTotalWorldTime();
 
         GlStateManager.pushMatrix();
@@ -99,15 +87,21 @@ public class SpellOverlayRenderer {
                 int y = startY + row * SLOT_SIZE;
                 int localIndex = row * COLUMNS_PER_SIDE + col;
 
+                // 左槽
                 int leftX = X_OFFSET + col * SLOT_SIZE;
-                if (localIndex < leftSpellCount) {
-                    drawSpellSlot(mc, leftX, y, localIndex, leftSpellCount, leftCurrentIndex, leftPage, leftSpellIcons, leftCooldowns, worldTime);
+                if (localIndex < leftSpells.size()) {
+                    SpellDisplayInfo info = leftSpells.get(localIndex);
+                    boolean isCurrent = (localIndex == leftCurrentIndex);
+                    drawSpellSlot(mc, leftX, y, info, isCurrent, worldTime);
                 }
 
+                // 右槽
                 int rightStartX = X_OFFSET + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
                 int rightX = rightStartX + col * SLOT_SIZE;
-                if (localIndex < rightSpellCount) {
-                    drawSpellSlot(mc, rightX, y, localIndex, rightSpellCount, rightCurrentIndex, rightPage, rightSpellIcons, rightCooldowns, worldTime);
+                if (localIndex < rightSpells.size()) {
+                    SpellDisplayInfo info = rightSpells.get(localIndex);
+                    boolean isCurrent = (localIndex == rightCurrentIndex);
+                    drawSpellSlot(mc, rightX, y, info, isCurrent, worldTime);
                 }
             }
         }
@@ -116,70 +110,83 @@ public class SpellOverlayRenderer {
         GlStateManager.popMatrix();
     }
 
-    private int getRows(int spellCount) {
-        return spellCount <= 0 ? 0 : (spellCount + COLUMNS_PER_SIDE - 1) / COLUMNS_PER_SIDE;
+    private List<SpellDisplayInfo> buildSpellList(NBTTagCompound toolTag, MagicPageItem.SlotType slotType) {
+        List<SpellDisplayInfo> list = new ArrayList<>();
+        String listKey = (slotType == MagicPageItem.SlotType.LEFT) ? MagicBook.TAG_LEFT_PAGES : MagicBook.TAG_RIGHT_PAGES;
+        NBTTagList pageList = toolTag.getTagList(listKey, 10);
+
+        for (int i = 0; i < pageList.tagCount(); i++) {
+            NBTTagCompound pageData = pageList.getCompoundTagAt(i);
+            if (pageData.isEmpty()) continue;
+
+            String pageId = pageData.getString(MagicBook.TAG_PAGE_ID);
+            Item item = Item.REGISTRY.getObject(new ResourceLocation(pageId));
+            if (!(item instanceof UnifiedMagicPage)) continue;
+
+            UnifiedMagicPage page = (UnifiedMagicPage) item;
+            List<String> names = page.getAllSpellNames(pageData);
+            List<ResourceLocation> icons = page.getSpellIcons(pageData);
+            int spellCount = Math.min(names.size(), icons.size()); // 确保一致
+            for (int j = 0; j < spellCount; j++) {
+                list.add(new SpellDisplayInfo(names.get(j), icons.get(j), pageData, j, page));
+            }
+        }
+        return list;
     }
 
-    private void drawSpellSlot(Minecraft mc, int x, int y, int localIndex, int spellCount, int currentIndex,
-                               UnifiedMagicPage page, List<ResourceLocation> spellIcons,
-                               NBTTagCompound cooldowns, long worldTime) {
+    private int getRows(int spellCount) {
+        return (spellCount + COLUMNS_PER_SIDE - 1) / COLUMNS_PER_SIDE;
+    }
+
+    private void drawSpellSlot(Minecraft mc, int x, int y, SpellDisplayInfo info, boolean isCurrent, long worldTime) {
         Gui.drawRect(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0x80000000);
 
-        boolean isCurrentSpell = false;
-        if (localIndex < spellCount && page != null && spellIcons != null && localIndex < spellIcons.size()) {
-            ResourceLocation iconTex = spellIcons.get(localIndex);
-            if (iconTex != null) {
-                mc.getTextureManager().bindTexture(iconTex);
-                GlStateManager.enableTexture2D();
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        if (info.icon != null) {
+            mc.getTextureManager().bindTexture(info.icon);
+            GlStateManager.enableTexture2D();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
-                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 
-                int iconX = x + 1;
-                int iconY = y + 1;
-                int iconSize = SLOT_SIZE - 2;
+            int iconX = x + 1;
+            int iconY = y + 1;
+            int iconSize = SLOT_SIZE - 2;
 
-                Tessellator tessellator = Tessellator.getInstance();
-                BufferBuilder buffer = tessellator.getBuffer();
-                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-                buffer.pos(iconX, iconY + iconSize, 0).tex(0, 1).endVertex();
-                buffer.pos(iconX + iconSize, iconY + iconSize, 0).tex(1, 1).endVertex();
-                buffer.pos(iconX + iconSize, iconY, 0).tex(1, 0).endVertex();
-                buffer.pos(iconX, iconY, 0).tex(0, 0).endVertex();
-                tessellator.draw();
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+            buffer.pos(iconX, iconY + iconSize, 0).tex(0, 1).endVertex();
+            buffer.pos(iconX + iconSize, iconY + iconSize, 0).tex(1, 1).endVertex();
+            buffer.pos(iconX + iconSize, iconY, 0).tex(1, 0).endVertex();
+            buffer.pos(iconX, iconY, 0).tex(0, 0).endVertex();
+            tessellator.draw();
 
-                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-                long lastUsed = cooldowns.getLong(String.valueOf(localIndex));
-                int cooldownTicks = page.getSpellCooldownTicks(localIndex);
-                if (cooldownTicks > 0) {
-                    long endTick = lastUsed + cooldownTicks;
-                    int remainingTicks = (int)(endTick - worldTime);
-                    if (remainingTicks > 0) {
-                        float ratio = (float) remainingTicks / cooldownTicks;
-                        int coverHeight = (int)(iconSize * ratio);
-                        Gui.drawRect(iconX, iconY + iconSize - coverHeight, iconX + iconSize, iconY + iconSize, 0x80000000);
-                    }
+            // 冷却遮罩
+            NBTTagCompound cooldowns = info.pageData.getCompoundTag(MagicBook.TAG_COOLDOWNS);
+            long lastUsed = cooldowns.getLong(String.valueOf(info.internalIndex));
+            int cooldownTicks = info.page.getSpellCooldownTicks(info.internalIndex, info.page.getSlotType());
+            if (cooldownTicks > 0) {
+                long endTick = lastUsed + cooldownTicks;
+                int remainingTicks = (int) (endTick - worldTime);
+                if (remainingTicks > 0) {
+                    float ratio = (float) remainingTicks / cooldownTicks;
+                    int coverHeight = (int) (iconSize * ratio);
+                    Gui.drawRect(iconX, iconY + iconSize - coverHeight, iconX + iconSize, iconY + iconSize, 0x80000000);
                 }
             }
-
-            if (localIndex == currentIndex) {
-                isCurrentSpell = true;
-            }
         }
 
-        drawSlotBorder(x, y, SLOT_SIZE, 0xFF888888);
-        if (isCurrentSpell) {
-            drawSlotBorder(x, y, SLOT_SIZE, 0xFFFFAA00);
-        }
+        drawSlotBorder(x, y, SLOT_SIZE, isCurrent ? 0xFFFFAA00 : 0xFF888888);
     }
 
     private void drawSlotBorder(int x, int y, int size, int color) {
-        Gui.drawRect(x, y, x + size, y + 1, color); // 上
-        Gui.drawRect(x, y + size - 1, x + size, y + size, color); // 下
-        Gui.drawRect(x, y, x + 1, y + size, color); // 左
-        Gui.drawRect(x + size - 1, y, x + size, y + size, color); // 右
+        Gui.drawRect(x, y, x + size, y + 1, color);
+        Gui.drawRect(x, y + size - 1, x + size, y + size, color);
+        Gui.drawRect(x, y, x + 1, y + size, color);
+        Gui.drawRect(x + size - 1, y, x + size, y + size, color);
     }
 }

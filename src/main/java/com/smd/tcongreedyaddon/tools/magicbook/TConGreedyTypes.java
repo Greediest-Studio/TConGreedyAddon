@@ -12,7 +12,7 @@ public class TConGreedyTypes {
     public static final String MAGICCORE = Tags.MOD_ID +".magiccore";
 
     public static void init() {
-        Material.UNKNOWN.addStats(new BookPageStats(true, true, 1));
+        Material.UNKNOWN.addStats(new BookPageStats(1, 1, 1));
         Material.UNKNOWN.addStats(new MagicCoreStats(10.0F,10F));
     }
 

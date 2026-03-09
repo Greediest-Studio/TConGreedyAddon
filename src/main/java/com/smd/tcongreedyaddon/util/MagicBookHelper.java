@@ -105,25 +105,47 @@ public final class MagicBookHelper {
     }
 
     /**
-     * 获取左槽是否可用。
+     * 获取左槽的槽位数量。
      * @param stack 工具物品堆
-     * @return {@code true} 表示左槽可用，{@code false} 表示不可用，若无法获取则返回 {@code null}
+     * @return 左槽最大可插入页面数，若无法获取则返回 {@code null}
      */
     @Nullable
-    public static Boolean hasLeftSlot(ItemStack stack) {
+    public static Integer getLeftSlotCount(ItemStack stack) {
         BookPageStats stats = getBookPageStats(stack);
-        return stats != null ? stats.hasLeft : null;
+        return stats != null ? stats.leftSlots : null;
     }
 
     /**
-     * 获取右槽是否可用。
+     * 获取右槽的槽位数量。
      * @param stack 工具物品堆
-     * @return {@code true} 表示右槽可用，{@code false} 表示不可用，若无法获取则返回 {@code null}
+     * @return 右槽最大可插入页面数，若无法获取则返回 {@code null}
+     */
+    @Nullable
+    public static Integer getRightSlotCount(ItemStack stack) {
+        BookPageStats stats = getBookPageStats(stack);
+        return stats != null ? stats.rightSlots : null;
+    }
+
+    /**
+     * 判断左槽是否可用（即左槽槽位数 > 0）。
+     * @param stack 工具物品堆
+     * @return {@code true} 表示左槽至少有一个槽位，{@code false} 表示无槽位，若无法获取则返回 {@code null}
+     */
+    @Nullable
+    public static Boolean hasLeftSlot(ItemStack stack) {
+        Integer count = getLeftSlotCount(stack);
+        return count != null ? count > 0 : null;
+    }
+
+    /**
+     * 判断右槽是否可用（即右槽槽位数 > 0）。
+     * @param stack 工具物品堆
+     * @return {@code true} 表示右槽至少有一个槽位，{@code false} 表示无槽位，若无法获取则返回 {@code null}
      */
     @Nullable
     public static Boolean hasRightSlot(ItemStack stack) {
-        BookPageStats stats = getBookPageStats(stack);
-        return stats != null ? stats.hasRight : null;
+        Integer count = getRightSlotCount(stack);
+        return count != null ? count > 0 : null;
     }
 
     /**
@@ -162,7 +184,6 @@ public final class MagicBookHelper {
         return stats != null ? stats.critchance : null;
     }
 
-
     /**
      * 获取魔导书的攻击力（来自头部和手柄等，使用 Tinkers' 的计算方式）。
      * @param stack 工具物品堆
@@ -171,7 +192,6 @@ public final class MagicBookHelper {
     public static float getAttackDamage(ItemStack stack) {
         return ToolHelper.getActualAttack(stack);
     }
-
 
     /**
      * 使用自定义伤害倍率,伤害类型和伤害源执行攻击。
@@ -328,5 +348,4 @@ public final class MagicBookHelper {
 
         return true;
     }
-
 }

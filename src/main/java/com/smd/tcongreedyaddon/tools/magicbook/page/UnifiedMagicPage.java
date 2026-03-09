@@ -49,6 +49,33 @@ public class UnifiedMagicPage extends MagicPageItem {
         return spell.onLeftClick(toolStack, player, target);
     }
 
+    @Override
+    public int getSpellCount(SlotType slotType) {
+        return slotType == SlotType.LEFT ? leftSpells.size() : rightSpells.size();
+    }
+
+    @Override
+    public String getSpellDisplayName(int internalIndex, SlotType slotType) {
+        List<?> spells = slotType == SlotType.LEFT ? leftSpells : rightSpells;
+        if (internalIndex < 0 || internalIndex >= spells.size()) return "Unknown";
+        Object spell = spells.get(internalIndex);
+        String key = (spell instanceof ILeftClickSpell) ? ((ILeftClickSpell) spell).getNameKey() : ((IRightClickSpell) spell).getNameKey();
+        return I18n.translateToLocal(key);
+    }
+
+    @Override
+    public int getSpellCooldownTicks(int internalIndex, SlotType slotType) {
+        List<?> spells = slotType == SlotType.LEFT ? leftSpells : rightSpells;
+        if (internalIndex < 0 || internalIndex >= spells.size()) return 0;
+        Object spell = spells.get(internalIndex);
+        if (spell instanceof ILeftClickSpell) {
+            return ((ILeftClickSpell) spell).getCooldownTicks();
+        } else if (spell instanceof IRightClickSpell) {
+            return ((IRightClickSpell) spell).getCooldownTicks();
+        }
+        return 0;
+    }
+
     // --- 右键逻辑 ---
     @Override
     public boolean onRightClick(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData) {
