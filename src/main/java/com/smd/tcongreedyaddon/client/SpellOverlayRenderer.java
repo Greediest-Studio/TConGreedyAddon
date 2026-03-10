@@ -1,5 +1,6 @@
 package com.smd.tcongreedyaddon.client;
 
+import com.smd.tcongreedyaddon.config.SpellOverlayConfig;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
@@ -27,9 +28,7 @@ public class SpellOverlayRenderer {
 
     private static final int COLUMNS_PER_SIDE = 2;
     private static final int SLOT_SIZE = 20;
-    private static final int X_OFFSET = 40;
-    private static final int Y_OFFSET = 10;
-    private static final int GROUP_GAP = SLOT_SIZE;
+    private static final int GROUP_GAP = SLOT_SIZE / 2;
 
     private static class SpellRenderInfo {
         final String name;
@@ -151,25 +150,29 @@ public class SpellOverlayRenderer {
         if (maxSelectableRows == 0 && maxNonSelectableRows == 0) return;
 
         int screenHeight = event.getResolution().getScaledHeight();
-        int startY = screenHeight - Y_OFFSET - (maxSelectableRows + maxNonSelectableRows) * SLOT_SIZE;
+        int screenWidth = event.getResolution().getScaledWidth();
+        int startY = screenHeight - SpellOverlayConfig.spellsYOffsetFromBottom - (maxSelectableRows) * SLOT_SIZE;
 
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
         GlStateManager.enableAlpha();
+
+        int activeGroupWidth = COLUMNS_PER_SIDE * SLOT_SIZE * 2 + GROUP_GAP;
+        int activeStartX = screenWidth - SpellOverlayConfig.activeSpellsXOffsetFromRight - activeGroupWidth;
 
         for (int row = 0; row < maxSelectableRows; row++) {
             for (int col = 0; col < COLUMNS_PER_SIDE; col++) {
                 int y = startY + row * SLOT_SIZE;
                 int localIndex = row * COLUMNS_PER_SIDE + col;
 
-                int leftX = X_OFFSET + col * SLOT_SIZE;
+                int leftX = activeStartX + col * SLOT_SIZE;
                 if (localIndex < leftSelectable.size()) {
                     SpellRenderInfo info = leftSelectable.get(localIndex);
                     boolean isCurrent = (localIndex == leftCurrentIndex);
                     drawSpellSlot(mc, leftX, y, info, isCurrent, worldTime);
                 }
 
-                int rightStartX = X_OFFSET + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
+                int rightStartX = activeStartX + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
                 int rightX = rightStartX + col * SLOT_SIZE;
                 if (localIndex < rightSelectable.size()) {
                     SpellRenderInfo info = rightSelectable.get(localIndex);
@@ -180,19 +183,19 @@ public class SpellOverlayRenderer {
         }
 
         // 绘制不可切换法术（被动）
-        int nonSelectableStartY = startY + maxSelectableRows * SLOT_SIZE;
+        int nonSelectableStartY = startY + (maxSelectableRows - 1) * SLOT_SIZE;
         for (int row = 0; row < maxNonSelectableRows; row++) {
             for (int col = 0; col < COLUMNS_PER_SIDE; col++) {
                 int y = nonSelectableStartY + row * SLOT_SIZE;
                 int localIndex = row * COLUMNS_PER_SIDE + col;
 
-                int leftX = X_OFFSET + col * SLOT_SIZE;
+                int leftX = SpellOverlayConfig.passiveSpellsXOffsetFromLeft + col * SLOT_SIZE;
                 if (localIndex < leftNonSelectable.size()) {
                     SpellRenderInfo info = leftNonSelectable.get(localIndex);
                     drawSpellSlot(mc, leftX, y, info, false, worldTime);
                 }
 
-                int rightStartX = X_OFFSET + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
+                int rightStartX = SpellOverlayConfig.passiveSpellsXOffsetFromLeft + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
                 int rightX = rightStartX + col * SLOT_SIZE;
                 if (localIndex < rightNonSelectable.size()) {
                     SpellRenderInfo info = rightNonSelectable.get(localIndex);
