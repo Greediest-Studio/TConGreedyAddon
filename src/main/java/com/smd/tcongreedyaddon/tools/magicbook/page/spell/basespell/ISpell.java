@@ -2,6 +2,7 @@ package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
@@ -70,6 +71,10 @@ public interface ISpell {
      */
     default int getCooldownTicks(EntityPlayer player, ItemStack bookStack) {
         return getCooldownTicks(player);
+    }
+
+    default ResourceLocation getDisplayIcon(NBTTagCompound pageData, int rawIndex) {
+        return getIcon();
     }
 
     /**

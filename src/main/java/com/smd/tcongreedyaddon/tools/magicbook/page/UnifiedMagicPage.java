@@ -147,7 +147,7 @@ public class UnifiedMagicPage extends MagicPageItem {
         return getSpellCooldownTicks(spellIndex, getSlotType());
     }
 
-    // ==================== 主动施法（左右键）====================
+    // ==================== 主动施法===================
 
     @Override
     public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData, ItemStack pageStack) {
@@ -211,7 +211,6 @@ public class UnifiedMagicPage extends MagicPageItem {
         for (int rawIndex = 0; rawIndex < allSpells.size(); rawIndex++) {
             ISpell spell = allSpells.get(rawIndex);
             SpellContext context = new SpellContext(world, player, toolStack, pageStack, pageData, slot, TriggerSource.tick(), null);
-            // 被动法术执行，但返回结果不重要
             executeSpellWithRawIndex(spell, rawIndex, context, pageStack);
         }
         pageStack.setTagCompound(pageData);
@@ -275,7 +274,6 @@ public class UnifiedMagicPage extends MagicPageItem {
     public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
-        // 左槽可切换法术
         if (!leftSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.left_spells") + ":");
             for (ISpell spell : leftSelectable) {
@@ -283,7 +281,6 @@ public class UnifiedMagicPage extends MagicPageItem {
             }
         }
 
-        // 右槽可切换法术
         if (!rightSelectable.isEmpty()) {
             tooltip.add(I18n.translateToLocal("tooltip.right_spells") + ":");
             for (ISpell spell : rightSelectable) {
@@ -291,7 +288,6 @@ public class UnifiedMagicPage extends MagicPageItem {
             }
         }
 
-        // 左槽不可切换法术（被动）
         List<ISpell> leftNonSelectable = new ArrayList<>();
         for (ISpell spell : leftSpells) {
             if (!spell.isSelectable()) leftNonSelectable.add(spell);
@@ -303,7 +299,6 @@ public class UnifiedMagicPage extends MagicPageItem {
             }
         }
 
-        // 右槽不可切换法术（被动）
         List<ISpell> rightNonSelectable = new ArrayList<>();
         for (ISpell spell : rightSpells) {
             if (!spell.isSelectable()) rightNonSelectable.add(spell);
@@ -319,13 +314,12 @@ public class UnifiedMagicPage extends MagicPageItem {
     public List<ResourceLocation> getSpellIcons(NBTTagCompound pageData, ItemStack pageStack) {
         SlotType slot = getSlotType();
         List<ResourceLocation> icons = new ArrayList<>();
-        for (ISpell spell : getSelectableSpells(slot)) {
-            icons.add(spell.getIcon());
+        List<ISpell> spells = getSelectableSpells(slot);
+        for (int i = 0; i < spells.size(); i++) {
+            icons.add(spells.get(i).getDisplayIcon(pageData, i));
         }
         return icons;
     }
-
-    // ==================== 建造者 ====================
 
     public static class Builder {
         private final SlotType slotType;
@@ -377,7 +371,7 @@ public class UnifiedMagicPage extends MagicPageItem {
             ISpell spell = spells.get(i);
             list.add(new SpellDisplayData(
                     I18n.translateToLocal(spell.getNameKey()),
-                    spell.getIcon(),
+                    spell.getDisplayIcon(pageData, i),
                     spell.isSelectable(),
                     spell.shouldRenderInOverlay(),
                     i, // 使用原始索引
@@ -410,3 +404,4 @@ public class UnifiedMagicPage extends MagicPageItem {
         }
     }
 }
+

@@ -8,6 +8,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -19,6 +20,14 @@ public class MagicBookEventHandler {
 
     @SubscribeEvent
     public static void onLivingJump(LivingJumpEvent event) {
+        if (event.getEntity().world.isRemote) return;
+        if (!(event.getEntity() instanceof EntityPlayer)) return;
+        EntityPlayer player = (EntityPlayer) event.getEntity();
+        handleEvent(player, event);
+    }
+
+    @SubscribeEvent
+    public static void onLivingAttack(LivingAttackEvent event) {
         if (event.getEntity().world.isRemote) return;
         if (!(event.getEntity() instanceof EntityPlayer)) return;
         EntityPlayer player = (EntityPlayer) event.getEntity();
