@@ -29,7 +29,6 @@ public class ClientEventHandler {
                     NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(1, true));
                 }
             }
-            // 如需切换上一个，可定义新的按键并发送 next=false 的包
         }
     }
 }

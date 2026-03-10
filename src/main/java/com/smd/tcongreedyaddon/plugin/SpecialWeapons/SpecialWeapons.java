@@ -1,6 +1,8 @@
 package com.smd.tcongreedyaddon.plugin.SpecialWeapons;
 
 import com.smd.tcongreedyaddon.TConGreedyAddon;
+import com.smd.tcongreedyaddon.client.ClientEventHandler;
+import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
@@ -14,13 +16,19 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.RangePulsePage;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tools.Pattern;
 import slimeknights.tconstruct.library.tools.ToolPart;
 import slimeknights.tconstruct.tools.TinkerTools;
+
+import static com.smd.tcongreedyaddon.client.KeyBindings.leftpage;
+import static com.smd.tcongreedyaddon.client.KeyBindings.rightpage;
 
 public class SpecialWeapons implements IModule {
 
@@ -66,6 +74,14 @@ public class SpecialWeapons implements IModule {
             }
         }
     }
+
+    @Override
+    public void preInitClient(FMLPreInitializationEvent event) {
+        registerKeyBindings();
+        MinecraftForge.EVENT_BUS.register(new SpellOverlayRenderer());
+        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
+    }
+
 
     @Override
     public void init() {
@@ -150,5 +166,10 @@ public class SpecialWeapons implements IModule {
             default:
                 return new BookPageStats(1, 1, 2);
         }
+    }
+
+    public void registerKeyBindings() {
+        ClientRegistry.registerKeyBinding(leftpage);
+        ClientRegistry.registerKeyBinding(rightpage);
     }
 }

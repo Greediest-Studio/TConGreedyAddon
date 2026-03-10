@@ -1,17 +1,8 @@
 package com.smd.tcongreedyaddon.proxy;
 
-import com.smd.tcongreedyaddon.client.ClientEventHandler;
-import com.smd.tcongreedyaddon.client.ModelRegistrationHandler;
-import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
 import com.smd.tcongreedyaddon.init.BookTransformerAppendModifiers;
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import slimeknights.mantle.client.book.repository.BookRepository;
 import slimeknights.mantle.client.book.repository.FileRepository;
 import slimeknights.tconstruct.common.ModelRegisterUtil;
@@ -21,9 +12,6 @@ import slimeknights.tconstruct.library.client.ToolBuildGuiInfo;
 import slimeknights.tconstruct.library.tools.IToolPart;
 import slimeknights.tconstruct.library.tools.ToolCore;
 import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
-
-import static com.smd.tcongreedyaddon.client.KeyBindings.leftpage;
-import static com.smd.tcongreedyaddon.client.KeyBindings.rightpage;
 
 public class ClientProxy extends CommonProxy {
 
@@ -85,17 +73,9 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit() {
         super.preInit();
-        registerKeyBindings();
-        MinecraftForge.EVENT_BUS.register(new SpellOverlayRenderer());
-        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
     }
 
     public <T extends Item & IToolPart> void registerToolPartModel(T part) {
         ModelRegisterUtil.registerPartModel(part);
-    }
-
-    public void registerKeyBindings() {
-        ClientRegistry.registerKeyBinding(leftpage);
-        ClientRegistry.registerKeyBinding(rightpage);
     }
 }
