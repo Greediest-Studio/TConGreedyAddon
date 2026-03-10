@@ -58,7 +58,6 @@ public interface ISpell {
     /**
      * 是否在 HUD 上显示该法术的图标和冷却。
      * 对于主动技能通常返回 true，对于被动技能可根据需要决定。
-     * 默认返回 true（兼容原有主动技能）。
      */
     default boolean shouldRenderInOverlay() {
         return true;
@@ -70,7 +69,6 @@ public interface ISpell {
      * 获取冷却时间（刻），基于玩家状态和魔导书动态计算。
      */
     default int getCooldownTicks(EntityPlayer player, ItemStack bookStack) {
-        // 默认调用仅玩家的版本
         return getCooldownTicks(player);
     }
 
@@ -78,7 +76,6 @@ public interface ISpell {
      * 获取冷却时间（刻），基于玩家状态动态计算（无魔导书）。
      */
     default int getCooldownTicks(EntityPlayer player) {
-        // 默认调用无参版本
         return getCooldownTicks();
     }
 }

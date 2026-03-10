@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellRegistry;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
@@ -358,7 +359,9 @@ public class UnifiedMagicPage extends MagicPageItem {
             if (slotType == SlotType.RIGHT && !leftSpells.isEmpty()) {
                 throw new IllegalStateException("Right page cannot have left spells");
             }
-            return new UnifiedMagicPage(this);
+            UnifiedMagicPage page = new UnifiedMagicPage(this);
+            SpellRegistry.registerPage(page, new ArrayList<>(leftSpells), new ArrayList<>(rightSpells));
+            return page;
         }
     }
 

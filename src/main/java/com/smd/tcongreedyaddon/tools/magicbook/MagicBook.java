@@ -5,11 +5,13 @@ import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
+import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -188,6 +190,45 @@ public class MagicBook extends TinkerToolCore {
         stack.setTagCompound(tag);
     }
 
+    private boolean isSelectedSpellOnCooldown(ItemStack bookStack, EntityPlayer player, MagicPageItem.SlotType slotType) {
+        if (player == null) {
+            return false;
+        }
+        List<SpellEntry> spells = buildSpellList(bookStack, slotType);
+        NBTTagCompound tag = TagUtil.getTagSafe(bookStack);
+        String key = (slotType == MagicPageItem.SlotType.LEFT) ? TAG_CUR_LEFT_INDEX : TAG_CUR_RIGHT_INDEX;
+        int selectedIndex = tag.getInteger(key);
+        if (selectedIndex < 0 || selectedIndex >= spells.size()) {
+            return false;
+        }
+        SpellEntry entry = spells.get(selectedIndex);
+        if (!(entry.page instanceof UnifiedMagicPage)) {
+            return false;
+        }
+        UnifiedMagicPage page = (UnifiedMagicPage) entry.page;
+        long worldTime = player.world.getTotalWorldTime();
+
+        for (UnifiedMagicPage.SpellDisplayData data : page.getAllSpellDisplayData(entry.pageStack)) {
+            if (data.internalIndex != entry.internalIndex) continue;
+            if (data.cooldownTicks <= 0) return false;
+            NBTTagCompound cooldowns = data.pageData.getCompoundTag(TAG_COOLDOWNS);
+            long lastUsed = cooldowns.getLong(String.valueOf(entry.internalIndex));
+            long cooldownEnd = lastUsed + data.cooldownTicks;
+            return worldTime < cooldownEnd;
+        }
+        return false;
+    }
+
+    private void syncHeldBook(EntityPlayer player, ItemStack bookStack) {
+        if (!(player instanceof EntityPlayerMP)) {
+            return;
+        }
+        EntityPlayerMP mp = (EntityPlayerMP) player;
+        int currentSlot = mp.inventory.currentItem;
+        mp.inventory.setInventorySlotContents(currentSlot, bookStack);
+        mp.inventory.markDirty();
+    }
+
     @Override
     public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
 
@@ -222,11 +263,15 @@ public class MagicBook extends TinkerToolCore {
         }
 
         if (world.isRemote) {
-            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            EnumActionResult clientResult = isSelectedSpellOnCooldown(stack, player, MagicPageItem.SlotType.RIGHT)
+                    ? EnumActionResult.PASS
+                    : EnumActionResult.SUCCESS;
+            return new ActionResult<>(clientResult, stack);
         }
 
         boolean executed = executeSpell(stack, player, MagicPageItem.SlotType.RIGHT, null);
         if (executed) {
+            syncHeldBook(player, stack);
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         } else {
             return new ActionResult<>(EnumActionResult.PASS, stack);
