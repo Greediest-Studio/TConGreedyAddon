@@ -4,6 +4,11 @@ import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +20,10 @@ public class ModuleManager {
     private static final Map<String, ModuleConfig> moduleConfigs = new HashMap<>();
     private static final Set<String> activeModules = new HashSet<>();
     private static Configuration config;
+
+    private static boolean isClientSide() {
+        return FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT;
+    }
 
     public static void registerModule(IModule module) {
         modules.put(module.getModuleName(), module);
@@ -47,7 +56,7 @@ public class ModuleManager {
         }
     }
 
-    public static void preInitActiveModules() {
+    public static void preInitActiveModules(FMLPreInitializationEvent event) {
         for (IModule module : modules.values()) {
             // 检查模块是否启用
             boolean enabled = config.get(
@@ -62,12 +71,17 @@ public class ModuleManager {
                 }
 
                 module.preInit();
+                if (isClientSide()) {
+                    module.preInitClient(event);
+                } else {
+                    module.preInitServer(event);
+                }
                 activeModules.add(module.getModuleName());
             }
         }
     }
 
-    public static void initActiveModules() {
+    public static void initActiveModules(FMLInitializationEvent event) {
         for (IModule module : modules.values()) {
             boolean enabled = config.get(
                     "modules",
@@ -82,6 +96,11 @@ public class ModuleManager {
                 }
 
                 module.init();
+                if (isClientSide()) {
+                    module.initClient(event);
+                } else {
+                    module.initServer(event);
+                }
             }
         }
 
@@ -90,7 +109,7 @@ public class ModuleManager {
         }
     }
 
-    public static void postInitActiveModules() {
+    public static void postInitActiveModules(FMLPostInitializationEvent event) {
         for (IModule module : modules.values()) {
             boolean enabled = config.get(
                     "modules",
@@ -100,6 +119,11 @@ public class ModuleManager {
 
             if (enabled) {
                 module.postInit();
+                if (isClientSide()) {
+                    module.postInitClient(event);
+                } else {
+                    module.postInitServer(event);
+                }
             }
         }
 

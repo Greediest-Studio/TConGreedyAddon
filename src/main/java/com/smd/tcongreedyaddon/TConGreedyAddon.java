@@ -55,7 +55,7 @@ public class TConGreedyAddon {
 
         ModuleManager.setupConfig(config);
 
-        ModuleManager.preInitActiveModules();
+        ModuleManager.preInitActiveModules(event);
 
         proxy.registerSubscriptions();
         proxy.preInit();
@@ -64,7 +64,7 @@ public class TConGreedyAddon {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Initialization");
-        ModuleManager.initActiveModules();
+        ModuleManager.initActiveModules(event);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new MagicBookGuiHandler());
         proxy.initToolGuis();
         proxy.init();
@@ -73,7 +73,7 @@ public class TConGreedyAddon {
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Post-Initialization");
-        ModuleManager.postInitActiveModules();
+        ModuleManager.postInitActiveModules(event);
         proxy.registerBookData();
         proxy.initToolGuis();
         
