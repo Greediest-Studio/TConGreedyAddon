@@ -41,7 +41,7 @@ public class JumpBoostPage extends UnifiedMagicPage {
         public boolean execute(SpellContext context) {
             if (!context.world.isRemote) {
                 EntityPlayer player = context.player;
-                player.motionY += 1.0; // 测试用
+                player.motionY += 1.0;
                 player.velocityChanged = true;
             }
             return true;

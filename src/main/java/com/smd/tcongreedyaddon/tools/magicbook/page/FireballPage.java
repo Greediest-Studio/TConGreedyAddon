@@ -114,7 +114,7 @@ public class FireballPage extends UnifiedMagicPage {
 
         @Override
         public int getCooldownTicks() {
-            return 60;
+            return 160;
         }
     }
 }

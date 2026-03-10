@@ -47,11 +47,21 @@ public class MagicBookEventHandler {
             MagicPageItem.SlotType slotType = (slot < inv.getLeftSlots()) ? MagicPageItem.SlotType.LEFT : MagicPageItem.SlotType.RIGHT;
 
             NBTTagCompound pageData = pageStack.getTagCompound();
-            if (pageData == null) pageData = new NBTTagCompound();
+            if (pageData == null) {
+                pageData = new NBTTagCompound();
+            }
+
+            NBTTagCompound beforeData = pageData.copy();
+            ItemStack beforeStack = pageStack.copy();
 
             page.onEvent(forgeEvent, player, bookStack, pageStack, pageData, slotType);
 
-            inv.setStackInSlot(slot, pageStack);
+            boolean dataChanged = !pageData.equals(beforeData);
+            boolean stackChanged = !ItemStack.areItemStacksEqual(beforeStack, pageStack);
+            if (dataChanged || stackChanged) {
+                pageStack.setTagCompound(pageData);
+                inv.setStackInSlot(slot, pageStack);
+            }
         }
     }
 }
