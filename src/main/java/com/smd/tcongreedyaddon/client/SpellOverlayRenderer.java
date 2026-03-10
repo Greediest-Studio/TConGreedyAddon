@@ -183,7 +183,7 @@ public class SpellOverlayRenderer {
         }
 
         // 绘制不可切换法术（被动）
-        int nonSelectableStartY = startY + (maxSelectableRows - 1) * SLOT_SIZE;
+        int nonSelectableStartY = screenHeight - SpellOverlayConfig.spellsYOffsetFromBottom - maxNonSelectableRows * SLOT_SIZE;
         for (int row = 0; row < maxNonSelectableRows; row++) {
             for (int col = 0; col < COLUMNS_PER_SIDE; col++) {
                 int y = nonSelectableStartY + row * SLOT_SIZE;
