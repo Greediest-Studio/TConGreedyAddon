@@ -64,15 +64,7 @@ public class SpecialWeapons implements IModule {
     public void preInit() {
 
         TConGreedyTypes.init();
-        
-        for (Material material : TinkerRegistry.getAllMaterials()) {
-            if (material.getStats(BookPageStats.TYPE) == null) {
-                material.addStats(getBookPageForMaterial(material));
-            }
-            if (material.getStats(MagicCoreStats.TYPE) == null) {
-                material.addStats(getMagicCoreForMaterial(material));
-            }
-        }
+
     }
 
     @Override
@@ -140,32 +132,6 @@ public class SpecialWeapons implements IModule {
 
         rangePulsePage = new RangePulsePage();
         event.getRegistry().register(rangePulsePage);
-    }
-
-    private MagicCoreStats getMagicCoreForMaterial(Material material) {
-        String id = material.getIdentifier();
-        switch (id) {
-            case "iron":
-                return new MagicCoreStats(10,10);
-            case "stone":
-            case "wood":
-                return new MagicCoreStats(10,5);
-            default:
-                return new MagicCoreStats(5,5);
-        }
-    }
-
-    private BookPageStats getBookPageForMaterial(Material material) {
-        String id = material.getIdentifier();
-        switch (id) {
-            case "iron":
-                return new BookPageStats(10, 7, 5);
-            case "diamond":
-            case "manyullyn":
-                return new BookPageStats(2, 2, 5);
-            default:
-                return new BookPageStats(1, 1, 2);
-        }
     }
 
     public void registerKeyBindings() {
