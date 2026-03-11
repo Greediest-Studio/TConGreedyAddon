@@ -17,6 +17,19 @@ public class ClientEventHandler {
             EntityPlayerSP player = mc.player;
             if (player == null) return;
 
+            ItemStack heldMain = player.getHeldItemMainhand();
+            boolean holdingBook = heldMain.getItem() instanceof MagicBook;
+            if (holdingBook) {
+                if (player.isHandActive()
+                        && player.getActiveHand() == net.minecraft.util.EnumHand.MAIN_HAND
+                        && !mc.gameSettings.keyBindUseItem.isKeyDown()) {
+                    player.stopActiveHand();
+                    MagicBook.clearClientHoldState(player);
+                }
+            } else {
+                MagicBook.clearClientHoldState(player);
+            }
+
             if (KeyBindings.leftpage.isPressed()) {
                 ItemStack held = player.getHeldItemMainhand();
                 if (held.getItem() instanceof MagicBook) {

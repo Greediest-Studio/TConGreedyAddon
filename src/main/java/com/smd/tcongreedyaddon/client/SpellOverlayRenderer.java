@@ -15,6 +15,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -73,6 +74,8 @@ public class SpellOverlayRenderer {
 
     private RenderCache cachedRender = null; // 缓存实例
 
+    private static final int HOLD_CHARGE_TARGET_TICKS = 100; // 5s at 20 TPS for charged hold fireball
+
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
         if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
@@ -105,6 +108,49 @@ public class SpellOverlayRenderer {
 
             renderLists(event, leftSelectable, leftNonSelectable, rightSelectable, rightNonSelectable);
         }
+
+        renderHoldChargeInfo(mc, event, mainHand);
+    }
+
+    private void renderHoldChargeInfo(Minecraft mc, RenderGameOverlayEvent.Post event, ItemStack bookStack) {
+        EntityPlayer player = mc.player;
+        if (player == null) {
+            return;
+        }
+
+        boolean locallyHoldingBook = player.isHandActive()
+                && player.getActiveHand() == net.minecraft.util.EnumHand.MAIN_HAND
+                && !player.getActiveItemStack().isEmpty()
+                && player.getActiveItemStack().getItem() == bookStack.getItem()
+                && mc.gameSettings.keyBindUseItem.isKeyDown();
+        boolean holdActive = MagicBook.isClientHoldActive(player);
+
+        if (!holdActive && !locallyHoldingBook) {
+            return;
+        }
+
+        int heldTicks = locallyHoldingBook
+                ? Math.max(0, bookStack.getMaxItemUseDuration() - player.getItemInUseCount())
+                : MagicBook.getClientHoldTicks(player);
+
+        float heldSeconds = heldTicks / 20.0f;
+        float targetSeconds = HOLD_CHARGE_TARGET_TICKS / 20.0f;
+
+        String text;
+        int color;
+        if (heldTicks >= HOLD_CHARGE_TARGET_TICKS) {
+            text = I18n.format("overlay.hold_charge_ready");
+            color = 0xFF55FF55;
+        } else {
+            text = I18n.format("overlay.hold_charge", String.format("%.1f", heldSeconds), String.format("%.1f", targetSeconds));
+            color = 0xFFFFFF55;
+        }
+
+        int screenWidth = event.getResolution().getScaledWidth();
+        int screenHeight = event.getResolution().getScaledHeight();
+        int x = (screenWidth - mc.fontRenderer.getStringWidth(text)) / 2;
+        int y = screenHeight - 38;
+        mc.fontRenderer.drawStringWithShadow(text, x, y, color);
     }
 
     private int computeStructureHash(ItemStack bookStack) {
@@ -306,3 +352,4 @@ public class SpellOverlayRenderer {
         Gui.drawRect(x + size - 1, y, x + size, y + size, color);
     }
 }
+

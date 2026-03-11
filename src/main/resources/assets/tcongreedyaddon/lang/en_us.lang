@@ -56,3 +56,6 @@ modifier.dreadpurity.desc=modifier.dreadpurity.desc
 modifier.light_pierce.name=modifier.light_pierce.name
 modifier.light_pierce.desc=modifier.light_pierce.desc
 modifier.light_pierce.extra=modifier.light_pierce.extra
+spell.hold_fireball=Charged Fireball Stream
+overlay.hold_charge=Charging %s/%s s
+overlay.hold_charge_ready=Charge complete, streaming fireballs

@@ -6,12 +6,19 @@ import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -34,7 +41,9 @@ import slimeknights.tconstruct.library.utils.ToolHelper;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MagicBook extends TinkerToolCore {
@@ -43,11 +52,23 @@ public class MagicBook extends TinkerToolCore {
     public static final int DURABILITY_COST = 1;
 
     private final Map<Integer, WeakReference<BookInventory>> inventoryCache = new ConcurrentHashMap<>();
+    private static final Map<String, HoldRuntimeState> SERVER_HOLD_STATES = new ConcurrentHashMap<>();
+    private static final Map<String, HoldRuntimeState> CLIENT_HOLD_STATES = new ConcurrentHashMap<>();
 
     // NBT keys
     public static final String TAG_CUR_LEFT_INDEX = "currentLeftSpellIndex";
     public static final String TAG_CUR_RIGHT_INDEX = "currentRightSpellIndex";
     public static final String TAG_COOLDOWNS = "cooldowns";
+
+    private static final String TAG_HOLD_ACTIVE = "holdActive";
+    private static final String TAG_HOLD_PAGE_SLOT = "holdPageSlot";
+    private static final String TAG_HOLD_RAW_INDEX = "holdRawIndex";
+    private static final String TAG_HOLD_TICKS = "holdTicks";
+    private static final String TAG_HOLD_START_TICK = "holdStartTick";
+    private static final String TAG_HOLD_MODE = "holdMode";
+
+    private static final String HOLD_MODE_CHANNEL = "channel";
+    private static final String HOLD_MODE_TRIGGER = "trigger";
 
     public MagicBook() {
         super(
@@ -78,13 +99,12 @@ public class MagicBook extends TinkerToolCore {
         return inv;
     }
 
-
     /** 表示一个可用的法术条目 */
     private static class SpellEntry {
-        final ItemStack pageStack;   // 书签物品
-        final MagicPageItem page;     // 页面实例
-        final int slot;               // 在容器中的槽位
-        final int internalIndex;      // 在页面内的法术索引
+        final ItemStack pageStack;
+        final MagicPageItem page;
+        final int slot;
+        final int internalIndex;
 
         SpellEntry(ItemStack pageStack, MagicPageItem page, int slot, int internalIndex) {
             this.pageStack = pageStack;
@@ -94,9 +114,73 @@ public class MagicBook extends TinkerToolCore {
         }
     }
 
-    /**
-     * 根据槽位类型构建当前可用的法术列表
-     */
+    private static class HoldSpellTarget {
+        final UnifiedMagicPage page;
+        final ItemStack pageStack;
+        final int pageSlot;
+        final ISpell spell;
+        final int rawIndex;
+        final NBTTagCompound pageData;
+
+        HoldSpellTarget(UnifiedMagicPage page, ItemStack pageStack, int pageSlot,
+                        ISpell spell, int rawIndex, NBTTagCompound pageData) {
+            this.page = page;
+            this.pageStack = pageStack;
+            this.pageSlot = pageSlot;
+            this.spell = spell;
+            this.rawIndex = rawIndex;
+            this.pageData = pageData;
+        }
+    }
+
+    private static class HoldRuntimeState {
+        final int pageSlot;
+        final int rawIndex;
+        final String mode;
+        final EnumHand hand;
+        final long startWorldTick;
+        int heldTicks;
+
+        HoldRuntimeState(int pageSlot, int rawIndex, String mode, EnumHand hand, long startWorldTick) {
+            this.pageSlot = pageSlot;
+            this.rawIndex = rawIndex;
+            this.mode = mode;
+            this.hand = hand;
+            this.startWorldTick = startWorldTick;
+        }
+    }
+
+    private static Map<String, HoldRuntimeState> getHoldStateStore(World world) {
+        return world.isRemote ? CLIENT_HOLD_STATES : SERVER_HOLD_STATES;
+    }
+
+    private static String getHoldStateKey(EntityPlayer player, EnumHand hand) {
+        return player.getUniqueID() + ":" + hand.name();
+    }
+
+    private static HoldRuntimeState getHoldState(EntityPlayer player, EnumHand hand, World world) {
+        return getHoldStateStore(world).get(getHoldStateKey(player, hand));
+    }
+
+    private static HoldRuntimeState getMainHandHoldState(EntityPlayer player, World world) {
+        return getHoldState(player, EnumHand.MAIN_HAND, world);
+    }
+
+    public static boolean isClientHoldActive(EntityPlayer player) {
+        return player != null && getMainHandHoldState(player, player.world) != null;
+    }
+
+    public static int getClientHoldTicks(EntityPlayer player) {
+        HoldRuntimeState state = player == null ? null : getMainHandHoldState(player, player.world);
+        return state == null ? 0 : state.heldTicks;
+    }
+
+    public static void clearClientHoldState(EntityPlayer player) {
+        if (player != null) {
+            CLIENT_HOLD_STATES.remove(getHoldStateKey(player, EnumHand.MAIN_HAND));
+        }
+    }
+
     private List<SpellEntry> buildSpellList(ItemStack stack, MagicPageItem.SlotType slotType) {
         List<SpellEntry> list = new ArrayList<>();
         BookInventory inv = getInventory(stack);
@@ -115,9 +199,6 @@ public class MagicBook extends TinkerToolCore {
         return list;
     }
 
-    /**
-     * 确保当前法术索引在合法范围内
-     */
     private void validateSpellIndices(ItemStack stack) {
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
         boolean dirty = false;
@@ -236,7 +317,7 @@ public class MagicBook extends TinkerToolCore {
             return true;
         }
 
-        boolean executed = executeSpell(stack, player, MagicPageItem.SlotType.LEFT, entity);
+        executeSpell(stack, player, MagicPageItem.SlotType.LEFT, entity);
 
         return true;
     }
@@ -262,115 +343,165 @@ public class MagicBook extends TinkerToolCore {
             return new ActionResult<>(EnumActionResult.FAIL, stack);
         }
 
-        if (world.isRemote) {
-            EnumActionResult clientResult = isSelectedSpellOnCooldown(stack, player, MagicPageItem.SlotType.RIGHT)
-                    ? EnumActionResult.PASS
-                    : EnumActionResult.SUCCESS;
-            return new ActionResult<>(clientResult, stack);
+        HoldSpellTarget holdTarget = resolveSelectedHoldSpell(stack, MagicPageItem.SlotType.RIGHT);
+        if (holdTarget != null && supportsHold(holdTarget.spell)) {
+            if (world.isRemote && isSelectedSpellOnCooldown(stack, player, MagicPageItem.SlotType.RIGHT)) {
+                return new ActionResult<>(EnumActionResult.PASS, stack);
+            }
+            if (!world.isRemote && holdTarget.page.isRawSpellOnCooldown(
+                    holdTarget.pageStack, holdTarget.rawIndex, world, player, stack)) {
+                return new ActionResult<>(EnumActionResult.PASS, stack);
+            }
+
+            String mode = getHoldMode(holdTarget.spell);
+            if (!mode.isEmpty()) {
+                player.setActiveHand(hand);
+                HoldRuntimeState state = getHoldState(player, hand, world);
+                boolean sameActiveHold = state != null
+                        && state.pageSlot == holdTarget.pageSlot
+                        && state.rawIndex == holdTarget.rawIndex
+                        && mode.equals(state.mode);
+                if (!sameActiveHold) {
+                    startHoldState(player, holdTarget, mode, hand, world);
+                }
+                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            }
         }
 
-        boolean executed = executeSpell(stack, player, MagicPageItem.SlotType.RIGHT, null);
-        if (executed) {
-            syncHeldBook(player, stack);
-            return new ActionResult<>(EnumActionResult.SUCCESS, stack);
-        } else {
+        if (world.isRemote) {
             return new ActionResult<>(EnumActionResult.PASS, stack);
         }
+
+        executeSpell(stack, player, MagicPageItem.SlotType.RIGHT, null);
+        return new ActionResult<>(EnumActionResult.PASS, stack);
     }
 
     @Override
-    public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
-        super.onUpdate(stack, world, entity, itemSlot, isSelected);
-        if (!(entity instanceof EntityPlayer) || !isSelected) return;
-        EntityPlayer player = (EntityPlayer) entity;
+    public void onUsingTick(ItemStack stack, EntityLivingBase living, int count) {
+        if (living.world.isRemote || !(living instanceof EntityPlayer)) {
+            return;
+        }
+        EntityPlayer player = (EntityPlayer) living;
 
-        if (!world.isRemote) {
-            cleanupExcessPages(stack, player);
+        ItemStack active = player.getActiveItemStack();
+        boolean stillUsingThisBook = player.isHandActive()
+                && player.getActiveHand() == EnumHand.MAIN_HAND
+                && !active.isEmpty()
+                && active.getItem() == stack.getItem();
+        if (!stillUsingThisBook) {
+            clearHoldState(player, EnumHand.MAIN_HAND, player.world);
+            return;
         }
 
-        BookInventory inv = getInventory(stack);
-        boolean dirty = false;
+        HoldRuntimeState state = getMainHandHoldState(player, player.world);
+        if (state == null) {
+            return;
+        }
 
-        for (int slot = 0; slot < inv.getSlots(); slot++) {
-            ItemStack pageStack = inv.getStackInSlot(slot);
-            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof MagicPageItem)) continue;
-            MagicPageItem page = (MagicPageItem) pageStack.getItem();
-            MagicPageItem.SlotType slotType = (slot < inv.getLeftSlots()) ? MagicPageItem.SlotType.LEFT : MagicPageItem.SlotType.RIGHT;
+        HoldSpellTarget target = resolveHoldSpellFromState(stack, state);
+        if (target == null) {
+            clearHoldState(player, EnumHand.MAIN_HAND, player.world);
+            return;
+        }
 
-            NBTTagCompound oldData = pageStack.getTagCompound();
-            if (oldData == null) oldData = new NBTTagCompound();
-            NBTTagCompound newData = oldData.copy();
+        state.heldTicks = (int) Math.max(0L, player.world.getTotalWorldTime() - state.startWorldTick + 1L);
+        NBTTagCompound beforePageData = target.pageData.copy();
 
-            // 修改点：传入 pageStack 作为最后一个参数
-            page.onHeldUpdate(world, player, stack, newData, slotType, pageStack);
-            if (!newData.equals(oldData)) {
-                pageStack.setTagCompound(newData);
-                inv.setStackInSlot(slot, pageStack);
-                dirty = true;
+        SpellContext context = new SpellContext(
+                player.world,
+                player,
+                stack,
+                target.pageStack,
+                target.pageData,
+                MagicPageItem.SlotType.RIGHT,
+                TriggerSource.holdTick(),
+                null
+        );
+
+        if (HOLD_MODE_CHANNEL.equals(state.mode) && target.spell instanceof IChannelReleaseSpell) {
+            ((IChannelReleaseSpell) target.spell).onChannelTick(context, state.heldTicks);
+        } else if (HOLD_MODE_TRIGGER.equals(state.mode) && target.spell instanceof IHoldTriggerSpell) {
+            IHoldTriggerSpell holdSpell = (IHoldTriggerSpell) target.spell;
+            if (state.heldTicks >= holdSpell.getTriggerStartTicks(context)) {
+                holdSpell.onHoldTriggerTick(context, state.heldTicks);
             }
+            int maxHoldTicks = holdSpell.getMaxHoldTicks(context);
+            if (maxHoldTicks > 0 && state.heldTicks >= maxHoldTicks) {
+                target.pageStack.setTagCompound(context.pageData);
+                if (!context.pageData.equals(beforePageData)) {
+                    getInventory(stack).setStackInSlot(target.pageSlot, target.pageStack);
+                }
+                player.stopActiveHand();
+                return;
+            }
+        }
+
+        target.pageStack.setTagCompound(context.pageData);
+        if (!context.pageData.equals(beforePageData)) {
+            getInventory(stack).setStackInSlot(target.pageSlot, target.pageStack);
         }
     }
 
-    @SideOnly(Side.CLIENT)
     @Override
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        super.addInformation(stack, worldIn, tooltip, flagIn);
+    public void onPlayerStoppedUsing(ItemStack stack, World world, EntityLivingBase living, int timeLeft) {
+        if (world.isRemote) {
+            if (living instanceof EntityPlayer) {
+                clearHoldState((EntityPlayer) living, EnumHand.MAIN_HAND, world);
+            }
+            return;
+        }
+        if (!(living instanceof EntityPlayer)) {
+            return;
+        }
+        EntityPlayer player = (EntityPlayer) living;
+        HoldRuntimeState state = getMainHandHoldState(player, world);
+        if (state == null) {
+            return;
+        }
 
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() >= 4) {
-            Material pageMat = materials.get(2);
-            Material coreMat = materials.get(3);
-            BookPageStats pageStats = pageMat.getStats(BookPageStats.TYPE);
-            if (pageStats != null) {
-                for (String line : pageStats.getLocalizedInfo()) {
-                    tooltip.add(TextFormatting.GOLD + line);
+        HoldSpellTarget target = resolveHoldSpellFromState(stack, state);
+        if (target == null) {
+            clearHoldState(player, EnumHand.MAIN_HAND, world);
+            return;
+        }
+
+        SpellContext releaseContext = new SpellContext(
+                world,
+                player,
+                stack,
+                target.pageStack,
+                target.pageData,
+                MagicPageItem.SlotType.RIGHT,
+                TriggerSource.holdRelease(),
+                null
+        );
+
+        if (HOLD_MODE_CHANNEL.equals(state.mode) && target.spell instanceof IChannelReleaseSpell) {
+            IChannelReleaseSpell channelSpell = (IChannelReleaseSpell) target.spell;
+            int minTicks = Math.max(0, channelSpell.getMinChannelTicks(releaseContext));
+            boolean completed = state.heldTicks >= minTicks;
+            if (!completed) {
+                channelSpell.onChannelInterrupted(releaseContext, state.heldTicks);
+            } else {
+                boolean released = channelSpell.onChannelRelease(releaseContext, state.heldTicks, true);
+                if (released) {
+                    target.page.applyRawSpellCooldown(target.pageStack, target.rawIndex, world, player, stack);
+                    ToolHelper.damageTool(stack, DURABILITY_COST, player);
                 }
             }
-            MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
-            if (coreStats != null) {
-                for (String infoLine : coreStats.getLocalizedInfo()) {
-                    tooltip.add(TextFormatting.GOLD + infoLine);
-                }
+        } else if (HOLD_MODE_TRIGGER.equals(state.mode) && target.spell instanceof IHoldTriggerSpell) {
+            IHoldTriggerSpell holdSpell = (IHoldTriggerSpell) target.spell;
+            int startTicks = Math.max(0, holdSpell.getTriggerStartTicks(releaseContext));
+            boolean interrupted = state.heldTicks < startTicks;
+            holdSpell.onHoldEnd(releaseContext, state.heldTicks, interrupted);
+            if (!interrupted) {
+                target.page.applyRawSpellCooldown(target.pageStack, target.rawIndex, world, player, stack);
             }
         }
 
-        NBTTagCompound tag = TagUtil.getTagSafe(stack);
-
-        List<SpellEntry> leftSpells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
-        int curLeft = tag.getInteger(TAG_CUR_LEFT_INDEX);
-        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
-        if (leftSpells.isEmpty()) {
-            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
-        } else {
-            for (int i = 0; i < leftSpells.size(); i++) {
-                SpellEntry entry = leftSpells.get(i);
-                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.LEFT);
-                if (i == curLeft) {
-                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
-                } else {
-                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
-                }
-            }
-        }
-
-        // 右槽法术
-        List<SpellEntry> rightSpells = buildSpellList(stack, MagicPageItem.SlotType.RIGHT);
-        int curRight = tag.getInteger(TAG_CUR_RIGHT_INDEX);
-        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ":");
-        if (rightSpells.isEmpty()) {
-            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
-        } else {
-            for (int i = 0; i < rightSpells.size(); i++) {
-                SpellEntry entry = rightSpells.get(i);
-                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.RIGHT);
-                if (i == curRight) {
-                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
-                } else {
-                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
-                }
-            }
-        }
+        target.pageStack.setTagCompound(releaseContext.pageData);
+        getInventory(stack).setStackInSlot(target.pageSlot, target.pageStack);
+        clearHoldState(player, EnumHand.MAIN_HAND, world);
     }
 
     // ==================== 工具属性 ====================
@@ -513,5 +644,217 @@ public class MagicBook extends TinkerToolCore {
                 player.dropItem(s, false, true);
             }
         }
+    }
+
+    @Override
+    public void onUpdate(ItemStack stack, World world, Entity entity, int itemSlot, boolean isSelected) {
+        super.onUpdate(stack, world, entity, itemSlot, isSelected);
+        if (!(entity instanceof EntityPlayer) || !isSelected) return;
+        EntityPlayer player = (EntityPlayer) entity;
+
+        if (!world.isRemote) {
+            HoldRuntimeState state = getMainHandHoldState(player, world);
+            if (state != null) {
+                ItemStack active = player.getActiveItemStack();
+                boolean stillUsingThisBook = player.isHandActive()
+                        && player.getActiveHand() == EnumHand.MAIN_HAND
+                        && !active.isEmpty()
+                        && active.getItem() == stack.getItem();
+                if (!stillUsingThisBook) {
+                    clearHoldState(player, EnumHand.MAIN_HAND, world);
+                }
+            }
+            cleanupExcessPages(stack, player);
+        } else if (!player.isHandActive()) {
+            clearHoldState(player, EnumHand.MAIN_HAND, world);
+        }
+
+        BookInventory inv = getInventory(stack);
+
+        for (int slot = 0; slot < inv.getSlots(); slot++) {
+            ItemStack pageStack = inv.getStackInSlot(slot);
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof MagicPageItem)) continue;
+            MagicPageItem page = (MagicPageItem) pageStack.getItem();
+            MagicPageItem.SlotType slotType = (slot < inv.getLeftSlots()) ? MagicPageItem.SlotType.LEFT : MagicPageItem.SlotType.RIGHT;
+
+            NBTTagCompound oldData = pageStack.getTagCompound();
+            if (oldData == null) oldData = new NBTTagCompound();
+            NBTTagCompound newData = oldData.copy();
+
+            page.onHeldUpdate(world, player, stack, newData, slotType, pageStack);
+            if (!newData.equals(oldData)) {
+                pageStack.setTagCompound(newData);
+                inv.setStackInSlot(slot, pageStack);
+            }
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+
+        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
+        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
+        if (materials.size() >= 4) {
+            Material pageMat = materials.get(2);
+            Material coreMat = materials.get(3);
+            BookPageStats pageStats = pageMat.getStats(BookPageStats.TYPE);
+            if (pageStats != null) {
+                for (String line : pageStats.getLocalizedInfo()) {
+                    tooltip.add(TextFormatting.GOLD + line);
+                }
+            }
+            MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
+            if (coreStats != null) {
+                for (String infoLine : coreStats.getLocalizedInfo()) {
+                    tooltip.add(TextFormatting.GOLD + infoLine);
+                }
+            }
+        }
+
+        NBTTagCompound tag = TagUtil.getTagSafe(stack);
+
+        List<SpellEntry> leftSpells = buildSpellList(stack, MagicPageItem.SlotType.LEFT);
+        int curLeft = tag.getInteger(TAG_CUR_LEFT_INDEX);
+        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.leftpage") + ":");
+        if (leftSpells.isEmpty()) {
+            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
+        } else {
+            for (int i = 0; i < leftSpells.size(); i++) {
+                SpellEntry entry = leftSpells.get(i);
+                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.LEFT);
+                if (i == curLeft) {
+                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                } else {
+                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
+                }
+            }
+        }
+
+        List<SpellEntry> rightSpells = buildSpellList(stack, MagicPageItem.SlotType.RIGHT);
+        int curRight = tag.getInteger(TAG_CUR_RIGHT_INDEX);
+        tooltip.add(TextFormatting.DARK_GREEN + I18n.format("tooltip.rightpage") + ":");
+        if (rightSpells.isEmpty()) {
+            tooltip.add(TextFormatting.GRAY + "  " + I18n.format("tooltip.empty"));
+        } else {
+            for (int i = 0; i < rightSpells.size(); i++) {
+                SpellEntry entry = rightSpells.get(i);
+                String spellName = entry.page.getSpellDisplayName(entry.internalIndex, MagicPageItem.SlotType.RIGHT);
+                if (i == curRight) {
+                    tooltip.add(TextFormatting.GREEN + "  - " + spellName + " " + I18n.format("tooltip.current"));
+                } else {
+                    tooltip.add(TextFormatting.GRAY + "  - " + spellName);
+                }
+            }
+        }
+    }
+
+    private HoldSpellTarget resolveSelectedHoldSpell(ItemStack stack, MagicPageItem.SlotType slot) {
+        validateSpellIndices(stack);
+        List<SpellEntry> spells = buildSpellList(stack, slot);
+        if (spells.isEmpty()) {
+            return null;
+        }
+
+        NBTTagCompound tag = TagUtil.getTagSafe(stack);
+        String key = slot == MagicPageItem.SlotType.LEFT ? TAG_CUR_LEFT_INDEX : TAG_CUR_RIGHT_INDEX;
+        int selectedIndex = tag.getInteger(key);
+        if (selectedIndex < 0 || selectedIndex >= spells.size()) {
+            return null;
+        }
+
+        SpellEntry entry = spells.get(selectedIndex);
+        if (!(entry.page instanceof UnifiedMagicPage)) {
+            return null;
+        }
+
+        UnifiedMagicPage page = (UnifiedMagicPage) entry.page;
+        UnifiedMagicPage.SelectedSpell selected = page.resolveSelectedSpell(slot, entry.internalIndex);
+        if (selected == null) {
+            return null;
+        }
+
+        NBTTagCompound pageData = entry.pageStack.getTagCompound();
+        if (pageData == null) {
+            pageData = new NBTTagCompound();
+        }
+
+        return new HoldSpellTarget(page, entry.pageStack, entry.slot, selected.spell, selected.rawIndex, pageData);
+    }
+
+    private HoldSpellTarget resolveHoldSpellFromState(ItemStack stack, HoldRuntimeState state) {
+        if (state == null) {
+            return null;
+        }
+
+        int pageSlot = state.pageSlot;
+        int rawIndex = state.rawIndex;
+
+        BookInventory inv = getInventory(stack);
+        if (pageSlot < 0 || pageSlot >= inv.getSlots()) {
+            return null;
+        }
+
+        ItemStack pageStack = inv.getStackInSlot(pageSlot);
+        if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) {
+            return null;
+        }
+
+        UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
+        UnifiedMagicPage.SelectedSpell selected = page.resolveRawSpell(MagicPageItem.SlotType.RIGHT, rawIndex);
+        if (selected == null) {
+            return null;
+        }
+
+        NBTTagCompound pageData = pageStack.getTagCompound();
+        if (pageData == null) {
+            pageData = new NBTTagCompound();
+        }
+
+        return new HoldSpellTarget(page, pageStack, pageSlot, selected.spell, selected.rawIndex, pageData);
+    }
+
+    private static boolean supportsHold(ISpell spell) {
+        return spell instanceof IChannelReleaseSpell || spell instanceof IHoldTriggerSpell;
+    }
+
+    private static String getHoldMode(ISpell spell) {
+        if (spell instanceof IChannelReleaseSpell) {
+            return HOLD_MODE_CHANNEL;
+        }
+        if (spell instanceof IHoldTriggerSpell) {
+            return HOLD_MODE_TRIGGER;
+        }
+        return "";
+    }
+
+    private void startHoldState(EntityPlayer player, HoldSpellTarget target, String mode, EnumHand hand, World world) {
+        HoldRuntimeState state = new HoldRuntimeState(target.pageSlot, target.rawIndex, mode, hand, world.getTotalWorldTime());
+        getHoldStateStore(world).put(getHoldStateKey(player, hand), state);
+    }
+
+    private void clearHoldState(EntityPlayer player, EnumHand hand, World world) {
+        getHoldStateStore(world).remove(getHoldStateKey(player, hand));
+    }
+
+    @Override
+    public int getMaxItemUseDuration(ItemStack stack) {
+        return 72000;
+    }
+
+    @Override
+    public EnumAction getItemUseAction(ItemStack stack) {
+        return EnumAction.BOW;
+    }
+
+    // Keep bow pull/stretch animation while holding, but avoid twitch from NBT updates.
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        if (!slotChanged && !oldStack.isEmpty() && !newStack.isEmpty()
+                && oldStack.getItem() == newStack.getItem()) {
+            return false;
+        }
+        return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
     }
 }

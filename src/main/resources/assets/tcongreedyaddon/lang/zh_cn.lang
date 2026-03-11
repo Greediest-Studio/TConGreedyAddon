@@ -75,6 +75,9 @@ tooltip.empty=空槽位
 
 spell.large_fire_ball=大火球
 spell.small_fire_ball=小火球
+spell.hold_fireball=蓄力烈焰连发
+overlay.hold_charge=蓄力中 %s/%s 秒
+overlay.hold_charge_ready=蓄力完成，持续释放中
 
 beam_attack=范围攻击
 
@@ -97,4 +100,3 @@ container.magicbook.right=右书签槽
 
 spell.6666=测试用被动技能
 spell.unknown=未命名
-

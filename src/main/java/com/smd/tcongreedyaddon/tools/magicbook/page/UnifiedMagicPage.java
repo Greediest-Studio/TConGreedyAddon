@@ -29,6 +29,16 @@ public class UnifiedMagicPage extends MagicPageItem {
         }
     }
 
+    public static class SelectedSpell {
+        public final ISpell spell;
+        public final int rawIndex;
+
+        public SelectedSpell(ISpell spell, int rawIndex) {
+            this.spell = spell;
+            this.rawIndex = rawIndex;
+        }
+    }
+
     private final SlotType slotType;
     private final List<ISpell> leftSpells;
     private final List<ISpell> rightSpells;
@@ -87,6 +97,50 @@ public class UnifiedMagicPage extends MagicPageItem {
      */
     private List<ISpell> getSelectableSpells(SlotType slot) {
         return slot == SlotType.LEFT ? leftSelectable : rightSelectable;
+    }
+
+    private List<ISpell> getAllSpells(SlotType slot) {
+        return slot == SlotType.LEFT ? leftSpells : rightSpells;
+    }
+
+    public SelectedSpell resolveSelectedSpell(SlotType slot, int selectableIndex) {
+        List<ISpell> all = getAllSpells(slot);
+        int selectableCounter = 0;
+        for (int rawIndex = 0; rawIndex < all.size(); rawIndex++) {
+            ISpell spell = all.get(rawIndex);
+            if (!spell.isSelectable()) {
+                continue;
+            }
+            if (selectableCounter == selectableIndex) {
+                return new SelectedSpell(spell, rawIndex);
+            }
+            selectableCounter++;
+        }
+        return null;
+    }
+
+    public SelectedSpell resolveRawSpell(SlotType slot, int rawIndex) {
+        List<ISpell> all = getAllSpells(slot);
+        if (rawIndex < 0 || rawIndex >= all.size()) {
+            return null;
+        }
+        return new SelectedSpell(all.get(rawIndex), rawIndex);
+    }
+
+    public boolean isRawSpellOnCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
+        SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
+        if (selected == null) {
+            return false;
+        }
+        return isSpellOnCooldownRaw(pageStack, rawIndex, world, player, bookStack, selected.spell);
+    }
+
+    public void applyRawSpellCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
+        SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
+        if (selected == null) {
+            return;
+        }
+        setSpellCooldownRaw(pageStack, rawIndex, world, player, bookStack, selected.spell);
     }
 
     private boolean isSpellOnCooldownRaw(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack, ISpell spell) {
@@ -404,4 +458,3 @@ public class UnifiedMagicPage extends MagicPageItem {
         }
     }
 }
-
