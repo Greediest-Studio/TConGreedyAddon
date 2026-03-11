@@ -60,13 +60,6 @@ public class MagicBook extends TinkerToolCore {
     public static final String TAG_CUR_RIGHT_INDEX = "currentRightSpellIndex";
     public static final String TAG_COOLDOWNS = "cooldowns";
 
-    private static final String TAG_HOLD_ACTIVE = "holdActive";
-    private static final String TAG_HOLD_PAGE_SLOT = "holdPageSlot";
-    private static final String TAG_HOLD_RAW_INDEX = "holdRawIndex";
-    private static final String TAG_HOLD_TICKS = "holdTicks";
-    private static final String TAG_HOLD_START_TICK = "holdStartTick";
-    private static final String TAG_HOLD_MODE = "holdMode";
-
     private static final String HOLD_MODE_CHANNEL = "channel";
     private static final String HOLD_MODE_TRIGGER = "trigger";
 
@@ -150,6 +143,22 @@ public class MagicBook extends TinkerToolCore {
         }
     }
 
+    public static final class HoldDisplayInfo {
+        public final int chargeTicks;
+        public final int maxHoldTicks;
+        public final boolean triggerMode;
+        public final int pageSlot;
+        public final int rawIndex;
+
+        private HoldDisplayInfo(int chargeTicks, int maxHoldTicks, boolean triggerMode, int pageSlot, int rawIndex) {
+            this.chargeTicks = chargeTicks;
+            this.maxHoldTicks = maxHoldTicks;
+            this.triggerMode = triggerMode;
+            this.pageSlot = pageSlot;
+            this.rawIndex = rawIndex;
+        }
+    }
+
     private static Map<String, HoldRuntimeState> getHoldStateStore(World world) {
         return world.isRemote ? CLIENT_HOLD_STATES : SERVER_HOLD_STATES;
     }
@@ -179,6 +188,19 @@ public class MagicBook extends TinkerToolCore {
         if (player != null) {
             CLIENT_HOLD_STATES.remove(getHoldStateKey(player, EnumHand.MAIN_HAND));
         }
+    }
+
+    @Nullable
+    public static HoldDisplayInfo getSelectedMainHandHoldDisplayInfo(EntityPlayer player) {
+        if (player == null) {
+            return null;
+        }
+        ItemStack mainHand = player.getHeldItemMainhand();
+        if (mainHand.isEmpty() || !(mainHand.getItem() instanceof MagicBook)) {
+            return null;
+        }
+        MagicBook book = (MagicBook) mainHand.getItem();
+        return book.getSelectedHoldDisplayInfo(mainHand, MagicPageItem.SlotType.RIGHT, player);
     }
 
     private List<SpellEntry> buildSpellList(ItemStack stack, MagicPageItem.SlotType slotType) {
@@ -298,16 +320,6 @@ public class MagicBook extends TinkerToolCore {
             return worldTime < cooldownEnd;
         }
         return false;
-    }
-
-    private void syncHeldBook(EntityPlayer player, ItemStack bookStack) {
-        if (!(player instanceof EntityPlayerMP)) {
-            return;
-        }
-        EntityPlayerMP mp = (EntityPlayerMP) player;
-        int currentSlot = mp.inventory.currentItem;
-        mp.inventory.setInventorySlotContents(currentSlot, bookStack);
-        mp.inventory.markDirty();
     }
 
     @Override
@@ -781,6 +793,45 @@ public class MagicBook extends TinkerToolCore {
         }
 
         return new HoldSpellTarget(page, entry.pageStack, entry.slot, selected.spell, selected.rawIndex, pageData);
+    }
+
+    @Nullable
+    public HoldDisplayInfo getSelectedHoldDisplayInfo(ItemStack stack, MagicPageItem.SlotType slot, EntityPlayer player) {
+        if (player == null) {
+            return null;
+        }
+
+        HoldSpellTarget target = resolveSelectedHoldSpell(stack, slot);
+        if (target == null || !supportsHold(target.spell)) {
+            return null;
+        }
+
+        NBTTagCompound contextData = target.pageData == null ? new NBTTagCompound() : target.pageData;
+        SpellContext context = new SpellContext(
+                player.world,
+                player,
+                stack,
+                target.pageStack,
+                contextData,
+                slot,
+                TriggerSource.holdTick(),
+                null
+        );
+
+        if (target.spell instanceof IHoldTriggerSpell) {
+            IHoldTriggerSpell holdSpell = (IHoldTriggerSpell) target.spell;
+            int chargeTicks = Math.max(0, holdSpell.getTriggerStartTicks(context));
+            int maxHoldTicks = holdSpell.getMaxHoldTicks(context);
+            return new HoldDisplayInfo(chargeTicks, maxHoldTicks, true, target.pageSlot, target.rawIndex);
+        }
+
+        if (target.spell instanceof IChannelReleaseSpell) {
+            IChannelReleaseSpell channelSpell = (IChannelReleaseSpell) target.spell;
+            int chargeTicks = Math.max(0, channelSpell.getMinChannelTicks(context));
+            return new HoldDisplayInfo(chargeTicks, -1, false, target.pageSlot, target.rawIndex);
+        }
+
+        return null;
     }
 
     private HoldSpellTarget resolveHoldSpellFromState(ItemStack stack, HoldRuntimeState state) {

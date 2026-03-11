@@ -74,8 +74,6 @@ public class SpellOverlayRenderer {
 
     private RenderCache cachedRender = null; // 缓存实例
 
-    private static final int HOLD_CHARGE_TARGET_TICKS = 100; // 5s at 20 TPS for charged hold fireball
-
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
         if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
@@ -118,6 +116,11 @@ public class SpellOverlayRenderer {
             return;
         }
 
+        MagicBook.HoldDisplayInfo holdInfo = MagicBook.getSelectedMainHandHoldDisplayInfo(player);
+        if (holdInfo == null) {
+            return;
+        }
+
         boolean locallyHoldingBook = player.isHandActive()
                 && player.getActiveHand() == net.minecraft.util.EnumHand.MAIN_HAND
                 && !player.getActiveItemStack().isEmpty()
@@ -133,12 +136,13 @@ public class SpellOverlayRenderer {
                 ? Math.max(0, bookStack.getMaxItemUseDuration() - player.getItemInUseCount())
                 : MagicBook.getClientHoldTicks(player);
 
+        int targetTicks = holdInfo.chargeTicks;
         float heldSeconds = heldTicks / 20.0f;
-        float targetSeconds = HOLD_CHARGE_TARGET_TICKS / 20.0f;
+        float targetSeconds = targetTicks / 20.0f;
 
         String text;
         int color;
-        if (heldTicks >= HOLD_CHARGE_TARGET_TICKS) {
+        if (targetTicks <= 0 || heldTicks >= targetTicks) {
             text = I18n.format("overlay.hold_charge_ready");
             color = 0xFF55FF55;
         } else {
