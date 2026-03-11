@@ -71,8 +71,6 @@ stat.slot.available=允许
 stat.slot.unavailable=禁止
 tooltip.empty=空槽位
 
-
-
 spell.large_fire_ball=大火球
 spell.small_fire_ball=小火球
 spell.hold_fireball=蓄力烈焰连发
@@ -82,7 +80,6 @@ overlay.hold_charge_ready=蓄力完成，持续释放中
 beam_attack=范围攻击
 
 default_attack=默认攻击模式
-
 
 tooltip.leftpage=左键效果
 tooltip.rightpage=右键效果
@@ -100,3 +97,7 @@ container.magicbook.right=右书签槽
 
 spell.6666=测试用被动技能
 spell.unknown=未命名
+
+key.tcongreedyaddon=Tcongreedyaddon
+key.tcongreedyaddon.leftpage=切换左键法术
+key.tcongreedyaddon.rightpage=切换右键法术

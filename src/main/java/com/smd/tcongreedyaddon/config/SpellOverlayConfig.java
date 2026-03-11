@@ -20,11 +20,11 @@ public class SpellOverlayConfig {
         "X offset (in scaled GUI pixels) from the RIGHT edge of the screen",
         "for the active (selectable) spell slot group.",
         "Increase to move the group further from the right edge.",
-        "Default: 100"
+        "Default: 33"
     })
     @Config.Name("Active Spells X Offset From Right")
     @Config.RangeInt(min = 0, max = 2000)
-    public static int activeSpellsXOffsetFromRight = 100;
+    public static int activeSpellsXOffsetFromRight = 33;
 
     @Config.Comment({
         "X offset (in scaled GUI pixels) from the LEFT edge of the screen",
@@ -44,7 +44,7 @@ public class SpellOverlayConfig {
     })
     @Config.Name("Spells Y Offset From Bottom")
     @Config.RangeInt(min = 0, max = 2000)
-    public static int spellsYOffsetFromBottom = 1;
+    public static int spellsYOffsetFromBottom = 23;
 
     @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
     private static class EventHandler {
