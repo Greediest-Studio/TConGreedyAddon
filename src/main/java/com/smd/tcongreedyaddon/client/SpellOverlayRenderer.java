@@ -207,8 +207,11 @@ public class SpellOverlayRenderer {
         GlStateManager.enableBlend();
         GlStateManager.enableAlpha();
 
+        // 快捷栏宽 182px，以屏幕水平中心对称排列，半宽 = 91
+        final int HOTBAR_HALF_WIDTH = 91;
         int activeGroupWidth = COLUMNS_PER_SIDE * SLOT_SIZE * 2 + GROUP_GAP;
-        int activeStartX = screenWidth - SpellOverlayConfig.activeSpellsXOffsetFromRight - activeGroupWidth;
+        // 主动法术槽：锚定到快捷栏右边缘，向右偏移 activeSpellsXOffsetFromRight
+        int activeStartX = screenWidth / 2 + HOTBAR_HALF_WIDTH + SpellOverlayConfig.activeSpellsXOffsetFromRight;
 
         for (int row = 0; row < maxSelectableRows; row++) {
             for (int col = 0; col < COLUMNS_PER_SIDE; col++) {
@@ -234,18 +237,21 @@ public class SpellOverlayRenderer {
 
         // 绘制不可切换法术（被动）
         int nonSelectableStartY = screenHeight - SpellOverlayConfig.spellsYOffsetFromBottom - maxNonSelectableRows * SLOT_SIZE;
+        // 被动法术槽：锚定到快捷栏左边缘，向左偏移 passiveGroupWidth + passiveSpellsXOffsetFromLeft
+        int passiveGroupWidth = COLUMNS_PER_SIDE * SLOT_SIZE * 2 + GROUP_GAP;
+        int passiveStartX = screenWidth / 2 - HOTBAR_HALF_WIDTH - passiveGroupWidth - SpellOverlayConfig.passiveSpellsXOffsetFromLeft;
         for (int row = 0; row < maxNonSelectableRows; row++) {
             for (int col = 0; col < COLUMNS_PER_SIDE; col++) {
                 int y = nonSelectableStartY + row * SLOT_SIZE;
                 int localIndex = row * COLUMNS_PER_SIDE + col;
 
-                int leftX = SpellOverlayConfig.passiveSpellsXOffsetFromLeft + col * SLOT_SIZE;
+                int leftX = passiveStartX + col * SLOT_SIZE;
                 if (localIndex < leftNonSelectable.size()) {
                     SpellRenderInfo info = leftNonSelectable.get(localIndex);
                     drawSpellSlot(mc, leftX, y, info, false, worldTime);
                 }
 
-                int rightStartX = SpellOverlayConfig.passiveSpellsXOffsetFromLeft + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
+                int rightStartX = passiveStartX + COLUMNS_PER_SIDE * SLOT_SIZE + GROUP_GAP;
                 int rightX = rightStartX + col * SLOT_SIZE;
                 if (localIndex < rightNonSelectable.size()) {
                     SpellRenderInfo info = rightNonSelectable.get(localIndex);

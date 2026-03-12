@@ -17,24 +17,28 @@ import com.smd.tcongreedyaddon.Tags;
 public class SpellOverlayConfig {
 
     @Config.Comment({
-        "X offset (in scaled GUI pixels) from the RIGHT edge of the screen",
+        "X offset (in scaled GUI pixels) from the RIGHT edge of the hotbar",
         "for the active (selectable) spell slot group.",
-        "Increase to move the group further from the right edge.",
-        "Default: 33"
+        "Slots are anchored to the hotbar's right edge (screen center + 91px),",
+        "so this value stays consistent across all screen sizes and GUI scales.",
+        "Increase to move the group further to the right.",
+        "Default: 5"
     })
-    @Config.Name("Active Spells X Offset From Right")
+    @Config.Name("Active Spells X Offset From Hotbar Right")
     @Config.RangeInt(min = 0, max = 2000)
-    public static int activeSpellsXOffsetFromRight = 33;
+    public static int activeSpellsXOffsetFromRight = 5;
 
     @Config.Comment({
-        "X offset (in scaled GUI pixels) from the LEFT edge of the screen",
+        "X offset (in scaled GUI pixels) from the LEFT edge of the hotbar",
         "for the passive (non-selectable) spell slot group.",
-        "Increase to move the group further from the left edge.",
-        "Default: 90"
+        "Slots are anchored to the hotbar's left edge (screen center - 91px),",
+        "so this value stays consistent across all screen sizes and GUI scales.",
+        "Increase to move the group further to the left.",
+        "Default: 5"
     })
-    @Config.Name("Passive Spells X Offset From Left")
+    @Config.Name("Passive Spells X Offset From Hotbar Left")
     @Config.RangeInt(min = 0, max = 2000)
-    public static int passiveSpellsXOffsetFromLeft = 90;
+    public static int passiveSpellsXOffsetFromLeft = 5;
 
     @Config.Comment({
         "Y offset (in scaled GUI pixels) from the BOTTOM edge of the screen",
