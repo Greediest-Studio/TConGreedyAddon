@@ -16,9 +16,13 @@ public class ModelRegistrationHandler {
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         registerItemModel(SpecialWeapons.fireballPage);
+        registerItemModel(SpecialWeapons.freezeRayPage);
     }
 
     private static void registerItemModel(Item item) {
+        if (item == null) {
+            return;
+        }
         ModelLoader.setCustomModelResourceLocation(item, 0,
                 new ModelResourceLocation(item.getRegistryName(), "inventory"));
     }

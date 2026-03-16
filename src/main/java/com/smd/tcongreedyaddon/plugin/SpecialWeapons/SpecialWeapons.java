@@ -12,6 +12,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
+import com.smd.tcongreedyaddon.tools.magicbook.page.FreezeRayPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.RangePulsePage;
 import net.minecraft.item.Item;
@@ -44,6 +45,7 @@ public class SpecialWeapons implements IModule {
 
     public static FireballPage fireballPage;
     public static BeamAttackPage beamAttackPage;
+    public static FreezeRayPage freezeRayPage;
     public static DefaultAttackPage defaultAttackPage;
     public static JumpBoostPage jumoboostpage;
     public static RangePulsePage rangePulsePage;
@@ -126,6 +128,9 @@ public class SpecialWeapons implements IModule {
 
         fireballPage = new FireballPage();
         event.getRegistry().register(fireballPage);
+
+        freezeRayPage = new FreezeRayPage();
+        event.getRegistry().register(freezeRayPage);
 
         jumoboostpage = new JumpBoostPage();
         event.getRegistry().register(jumoboostpage);

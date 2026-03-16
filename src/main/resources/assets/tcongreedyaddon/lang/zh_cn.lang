@@ -4,6 +4,7 @@ item.dagger.name=匕首
 item.tconstruct:crossbow.name=十字弩
 item.allinonetool.name=全能工具
 item.magicbook.name=魔法书
+item.freeze_ray_page.name=冻结射线书签
 
 item.greatbladeCore.name=组装核心
 item.magiccore.name=术式核心
@@ -74,6 +75,7 @@ tooltip.empty=空槽位
 spell.large_fire_ball=大火球
 spell.small_fire_ball=小火球
 spell.hold_fireball=蓄力烈焰连发
+spell.freeze_ray=冻结射线
 overlay.hold_charge=蓄力中 %s/%s 秒
 overlay.hold_charge_ready=蓄力完成，持续释放中
 
