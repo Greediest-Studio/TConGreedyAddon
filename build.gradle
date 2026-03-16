@@ -131,6 +131,8 @@ dependencies {
     implementation "curse.maven:TConstruct-74072:2902483"
     implementation "curse.maven:AbyssalCraft-53686:6711543"
 
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     if (propertyBool('use_asset_mover')) {
         implementation "com.cleanroommc:assetmover:${propertyString('asset_mover_version')}"
     }
