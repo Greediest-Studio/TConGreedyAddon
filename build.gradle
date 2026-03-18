@@ -130,6 +130,7 @@ dependencies {
     implementation "curse.maven:Mantle-74924:2713386"
     implementation "curse.maven:TConstruct-74072:2902483"
     implementation "curse.maven:AbyssalCraft-53686:6711543"
+    implementation "curse.maven:crafttweaker-239197:6669824"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 

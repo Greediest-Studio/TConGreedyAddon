@@ -18,8 +18,6 @@ public class TConGreedyTypes {
     public static void init() {
         Material.UNKNOWN.addStats(new BookPageStats(1, 1, 1));
         Material.UNKNOWN.addStats(new MagicCoreStats(10.0F, 10F));
-        registerBookPage("iron",10,7,5);
-        registerMagicCore("iron",10,10);
     }
 
     /**
