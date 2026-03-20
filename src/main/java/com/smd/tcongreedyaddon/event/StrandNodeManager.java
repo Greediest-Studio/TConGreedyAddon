@@ -4,6 +4,7 @@ import com.smd.bulletapi.api.Battlefield;
 import com.smd.bulletapi.api.BulletApi;
 import com.smd.bulletapi.api.handle.BulletHandle;
 import com.smd.tcongreedyaddon.Tags;
+import com.smd.tcongreedyaddon.util.MagicBookHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -32,6 +33,9 @@ public final class StrandNodeManager {
     @Nullable
     public static StrandNode findReusableNode(World world, EntityPlayer player, double range) {
         if (world == null || player == null) {
+            return null;
+        }
+        if (!MagicBookHelper.isHoldingBookWithSpell(player, "spell.strand_grapple")) {
             return null;
         }
 

@@ -49,6 +49,11 @@ public final class StrandNodeHighlightRenderer {
             CLIENT_WORLD_PROGRESS.remove(dimension);
             return;
         }
+        if (!MagicBookHelper.isHoldingBookWithSpell(mc.player, "spell.strand_grapple")) {
+            resetNodeScales(bullets);
+            CLIENT_WORLD_PROGRESS.remove(dimension);
+            return;
+        }
 
         double maxRange = getClientReuseRange(mc.player);
         int aimedBulletId = findAimedNodeBulletId(mc.player, bullets, maxRange);
@@ -129,6 +134,14 @@ public final class StrandNodeHighlightRenderer {
         double projection = offset.dotProduct(lineDir);
         Vec3d nearest = lineStart.add(lineDir.scale(projection));
         return nearest.distanceTo(point);
+    }
+
+    private static void resetNodeScales(Map<Integer, ClientBullet> bullets) {
+        for (ClientBullet bullet : bullets.values()) {
+            if (isStrandNodeBullet(bullet)) {
+                applyBulletScale(bullet, 0.0F);
+            }
+        }
     }
 
     private static void applyBulletScale(ClientBullet bullet, float highlightProgress) {

@@ -338,6 +338,34 @@ public class MagicBook extends TinkerToolCore {
         return true;
     }
 
+    public boolean hasSpell(ItemStack bookStack, String spellRegistryName) {
+        if (ToolHelper.isBroken(bookStack)
+                || spellRegistryName == null
+                || spellRegistryName.trim().isEmpty()) {
+            return false;
+        }
+        String normalizedName = spellRegistryName.trim();
+
+        BookInventory inv = getInventory(bookStack);
+        for (int slot = 0; slot < inv.getSlots(); slot++) {
+            ItemStack pageStack = inv.getStackInSlot(slot);
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) {
+                continue;
+            }
+
+            UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
+            MagicPageItem.SlotType slotType = slot < inv.getLeftSlots()
+                    ? MagicPageItem.SlotType.LEFT
+                    : MagicPageItem.SlotType.RIGHT;
+            for (ISpell spell : page.getRawSpells(slotType)) {
+                if (normalizedName.equalsIgnoreCase(spell.getNameKey())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // ==================== 切换法术 ====================
 
     public void switchSpell(ItemStack stack, MagicPageItem.SlotType slot, boolean next) {

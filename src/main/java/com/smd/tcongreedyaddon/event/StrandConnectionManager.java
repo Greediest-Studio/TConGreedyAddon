@@ -21,6 +21,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
@@ -91,7 +92,28 @@ public final class StrandConnectionManager {
     private static final double SWING_SHORTEN_BASE = 0.008D;
     private static final double GROUND_REENTRY_TANGENTIAL = 0.24D;
     private static final double SWING_ENTRY_TANGENTIAL = 0.52D;
+    private static final double SWING_EXIT_TANGENTIAL = 0.34D;
     private static final double SWING_ENTRY_PULL_EPSILON = 0.18D;
+
+    private static final int PHASE_MIN_HOLD_TICKS = 6;
+
+    private static final double ROPE_TARGET_SLACK = 0.08D;
+    private static final double ROPE_REEL_IN_PULL_BASE = 0.06D;
+    private static final double ROPE_REEL_IN_PULL_SPEED_SCALE = 0.02D;
+    private static final double ROPE_REEL_OUT_ORBIT = 0.09D;
+    private static final double ROPE_REEL_OUT_DRIFT = 0.05D;
+    private static final double ROPE_ADJUST_RATE_PULL = 0.16D;
+    private static final double ROPE_ADJUST_RATE_ORBIT = 0.11D;
+    private static final double ROPE_ADJUST_RATE_DRIFT = 0.08D;
+
+    private static final double NEAR_ANCHOR_SOFT_DISTANCE = 1.25D;
+    private static final double NEAR_ANCHOR_SOFT_MAX_SPEED = 1.35D;
+    private static final double NEAR_ANCHOR_SOFT_MIN_TANGENTIAL = 0.14D;
+    private static final double NEAR_ANCHOR_TANGENT_KEEP = 0.96D;
+    private static final double NEAR_ANCHOR_OUTWARD_KEEP = 0.92D;
+    private static final double NEAR_ANCHOR_SPEED_KEEP = 0.9D;
+    private static final int NEAR_ANCHOR_SOFT_MAX_TICKS = 8;
+    private static final double NEAR_ANCHOR_FORCE_RELEASE_MAX_SPEED = 0.42D;
 
     private static final double MAX_CONNECTION_SPEED = 2.65D;
     private static final int REUSE_GRAPPLE_COOLDOWN_TICKS = 3;
@@ -354,16 +376,21 @@ public final class StrandConnectionManager {
             disconnect(player, false);
             return;
         }
-        if (distance <= computeCloseReleaseDistance(connection)) {
-            disconnect(player, false);
-            return;
-        }
 
         Vec3d ropeDir = toAnchor.scale(1.0D / distance);
         Vec3d motion = getMotion(player);
         double towardSpeed = motion.dotProduct(ropeDir);
         Vec3d tangentialMotion = motion.subtract(ropeDir.scale(towardSpeed));
         double tangentialSpeed = tangentialMotion.length();
+
+        if (distance <= computeCloseReleaseDistance(connection)) {
+            if (trySoftReleaseNearAnchor(player, connection, ropeDir, motion, tangentialMotion)) {
+                return;
+            }
+            disconnect(player, false);
+            return;
+        }
+        connection.nearAnchorTicks = 0;
 
         Vec3d look = normalizeOrZero(player.getLookVec());
         double lookDot = look.dotProduct(ropeDir);
@@ -380,19 +407,38 @@ public final class StrandConnectionManager {
             return;
         }
 
+        if (isRopeOccluded(world, playerCenter, connection.anchorPos)) {
+            disconnect(player, false);
+            return;
+        }
+
         connection.ticksConnected++;
+        connection.phaseTicks++;
         connection.ropeLength = Math.min(connection.ropeLength, connection.maxRange);
         connection.ropeLength = Math.max(connection.ropeLength, connection.minRopeLength);
+        connection.targetRopeLength = MathHelper.clamp(
+                connection.targetRopeLength,
+                connection.minRopeLength,
+                connection.maxRange
+        );
 
-        if (shouldEnterSwing(connection, distance, tangentialSpeed)) {
-            connection.phase = Phase.SWING;
-        } else if (shouldReenterTraction(player, connection, tangentialSpeed, toAnchor.y)) {
-            connection.phase = Phase.TRACTION;
+        updateRopeTargetLength(connection, distance, tangentialSpeed);
+
+        if (canSwitchPhase(connection) && shouldEnterSwing(connection, distance, tangentialSpeed)) {
+            setPhase(connection, Phase.SWING);
+        } else if (canSwitchPhase(connection) && shouldReenterTraction(player, connection, tangentialSpeed, toAnchor.y)) {
+            setPhase(connection, Phase.TRACTION);
         }
 
         Vec3d adjustedMotion = connection.phase == Phase.TRACTION
                 ? applyTraction(player, connection, ropeDir, distance, motion, tangentialMotion)
                 : applySwing(player, connection, ropeDir, distance, motion, towardSpeed, tangentialSpeed);
+
+        connection.ropeLength = approach(
+                connection.ropeLength,
+                connection.targetRopeLength,
+                getRopeAdjustRate(connection.viewIntent)
+        );
 
         adjustedMotion = clampMagnitude(adjustedMotion, MAX_CONNECTION_SPEED);
         setMotion(player, adjustedMotion);
@@ -471,7 +517,7 @@ public final class StrandConnectionManager {
         if (connection.phase == Phase.SWING
                 && connection.viewIntent == ViewIntent.PULL
                 && (connection.anchorPos.distanceTo(getPlayerCenter(player)) > connection.ropeLength + VIEW_PULL_REENTER_DISTANCE
-                || tangentialSpeed < SWING_ENTRY_TANGENTIAL)) {
+                || tangentialSpeed < SWING_EXIT_TANGENTIAL)) {
             return true;
         }
         return connection.phase == Phase.SWING
@@ -499,7 +545,10 @@ public final class StrandConnectionManager {
 
         motion = motion.scale(TRACTION_BLEND_CURRENT).add(desired.scale(TRACTION_BLEND_TARGET));
         motion = applyVerticalStabilization(connection, player, ropeDir, motion);
-        connection.ropeLength = Math.max(connection.minRopeLength, Math.min(connection.ropeLength, distance - 0.08D));
+        connection.targetRopeLength = Math.max(
+            connection.minRopeLength,
+            Math.min(connection.targetRopeLength, distance - ROPE_TARGET_SLACK)
+        );
         return motion;
     }
 
@@ -526,10 +575,109 @@ public final class StrandConnectionManager {
 
         if (tangentialSpeed > 0.05D) {
             double shorten = Math.min(0.18D, SWING_SHORTEN_BASE + tangentialSpeed * SWING_SHORTEN_FACTOR);
-            connection.ropeLength = Math.max(connection.minRopeLength, connection.ropeLength - shorten);
+            connection.targetRopeLength = Math.max(connection.minRopeLength, connection.targetRopeLength - shorten);
         }
 
         return applyVerticalStabilization(connection, player, ropeDir, motion);
+    }
+
+    private static boolean trySoftReleaseNearAnchor(EntityPlayer player, ActiveConnection connection,
+                                                    Vec3d ropeDir, Vec3d motion, Vec3d tangentialMotion) {
+        if (player == null || connection == null) {
+            return false;
+        }
+
+        double totalSpeed = motion.length();
+        double tangentialSpeed = tangentialMotion.length();
+        if (totalSpeed > NEAR_ANCHOR_SOFT_MAX_SPEED || tangentialSpeed < NEAR_ANCHOR_SOFT_MIN_TANGENTIAL) {
+            return false;
+        }
+
+        connection.nearAnchorTicks++;
+
+        Vec3d adjusted = tangentialMotion.scale(NEAR_ANCHOR_TANGENT_KEEP);
+        double radialSpeed = motion.dotProduct(ropeDir);
+        if (radialSpeed < 0.0D) {
+            adjusted = adjusted.add(ropeDir.scale(radialSpeed * NEAR_ANCHOR_OUTWARD_KEEP));
+        }
+
+        double targetSpeed = Math.max(0.24D, totalSpeed * NEAR_ANCHOR_SPEED_KEEP);
+        adjusted = clampMagnitude(adjusted, targetSpeed);
+        setMotion(player, adjusted);
+        player.fallDistance = 0.0F;
+        player.velocityChanged = true;
+
+        return !(connection.nearAnchorTicks >= NEAR_ANCHOR_SOFT_MAX_TICKS
+                && adjusted.length() < NEAR_ANCHOR_FORCE_RELEASE_MAX_SPEED);
+    }
+
+    private static boolean isRopeOccluded(World world, Vec3d start, Vec3d end) {
+        if (world == null || start == null || end == null) {
+            return false;
+        }
+
+        Vec3d offset = end.subtract(start);
+        if (offset.lengthSquared() < 1.0E-6D) {
+            return false;
+        }
+
+        Vec3d dir = normalizeOrZero(offset);
+        Vec3d rayStart = start.add(dir.scale(0.15D));
+        Vec3d rayEnd = end.subtract(dir.scale(0.15D));
+        RayTraceResult hit = world.rayTraceBlocks(rayStart, rayEnd, false, true, false);
+        return hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK;
+    }
+
+    private static void updateRopeTargetLength(ActiveConnection connection, double distance, double tangentialSpeed) {
+        if (connection == null) {
+            return;
+        }
+
+        double base = Math.max(connection.minRopeLength, distance - ROPE_TARGET_SLACK);
+        double target;
+        switch (connection.viewIntent) {
+            case PULL:
+                target = base - (ROPE_REEL_IN_PULL_BASE + tangentialSpeed * ROPE_REEL_IN_PULL_SPEED_SCALE);
+                break;
+            case ORBIT:
+                target = base + ROPE_REEL_OUT_ORBIT;
+                break;
+            default:
+                target = base + ROPE_REEL_OUT_DRIFT;
+                break;
+        }
+
+        connection.targetRopeLength = MathHelper.clamp(target, connection.minRopeLength, connection.maxRange);
+    }
+
+    private static double getRopeAdjustRate(ViewIntent intent) {
+        switch (intent) {
+            case PULL:
+                return ROPE_ADJUST_RATE_PULL;
+            case ORBIT:
+                return ROPE_ADJUST_RATE_ORBIT;
+            default:
+                return ROPE_ADJUST_RATE_DRIFT;
+        }
+    }
+
+    private static double approach(double current, double target, double delta) {
+        if (current < target) {
+            return Math.min(current + delta, target);
+        }
+        return Math.max(current - delta, target);
+    }
+
+    private static boolean canSwitchPhase(ActiveConnection connection) {
+        return connection != null && connection.phaseTicks >= PHASE_MIN_HOLD_TICKS;
+    }
+
+    private static void setPhase(ActiveConnection connection, Phase phase) {
+        if (connection == null || phase == null || connection.phase == phase) {
+            return;
+        }
+        connection.phase = phase;
+        connection.phaseTicks = 0;
     }
 
     private static EntityLivingBase findDashCollisionTarget(EntityPlayer player, Vec3d direction) {
@@ -911,7 +1059,10 @@ public final class StrandConnectionManager {
         private ViewIntent viewIntent = ViewIntent.PULL;
         private int ticksConnected;
         private int detachWarningTicks;
+        private int nearAnchorTicks;
+        private int phaseTicks;
         private double ropeLength;
+        private double targetRopeLength;
 
         private ActiveConnection(int dimension, int bulletId, Vec3d anchorPos,
                                  double maxRange, double speedFactor, double initialDistance,
@@ -923,6 +1074,7 @@ public final class StrandConnectionManager {
             this.speedFactor = speedFactor;
             this.minRopeLength = Math.max(MIN_ROPE_LENGTH, initialDistance * 0.24D);
             this.ropeLength = Math.min(maxRange, initialDistance);
+            this.targetRopeLength = this.ropeLength;
             this.reusedNode = reusedNode;
         }
 

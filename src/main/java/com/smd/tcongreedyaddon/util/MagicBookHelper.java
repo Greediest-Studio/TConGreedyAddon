@@ -194,6 +194,38 @@ public final class MagicBookHelper {
     }
 
     /**
+     * 判断玩家是否持有包含指定法术（注册名）的魔导书。
+     * 当玩家为 null 或传入的法术名为空时返回 false。
+     * 此方法会检查主手与副手的物品堆，若任一为 MagicBook 且包含该法术则返回 true。
+     * @param player 玩家实体，若为 null 则返回 false
+     * @param spellRegistryName 法术注册名（非空字符串），例如 "spell.strand_grapple"
+     * @return 若任一手持书包含该法术则返回 true，否则返回 false
+     */
+    public static boolean isHoldingBookWithSpell(EntityPlayer player, String spellRegistryName) {
+        if (player == null || spellRegistryName == null || spellRegistryName.trim().isEmpty()) {
+            return false;
+        }
+        String normalizedName = spellRegistryName.trim();
+        return hasBookWithSpell(player.getHeldItemMainhand(), normalizedName)
+                || hasBookWithSpell(player.getHeldItemOffhand(), normalizedName);
+    }
+
+    /**
+     * 判断指定物品堆是否为魔导书且包含指定法术（通过注册名）。
+     * 允许传入 null 或空堆，遇到非魔导书时直接返回 false。
+     * @param stack 要检查的物品堆，允许为 null 或空堆
+     * @param spellRegistryName 已规范化的法术注册名
+     * @return 若为 MagicBook 且包含该法术返回 true，否则返回 false
+     */
+    private static boolean hasBookWithSpell(ItemStack stack, String spellRegistryName) {
+        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof MagicBook)) {
+            return false;
+        }
+        MagicBook book = (MagicBook) stack.getItem();
+        return book.hasSpell(stack, spellRegistryName);
+    }
+
+    /**
      * 使用自定义伤害倍率,伤害类型和伤害源执行攻击。
      *
      * @param stack           工具物品堆
