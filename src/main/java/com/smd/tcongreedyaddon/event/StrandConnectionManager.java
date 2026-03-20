@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -61,7 +62,28 @@ public final class StrandConnectionManager {
     private static final double VERTICAL_STABILIZE_RANGE = 1.75D;
     private static final double VERTICAL_STABILIZE_NEAR = 0.62D;
     private static final double VERTICAL_STABILIZE_FAR = 0.16D;
-    private static final double VERTICAL_SUPPORT_EXPONENT = 1.6D;
+    private static final double VIEW_PULL_ENTER_DOT = 0.52D;
+    private static final double VIEW_PULL_EXIT_DOT = 0.30D;
+    private static final double VIEW_ORBIT_ENTER_TANGENT = 0.38D;
+    private static final double VIEW_ORBIT_EXIT_TANGENT = 0.24D;
+    private static final double VIEW_ORBIT_READY_TICKS = 4;
+    private static final double VIEW_ORBIT_MIN_TANGENTIAL = 0.12D;
+    private static final double VIEW_PULL_REENTER_DISTANCE = 0.14D;
+    private static final double TRACTION_PULL_WEIGHT_PULL = 0.82D;
+    private static final double TRACTION_PULL_WEIGHT_ORBIT = 0.22D;
+    private static final double TRACTION_PULL_WEIGHT_DRIFT = 0.10D;
+    private static final double TRACTION_TANGENT_KEEP_PULL = 0.72D;
+    private static final double TRACTION_TANGENT_KEEP_ORBIT = 0.97D;
+    private static final double TRACTION_TANGENT_KEEP_DRIFT = 0.90D;
+    private static final double TRACTION_STEER_PULL = 0.045D;
+    private static final double TRACTION_STEER_ORBIT = 0.12D;
+    private static final double TRACTION_STEER_DRIFT = 0.0D;
+    private static final double SWING_STEER_ORBIT_SCALE = 1.0D;
+    private static final double SWING_STEER_PULL_SCALE = 0.2D;
+    private static final double SWING_STEER_DRIFT_SCALE = 0.0D;
+    private static final double VERTICAL_SUPPORT_PULL = 0.24D;
+    private static final double VERTICAL_SUPPORT_ORBIT = 1.0D;
+    private static final double VERTICAL_SUPPORT_DRIFT = 0.0D;
 
     private static final double SWING_STEER = 0.03D;
     private static final double SWING_TENSION = 0.26D;
@@ -72,6 +94,7 @@ public final class StrandConnectionManager {
     private static final double SWING_ENTRY_PULL_EPSILON = 0.18D;
 
     private static final double MAX_CONNECTION_SPEED = 2.65D;
+    private static final int REUSE_GRAPPLE_COOLDOWN_TICKS = 3;
 
     private static final int MELEE_DASH_TICKS = 6;
     private static final int MELEE_GRACE_TICKS = 7;
@@ -79,7 +102,7 @@ public final class StrandConnectionManager {
     private static final double MELEE_COLLISION_GROW = 0.24D;
     private static final int MELEE_IMPACT_LIFE = 4;
     private static final double MELEE_IMPACT_RADIUS = 2.2D;
-    private static final float MELEE_DAMAGE_MULTIPLIER = 3.5F;
+    private static final float MELEE_DAMAGE_MULTIPLIER = 5.25F;
     private static final double MELEE_KNOCKBACK_SPEED = 0.78D;
     private static final double MELEE_BOSS_KNOCKBACK_SCALE = 0.2D;
     private static final double MELEE_RECOIL_SPEED = 0.1D;
@@ -88,6 +111,7 @@ public final class StrandConnectionManager {
     private static final Map<UUID, ActiveConnection> ACTIVE_CONNECTIONS = new ConcurrentHashMap<>();
     private static final Map<UUID, MeleeDashState> ACTIVE_MELEE_DASHES = new ConcurrentHashMap<>();
     private static final Map<UUID, MeleeGraceState> ACTIVE_MELEE_GRACES = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> ACTIVE_REUSE_COOLDOWNS = new ConcurrentHashMap<>();
 
     private static volatile boolean clientConnectionActive;
     private static volatile boolean clientMeleeReady;
@@ -97,7 +121,7 @@ public final class StrandConnectionManager {
 
     public static boolean connect(EntityPlayer player, ItemStack bookStack,
                                   StrandNodeManager.StrandNode node,
-                                  double maxRange, double spellSpeed) {
+                                  double maxRange, double spellSpeed, boolean reusedNode) {
         if (player == null || player.world == null || player.world.isRemote || node == null) {
             return false;
         }
@@ -122,7 +146,8 @@ public final class StrandConnectionManager {
                 anchorPos,
                 Math.max(2.0D, maxRange),
                 Math.max(0.5D, spellSpeed),
-                distance
+                distance,
+                reusedNode
         );
         ACTIVE_CONNECTIONS.put(player.getUniqueID(), connection);
         syncClientConnection(player, connection);
@@ -144,6 +169,12 @@ public final class StrandConnectionManager {
         ActiveConnection connection = ACTIVE_CONNECTIONS.remove(player.getUniqueID());
         if (connection == null) {
             return false;
+        }
+        if (connection.reusedNode && player.world != null && !player.world.isRemote) {
+            ACTIVE_REUSE_COOLDOWNS.put(
+                    player.getUniqueID(),
+                    player.world.getTotalWorldTime() + REUSE_GRAPPLE_COOLDOWN_TICKS
+            );
         }
         if (grantMeleeGrace && connection.isMeleeReady()) {
             ACTIVE_MELEE_GRACES.put(player.getUniqueID(),
@@ -211,6 +242,26 @@ public final class StrandConnectionManager {
 
     public static boolean hasConnection(EntityPlayer player) {
         return player != null && ACTIVE_CONNECTIONS.containsKey(player.getUniqueID());
+    }
+
+    public static boolean hasReuseCooldown(EntityPlayer player) {
+        return getReuseCooldownRemainingTicks(player) > 0;
+    }
+
+    public static int getReuseCooldownRemainingTicks(EntityPlayer player) {
+        if (player == null || player.world == null) {
+            return 0;
+        }
+        Long cooldownEnd = ACTIVE_REUSE_COOLDOWNS.get(player.getUniqueID());
+        if (cooldownEnd == null) {
+            return 0;
+        }
+        long remaining = cooldownEnd - player.world.getTotalWorldTime();
+        if (remaining <= 0L) {
+            ACTIVE_REUSE_COOLDOWNS.remove(player.getUniqueID());
+            return 0;
+        }
+        return (int) remaining;
     }
 
     public static boolean isClientMeleeReady() {
@@ -314,7 +365,10 @@ public final class StrandConnectionManager {
         Vec3d tangentialMotion = motion.subtract(ropeDir.scale(towardSpeed));
         double tangentialSpeed = tangentialMotion.length();
 
-        double lookDot = normalizeOrZero(player.getLookVec()).dotProduct(ropeDir);
+        Vec3d look = normalizeOrZero(player.getLookVec());
+        double lookDot = look.dotProduct(ropeDir);
+        double lookTangentStrength = MathHelper.clamp(projectOnPlane(look, ropeDir).length(), 0.0D, 1.0D);
+        connection.viewIntent = resolveViewIntent(connection, lookDot, lookTangentStrength, tangentialSpeed);
         if (lookDot < DETACH_OBTUSE_DOT) {
             connection.detachWarningTicks++;
         } else {
@@ -399,6 +453,11 @@ public final class StrandConnectionManager {
         if (connection.phase != Phase.TRACTION) {
             return false;
         }
+        if (connection.viewIntent == ViewIntent.ORBIT
+                && connection.ticksConnected >= VIEW_ORBIT_READY_TICKS
+                && tangentialSpeed >= VIEW_ORBIT_MIN_TANGENTIAL) {
+            return true;
+        }
 
         boolean enoughTime = connection.ticksConnected >= TRACTION_MIN_TICKS;
         boolean fastEnough = tangentialSpeed >= SWING_ENTRY_TANGENTIAL;
@@ -409,6 +468,12 @@ public final class StrandConnectionManager {
 
     private static boolean shouldReenterTraction(EntityPlayer player, ActiveConnection connection,
                                                  double tangentialSpeed, double verticalGap) {
+        if (connection.phase == Phase.SWING
+                && connection.viewIntent == ViewIntent.PULL
+                && (connection.anchorPos.distanceTo(getPlayerCenter(player)) > connection.ropeLength + VIEW_PULL_REENTER_DISTANCE
+                || tangentialSpeed < SWING_ENTRY_TANGENTIAL)) {
+            return true;
+        }
         return connection.phase == Phase.SWING
                 && player.onGround
                 && verticalGap > 0.35D
@@ -421,14 +486,15 @@ public final class StrandConnectionManager {
         double rangeFactor = MathHelper.clamp(distance / Math.max(2.0D, connection.maxRange), 0.35D, 1.0D);
         double directSpeed = (TRACTION_DIRECT_SPEED + connection.speedFactor * TRACTION_SPEED_SCALE)
                 * (0.85D + rangeFactor * 0.45D);
-        double pullWeight = TRACTION_MIN_PULL_WEIGHT
-                + (1.0D - TRACTION_MIN_PULL_WEIGHT) * computeCenterPullWeight(player, ropeDir);
+        double pullWeight = getTractionPullWeight(connection.viewIntent);
+        double tangentKeep = getTractionTangentKeep(connection.viewIntent);
+        double steerStrength = getTractionSteer(connection.viewIntent);
 
-        Vec3d desired = ropeDir.scale(directSpeed * pullWeight).add(tangentialMotion.scale(TRACTION_TANGENT_KEEP));
+        Vec3d desired = ropeDir.scale(directSpeed * pullWeight).add(tangentialMotion.scale(tangentKeep));
         Vec3d lookTangent = projectOnPlane(normalizeOrZero(player.getLookVec()), ropeDir);
         double lookTangentLength = lookTangent.length();
-        if (lookTangentLength > 1.0E-5D) {
-            desired = desired.add(lookTangent.scale(TRACTION_STEER / lookTangentLength));
+        if (lookTangentLength > 1.0E-5D && steerStrength > 1.0E-5D) {
+            desired = desired.add(lookTangent.scale(steerStrength / lookTangentLength));
         }
 
         motion = motion.scale(TRACTION_BLEND_CURRENT).add(desired.scale(TRACTION_BLEND_TARGET));
@@ -454,7 +520,7 @@ public final class StrandConnectionManager {
         if (lookTangentLength > 1.0E-5D) {
             double viewFactor = MathHelper.clamp(lookTangentLength, 0.0D, 1.0D);
             double ropeFactor = MathHelper.clamp(connection.ropeLength / 9.0D, 0.5D, 1.45D);
-            double steer = SWING_STEER * viewFactor * ropeFactor;
+            double steer = SWING_STEER * viewFactor * ropeFactor * getSwingSteerScale(connection.viewIntent);
             motion = motion.add(lookTangent.scale(steer / lookTangentLength));
         }
 
@@ -535,10 +601,16 @@ public final class StrandConnectionManager {
                 player,
                 context.hitEntity,
                 MELEE_DAMAGE_MULTIPLIER,
-                DamageSource.causePlayerDamage(player)
+                createPlayerMagicDamageSource(player)
         );
         applyMeleeRecoil(player, (EntityLivingBase) context.hitEntity);
         applyMeleeKnockback(player, (EntityLivingBase) context.hitEntity);
+    }
+
+    private static DamageSource createPlayerMagicDamageSource(EntityPlayer player) {
+        return new EntityDamageSource("magic", player)
+                .setDamageBypassesArmor()
+                .setMagicDamage();
     }
 
     private static Vec3d horizontalize(Vec3d vector) {
@@ -571,14 +643,6 @@ public final class StrandConnectionManager {
         return vector.scale(maxMagnitude / length);
     }
 
-    private static double computeCenterPullWeight(EntityPlayer player, Vec3d ropeDir) {
-        if (player == null || ropeDir == null) {
-            return 0.0D;
-        }
-        Vec3d look = normalizeOrZero(player.getLookVec());
-        return MathHelper.clamp(look.dotProduct(ropeDir), 0.0D, 1.0D);
-    }
-
     private static double computeVerticalCompensation(ActiveConnection connection, EntityPlayer player) {
         if (connection == null || player == null) {
             return 0.0D;
@@ -598,7 +662,7 @@ public final class StrandConnectionManager {
             return motion == null ? Vec3d.ZERO : motion;
         }
 
-        double supportFactor = computeVerticalSupportFactor(player, ropeDir);
+        double supportFactor = computeVerticalSupportFactor(connection);
         if (supportFactor <= 1.0E-4D) {
             return motion;
         }
@@ -617,14 +681,88 @@ public final class StrandConnectionManager {
         return new Vec3d(motion.x, stabilizedY, motion.z);
     }
 
-    private static double computeVerticalSupportFactor(EntityPlayer player, Vec3d ropeDir) {
-        if (player == null || ropeDir == null) {
-            return 0.0D;
+    private static ViewIntent resolveViewIntent(ActiveConnection connection, double lookDot,
+                                                double lookTangentStrength, double tangentialSpeed) {
+        if (connection == null) {
+            return ViewIntent.DRIFT;
         }
 
-        Vec3d lookTangent = projectOnPlane(normalizeOrZero(player.getLookVec()), ropeDir);
-        double tangentFactor = MathHelper.clamp(lookTangent.length(), 0.0D, 1.0D);
-        return Math.pow(tangentFactor, VERTICAL_SUPPORT_EXPONENT);
+        ViewIntent previous = connection.viewIntent;
+        if (previous == ViewIntent.PULL && lookDot >= VIEW_PULL_EXIT_DOT) {
+            return ViewIntent.PULL;
+        }
+        if (previous == ViewIntent.ORBIT
+                && lookTangentStrength >= VIEW_ORBIT_EXIT_TANGENT
+                && lookDot < VIEW_PULL_ENTER_DOT) {
+            return ViewIntent.ORBIT;
+        }
+        if (lookDot >= VIEW_PULL_ENTER_DOT) {
+            return ViewIntent.PULL;
+        }
+        if (lookTangentStrength >= VIEW_ORBIT_ENTER_TANGENT
+                && (tangentialSpeed >= VIEW_ORBIT_MIN_TANGENTIAL
+                || connection.ticksConnected >= VIEW_ORBIT_READY_TICKS)) {
+            return ViewIntent.ORBIT;
+        }
+        return ViewIntent.DRIFT;
+    }
+
+    private static double getTractionPullWeight(ViewIntent intent) {
+        switch (intent) {
+            case PULL:
+                return TRACTION_PULL_WEIGHT_PULL;
+            case ORBIT:
+                return TRACTION_PULL_WEIGHT_ORBIT;
+            default:
+                return TRACTION_PULL_WEIGHT_DRIFT;
+        }
+    }
+
+    private static double getTractionTangentKeep(ViewIntent intent) {
+        switch (intent) {
+            case PULL:
+                return TRACTION_TANGENT_KEEP_PULL;
+            case ORBIT:
+                return TRACTION_TANGENT_KEEP_ORBIT;
+            default:
+                return TRACTION_TANGENT_KEEP_DRIFT;
+        }
+    }
+
+    private static double getTractionSteer(ViewIntent intent) {
+        switch (intent) {
+            case PULL:
+                return TRACTION_STEER_PULL;
+            case ORBIT:
+                return TRACTION_STEER_ORBIT;
+            default:
+                return TRACTION_STEER_DRIFT;
+        }
+    }
+
+    private static double getSwingSteerScale(ViewIntent intent) {
+        switch (intent) {
+            case PULL:
+                return SWING_STEER_PULL_SCALE;
+            case ORBIT:
+                return SWING_STEER_ORBIT_SCALE;
+            default:
+                return SWING_STEER_DRIFT_SCALE;
+        }
+    }
+
+    private static double computeVerticalSupportFactor(ActiveConnection connection) {
+        if (connection == null) {
+            return 0.0D;
+        }
+        switch (connection.viewIntent) {
+            case PULL:
+                return VERTICAL_SUPPORT_PULL;
+            case ORBIT:
+                return VERTICAL_SUPPORT_ORBIT;
+            default:
+                return VERTICAL_SUPPORT_DRIFT;
+        }
     }
 
     private static double computeCloseReleaseDistance(ActiveConnection connection) {
@@ -655,6 +793,7 @@ public final class StrandConnectionManager {
         clearConnection(player, false);
         ACTIVE_MELEE_DASHES.remove(player.getUniqueID());
         ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
+        ACTIVE_REUSE_COOLDOWNS.remove(player.getUniqueID());
     }
 
     private static void clearConnection(EntityPlayer player, boolean grantMeleeGrace) {
@@ -753,6 +892,12 @@ public final class StrandConnectionManager {
         SWING
     }
 
+    private enum ViewIntent {
+        PULL,
+        ORBIT,
+        DRIFT
+    }
+
     private static final class ActiveConnection {
         private final int dimension;
         private final int bulletId;
@@ -760,14 +905,17 @@ public final class StrandConnectionManager {
         private final double maxRange;
         private final double speedFactor;
         private final double minRopeLength;
+        private final boolean reusedNode;
         private final boolean meleeArmed = true;
         private Phase phase = Phase.TRACTION;
+        private ViewIntent viewIntent = ViewIntent.PULL;
         private int ticksConnected;
         private int detachWarningTicks;
         private double ropeLength;
 
         private ActiveConnection(int dimension, int bulletId, Vec3d anchorPos,
-                                 double maxRange, double speedFactor, double initialDistance) {
+                                 double maxRange, double speedFactor, double initialDistance,
+                                 boolean reusedNode) {
             this.dimension = dimension;
             this.bulletId = bulletId;
             this.anchorPos = anchorPos;
@@ -775,6 +923,7 @@ public final class StrandConnectionManager {
             this.speedFactor = speedFactor;
             this.minRopeLength = Math.max(MIN_ROPE_LENGTH, initialDistance * 0.24D);
             this.ropeLength = Math.min(maxRange, initialDistance);
+            this.reusedNode = reusedNode;
         }
 
         private boolean isMeleeReady() {

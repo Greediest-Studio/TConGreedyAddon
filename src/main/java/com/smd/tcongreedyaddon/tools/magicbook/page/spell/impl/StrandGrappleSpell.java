@@ -57,6 +57,9 @@ public class StrandGrappleSpell extends AbstractSpell implements IKeybindSkillSp
                     ? KeybindResult.SUCCESS_NO_COOLDOWN
                     : KeybindResult.PASS;
         }
+        if (StrandConnectionManager.hasReuseCooldown(context.player)) {
+            return KeybindResult.PASS;
+        }
         if (StrandConnectionManager.hasConnection(context.player)) {
             return KeybindResult.PASS;
         }
@@ -66,7 +69,7 @@ public class StrandGrappleSpell extends AbstractSpell implements IKeybindSkillSp
         if (reusable != null) {
             StrandNodeManager.refreshNode(context.world, reusable);
             boolean connected = StrandConnectionManager.connect(
-                    context.player, context.bookStack, reusable, context.getRange(), context.getSpellSpeed());
+                    context.player, context.bookStack, reusable, context.getRange(), context.getSpellSpeed(), true);
             return connected ? KeybindResult.SUCCESS_NO_COOLDOWN : KeybindResult.PASS;
         }
 
@@ -81,7 +84,7 @@ public class StrandGrappleSpell extends AbstractSpell implements IKeybindSkillSp
         }
 
         boolean connected = StrandConnectionManager.connect(
-                context.player, context.bookStack, node, context.getRange(), context.getSpellSpeed());
+                context.player, context.bookStack, node, context.getRange(), context.getSpellSpeed(), false);
         return connected ? KeybindResult.SUCCESS_APPLY_COOLDOWN : KeybindResult.PASS;
     }
 
