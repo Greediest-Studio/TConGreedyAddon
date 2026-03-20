@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class StrandNodeManager {
     public static final int NODE_LIFE_TICKS = 20 * 60;
-    private static final double REUSE_RADIUS = 4.0D;
+    private static final double REUSE_RADIUS = 2.5D;
 
     private static final Map<Integer, Map<Integer, StrandNode>> WORLD_NODES = new ConcurrentHashMap<>();
 
@@ -60,9 +60,14 @@ public final class StrandNodeManager {
                 .velocity(new Vec3d(0.0D, 0.0D, 0.0D))
                 .life(NODE_LIFE_TICKS)
                 .damage(0.0F)
-                .rendererType("point")
-                .color(0x45FF66)
-                .size(1.15F)
+                .rendererType("model_json")
+                .color(0x00FF00)
+                .size(1.0F)
+                .set("model", "minecraft:ender_pearl")
+                .set("variant", "inventory")
+                .set("scale", 0.9F)
+                .set("rot_mode", "face_camera")
+                .set("tint", 0x00FF00)
                 .shooter(player)
                 .shooterHeldItem(player.getHeldItemMainhand())
                 .set("strand_node", true)

@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class StrandConnectionManager {
     private static final double MIN_ROPE_LENGTH = 2.4D;
     private static final double EMERGENCY_RELEASE_DISTANCE = 0.55D;
+    private static final double CLOSE_RELEASE_RANGE_FACTOR = 0.10D;
     private static final double DETACH_OBTUSE_DOT = -0.02D;
     private static final int DETACH_WARNING_TICKS = 8;
 
@@ -47,13 +48,23 @@ public final class StrandConnectionManager {
     private static final double TRACTION_DIRECT_SPEED = 0.86D;
     private static final double TRACTION_SPEED_SCALE = 0.08D;
     private static final double TRACTION_STEER = 0.04D;
-    private static final double TRACTION_TANGENT_KEEP = 0.52D;
-    private static final double TRACTION_GRAVITY_CANCEL = 0.072D;
-    private static final double TRACTION_VERTICAL_BONUS = 0.12D;
+    private static final double TRACTION_MIN_PULL_WEIGHT = 0.15D;
+    private static final double TRACTION_TANGENT_KEEP = 0.78D;
+    private static final double TRACTION_BLEND_CURRENT = 0.72D;
+    private static final double TRACTION_BLEND_TARGET = 0.28D;
+    private static final double GRAVITY_COMPENSATION_BASE = 0.08D;
+    private static final double GRAVITY_COMPENSATION_PER_BLOCK = 0.012D;
+    private static final double GRAVITY_COMPENSATION_MIN = 0.0D;
+    private static final double GRAVITY_COMPENSATION_MAX = 0.13D;
+    private static final double VERTICAL_TARGET_SPEED_PER_BLOCK = 0.045D;
+    private static final double VERTICAL_TARGET_SPEED_MAX = 0.18D;
+    private static final double VERTICAL_STABILIZE_RANGE = 1.75D;
+    private static final double VERTICAL_STABILIZE_NEAR = 0.62D;
+    private static final double VERTICAL_STABILIZE_FAR = 0.16D;
+    private static final double VERTICAL_SUPPORT_EXPONENT = 1.6D;
 
     private static final double SWING_STEER = 0.03D;
-    private static final double SWING_TENSION = 0.3D;
-    private static final double SWING_GRAVITY_BLEND = 0.52D;
+    private static final double SWING_TENSION = 0.26D;
     private static final double SWING_SHORTEN_FACTOR = 0.028D;
     private static final double SWING_SHORTEN_BASE = 0.008D;
     private static final double GROUND_REENTRY_TANGENTIAL = 0.24D;
@@ -68,10 +79,10 @@ public final class StrandConnectionManager {
     private static final double MELEE_COLLISION_GROW = 0.24D;
     private static final int MELEE_IMPACT_LIFE = 4;
     private static final double MELEE_IMPACT_RADIUS = 2.2D;
-    private static final float MELEE_DAMAGE_MULTIPLIER = 1.1F;
+    private static final float MELEE_DAMAGE_MULTIPLIER = 3.5F;
     private static final double MELEE_KNOCKBACK_SPEED = 0.78D;
     private static final double MELEE_BOSS_KNOCKBACK_SCALE = 0.2D;
-    private static final double MELEE_RECOIL_SPEED = 0.16D;
+    private static final double MELEE_RECOIL_SPEED = 0.1D;
     private static final String IMPACT_HIT_KEY_PREFIX = "strand_grapple_hit_";
 
     private static final Map<UUID, ActiveConnection> ACTIVE_CONNECTIONS = new ConcurrentHashMap<>();
@@ -292,7 +303,7 @@ public final class StrandConnectionManager {
             disconnect(player, false);
             return;
         }
-        if (distance <= EMERGENCY_RELEASE_DISTANCE) {
+        if (distance <= computeCloseReleaseDistance(connection)) {
             disconnect(player, false);
             return;
         }
@@ -326,8 +337,8 @@ public final class StrandConnectionManager {
         }
 
         Vec3d adjustedMotion = connection.phase == Phase.TRACTION
-                ? applyTraction(player, connection, ropeDir, distance, tangentialMotion)
-                : applySwing(player, connection, ropeDir, distance, towardSpeed, tangentialMotion, tangentialSpeed);
+                ? applyTraction(player, connection, ropeDir, distance, motion, tangentialMotion)
+                : applySwing(player, connection, ropeDir, distance, motion, towardSpeed, tangentialSpeed);
 
         adjustedMotion = clampMagnitude(adjustedMotion, MAX_CONNECTION_SPEED);
         setMotion(player, adjustedMotion);
@@ -405,43 +416,38 @@ public final class StrandConnectionManager {
     }
 
     private static Vec3d applyTraction(EntityPlayer player, ActiveConnection connection, Vec3d ropeDir,
-                                       double distance, Vec3d tangentialMotion) {
-        Vec3d motion = getMotion(player);
+                                       double distance, Vec3d currentMotion, Vec3d tangentialMotion) {
+        Vec3d motion = currentMotion;
         double rangeFactor = MathHelper.clamp(distance / Math.max(2.0D, connection.maxRange), 0.35D, 1.0D);
         double directSpeed = (TRACTION_DIRECT_SPEED + connection.speedFactor * TRACTION_SPEED_SCALE)
                 * (0.85D + rangeFactor * 0.45D);
+        double pullWeight = TRACTION_MIN_PULL_WEIGHT
+                + (1.0D - TRACTION_MIN_PULL_WEIGHT) * computeCenterPullWeight(player, ropeDir);
 
-        Vec3d desired = ropeDir.scale(directSpeed).add(tangentialMotion.scale(TRACTION_TANGENT_KEEP));
+        Vec3d desired = ropeDir.scale(directSpeed * pullWeight).add(tangentialMotion.scale(TRACTION_TANGENT_KEEP));
         Vec3d lookTangent = projectOnPlane(normalizeOrZero(player.getLookVec()), ropeDir);
         double lookTangentLength = lookTangent.length();
         if (lookTangentLength > 1.0E-5D) {
             desired = desired.add(lookTangent.scale(TRACTION_STEER / lookTangentLength));
         }
 
-        desired = desired.add(0.0D, TRACTION_GRAVITY_CANCEL, 0.0D);
-        if (ropeDir.y > 0.0D) {
-            desired = desired.add(0.0D, ropeDir.y * TRACTION_VERTICAL_BONUS + 0.03D, 0.0D);
-        }
-
-        motion = motion.scale(0.22D).add(desired.scale(0.78D));
+        motion = motion.scale(TRACTION_BLEND_CURRENT).add(desired.scale(TRACTION_BLEND_TARGET));
+        motion = applyVerticalStabilization(connection, player, ropeDir, motion);
         connection.ropeLength = Math.max(connection.minRopeLength, Math.min(connection.ropeLength, distance - 0.08D));
         return motion;
     }
 
     private static Vec3d applySwing(EntityPlayer player, ActiveConnection connection, Vec3d ropeDir, double distance,
-                                    double towardSpeed, Vec3d tangentialMotion, double tangentialSpeed) {
-        Vec3d motion = tangentialMotion;
-        if (towardSpeed > 0.0D) {
-            motion = motion.add(ropeDir.scale(towardSpeed));
+                                    Vec3d currentMotion, double towardSpeed, double tangentialSpeed) {
+        Vec3d motion = currentMotion;
+        if (distance >= connection.ropeLength && towardSpeed < 0.0D) {
+            motion = motion.subtract(ropeDir.scale(towardSpeed));
         }
 
         if (distance > connection.ropeLength) {
             double stretch = distance - connection.ropeLength;
             motion = motion.add(ropeDir.scale(stretch * SWING_TENSION));
         }
-
-        Vec3d tangentGravity = projectOnPlane(new Vec3d(0.0D, -0.08D, 0.0D), ropeDir).scale(SWING_GRAVITY_BLEND);
-        motion = motion.add(tangentGravity);
 
         Vec3d lookTangent = projectOnPlane(normalizeOrZero(player.getLookVec()), ropeDir);
         double lookTangentLength = lookTangent.length();
@@ -457,7 +463,7 @@ public final class StrandConnectionManager {
             connection.ropeLength = Math.max(connection.minRopeLength, connection.ropeLength - shorten);
         }
 
-        return motion;
+        return applyVerticalStabilization(connection, player, ropeDir, motion);
     }
 
     private static EntityLivingBase findDashCollisionTarget(EntityPlayer player, Vec3d direction) {
@@ -563,6 +569,69 @@ public final class StrandConnectionManager {
             return vector;
         }
         return vector.scale(maxMagnitude / length);
+    }
+
+    private static double computeCenterPullWeight(EntityPlayer player, Vec3d ropeDir) {
+        if (player == null || ropeDir == null) {
+            return 0.0D;
+        }
+        Vec3d look = normalizeOrZero(player.getLookVec());
+        return MathHelper.clamp(look.dotProduct(ropeDir), 0.0D, 1.0D);
+    }
+
+    private static double computeVerticalCompensation(ActiveConnection connection, EntityPlayer player) {
+        if (connection == null || player == null) {
+            return 0.0D;
+        }
+
+        double verticalGap = connection.anchorPos.y - getPlayerCenter(player).y;
+        return MathHelper.clamp(
+                GRAVITY_COMPENSATION_BASE + verticalGap * GRAVITY_COMPENSATION_PER_BLOCK,
+                GRAVITY_COMPENSATION_MIN,
+                GRAVITY_COMPENSATION_MAX
+        );
+    }
+
+    private static Vec3d applyVerticalStabilization(ActiveConnection connection, EntityPlayer player,
+                                                    Vec3d ropeDir, Vec3d motion) {
+        if (connection == null || player == null || motion == null) {
+            return motion == null ? Vec3d.ZERO : motion;
+        }
+
+        double supportFactor = computeVerticalSupportFactor(player, ropeDir);
+        if (supportFactor <= 1.0E-4D) {
+            return motion;
+        }
+
+        double verticalGap = connection.anchorPos.y - getPlayerCenter(player).y;
+        double compensatedY = motion.y + computeVerticalCompensation(connection, player) * supportFactor;
+        double targetY = MathHelper.clamp(
+                verticalGap * VERTICAL_TARGET_SPEED_PER_BLOCK,
+                -VERTICAL_TARGET_SPEED_MAX,
+                VERTICAL_TARGET_SPEED_MAX
+        ) * supportFactor;
+        double proximity = 1.0D - MathHelper.clamp(Math.abs(verticalGap) / VERTICAL_STABILIZE_RANGE, 0.0D, 1.0D);
+        double stabilizeFactor = VERTICAL_STABILIZE_FAR
+                + (VERTICAL_STABILIZE_NEAR - VERTICAL_STABILIZE_FAR) * proximity;
+        double stabilizedY = compensatedY + (targetY - compensatedY) * stabilizeFactor;
+        return new Vec3d(motion.x, stabilizedY, motion.z);
+    }
+
+    private static double computeVerticalSupportFactor(EntityPlayer player, Vec3d ropeDir) {
+        if (player == null || ropeDir == null) {
+            return 0.0D;
+        }
+
+        Vec3d lookTangent = projectOnPlane(normalizeOrZero(player.getLookVec()), ropeDir);
+        double tangentFactor = MathHelper.clamp(lookTangent.length(), 0.0D, 1.0D);
+        return Math.pow(tangentFactor, VERTICAL_SUPPORT_EXPONENT);
+    }
+
+    private static double computeCloseReleaseDistance(ActiveConnection connection) {
+        if (connection == null) {
+            return EMERGENCY_RELEASE_DISTANCE;
+        }
+        return Math.max(EMERGENCY_RELEASE_DISTANCE, connection.maxRange * CLOSE_RELEASE_RANGE_FACTOR);
     }
 
     private static Vec3d getMotion(EntityPlayer player) {

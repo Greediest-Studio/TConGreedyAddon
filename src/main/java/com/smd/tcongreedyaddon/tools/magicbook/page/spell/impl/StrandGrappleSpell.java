@@ -57,6 +57,9 @@ public class StrandGrappleSpell extends AbstractSpell implements IKeybindSkillSp
                     ? KeybindResult.SUCCESS_NO_COOLDOWN
                     : KeybindResult.PASS;
         }
+        if (StrandConnectionManager.hasConnection(context.player)) {
+            return KeybindResult.PASS;
+        }
 
         StrandNodeManager.StrandNode reusable = StrandNodeManager.findReusableNode(
                 context.world, context.player, context.getRange());
