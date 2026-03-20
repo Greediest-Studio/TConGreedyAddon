@@ -1,6 +1,8 @@
 package com.smd.tcongreedyaddon.client;
 
 import com.smd.tcongreedyaddon.network.NetworkHandler;
+import com.smd.tcongreedyaddon.network.GrappleMeleePacket;
+import com.smd.tcongreedyaddon.network.SkillKeyPacket;
 import com.smd.tcongreedyaddon.network.SwitchSpellPacket;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import net.minecraft.client.Minecraft;
@@ -10,6 +12,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class ClientEventHandler {
+    private boolean utilitySkillWasDown;
+
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
@@ -42,6 +46,21 @@ public class ClientEventHandler {
                     NetworkHandler.INSTANCE.sendToServer(new SwitchSpellPacket(1, true));
                 }
             }
+
+            boolean skillPressed = KeyBindings.utilitySkill.isPressed();
+            boolean skillDown = KeyBindings.utilitySkill.isKeyDown();
+            if (holdingBook) {
+                if (skillPressed) {
+                    NetworkHandler.INSTANCE.sendToServer(new SkillKeyPacket(SkillKeyPacket.Action.PRESS));
+                }
+                if ((!skillDown && utilitySkillWasDown) || (skillPressed && !skillDown)) {
+                    NetworkHandler.INSTANCE.sendToServer(new SkillKeyPacket(SkillKeyPacket.Action.RELEASE));
+                }
+                if (KeyBindings.grappleMelee.isPressed()) {
+                    NetworkHandler.INSTANCE.sendToServer(new GrappleMeleePacket());
+                }
+            }
+            utilitySkillWasDown = skillDown;
         }
     }
 }

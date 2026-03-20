@@ -25,4 +25,20 @@ public class KeyBindings {
             KEY_CATEGORY
     );
 
+    public static final KeyBinding utilitySkill = new KeyBinding(
+            "key.tcongreedyaddon.utilityskill",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            Keyboard.KEY_Q,
+            KEY_CATEGORY
+    );
+
+    public static final KeyBinding grappleMelee = new KeyBinding(
+            "key.tcongreedyaddon.grapplemelee",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            Keyboard.KEY_R,
+            KEY_CATEGORY
+    );
+
 }

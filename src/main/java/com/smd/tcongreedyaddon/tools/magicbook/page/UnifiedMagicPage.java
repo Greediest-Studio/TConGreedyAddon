@@ -103,6 +103,10 @@ public class UnifiedMagicPage extends MagicPageItem {
         return slot == SlotType.LEFT ? leftSpells : rightSpells;
     }
 
+    public List<ISpell> getRawSpells(SlotType slot) {
+        return getAllSpells(slot);
+    }
+
     public SelectedSpell resolveSelectedSpell(SlotType slot, int selectableIndex) {
         List<ISpell> all = getAllSpells(slot);
         int selectableCounter = 0;

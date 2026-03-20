@@ -5,6 +5,7 @@ item.tconstruct:crossbow.name=十字弩
 item.allinonetool.name=全能工具
 item.magicbook.name=魔法书
 item.freeze_ray_page.name=冻结射线书签
+item.strand_grapple_page.name=缚丝勾爪书签
 
 item.greatbladeCore.name=组装核心
 item.magiccore.name=术式核心
@@ -76,6 +77,7 @@ spell.large_fire_ball=大火球
 spell.small_fire_ball=小火球
 spell.hold_fireball=蓄力烈焰连发
 spell.freeze_ray=冻结射线
+spell.strand_grapple=缚丝勾爪
 overlay.hold_charge=蓄力中 %s/%s 秒
 overlay.hold_charge_ready=蓄力完成，持续释放中
 
@@ -103,3 +105,5 @@ spell.unknown=未命名
 key.tcongreedyaddon=Tcongreedyaddon
 key.tcongreedyaddon.leftpage=切换左键法术
 key.tcongreedyaddon.rightpage=切换右键法术
+key.tcongreedyaddon.utilityskill=释放泛用技能
+key.tcongreedyaddon.grapplemelee=释放缚丝近战

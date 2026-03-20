@@ -7,6 +7,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindSkillSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
@@ -122,6 +123,28 @@ public class MagicBook extends TinkerToolCore {
             this.pageSlot = pageSlot;
             this.spell = spell;
             this.rawIndex = rawIndex;
+            this.pageData = pageData;
+        }
+    }
+
+    private static class KeybindSkillTarget {
+        final UnifiedMagicPage page;
+        final ItemStack pageStack;
+        final int pageSlot;
+        final IKeybindSkillSpell spell;
+        final int rawIndex;
+        final MagicPageItem.SlotType slotType;
+        final NBTTagCompound pageData;
+
+        private KeybindSkillTarget(UnifiedMagicPage page, ItemStack pageStack, int pageSlot,
+                                   IKeybindSkillSpell spell, int rawIndex,
+                                   MagicPageItem.SlotType slotType, NBTTagCompound pageData) {
+            this.page = page;
+            this.pageStack = pageStack;
+            this.pageSlot = pageSlot;
+            this.spell = spell;
+            this.rawIndex = rawIndex;
+            this.slotType = slotType;
             this.pageData = pageData;
         }
     }
@@ -273,6 +296,46 @@ public class MagicBook extends TinkerToolCore {
             ToolHelper.damageTool(bookStack, DURABILITY_COST, player);
         }
         return result;
+    }
+
+    public boolean triggerKeybindSkill(ItemStack bookStack, EntityPlayer player, String keyId,
+                                       IKeybindSkillSpell.KeyAction action) {
+        if (ToolHelper.isBroken(bookStack) || player == null || keyId == null || keyId.isEmpty()) {
+            return false;
+        }
+
+        KeybindSkillTarget target = resolveKeybindSkill(bookStack, keyId);
+        if (target == null) {
+            return false;
+        }
+
+        boolean onCooldown = target.page.isRawSpellOnCooldown(
+                target.pageStack, target.rawIndex, player.world, player, bookStack);
+        SpellContext context = new SpellContext(
+                player.world,
+                player,
+                bookStack,
+                target.pageStack,
+                target.pageData,
+                target.slotType,
+                action == IKeybindSkillSpell.KeyAction.PRESS ? TriggerSource.skillPress() : TriggerSource.skillRelease(),
+                null
+        );
+
+        IKeybindSkillSpell.KeybindResult result = target.spell.onKeybindTriggered(context, action, onCooldown);
+        if (!result.isSuccess()) {
+            return false;
+        }
+
+        target.pageStack.setTagCompound(context.pageData);
+        getInventory(bookStack).setStackInSlot(target.pageSlot, target.pageStack);
+        if (result.shouldApplyCooldown()) {
+            target.page.applyRawSpellCooldown(target.pageStack, target.rawIndex, player.world, player, bookStack);
+        }
+        if (action == IKeybindSkillSpell.KeyAction.PRESS) {
+            ToolHelper.damageTool(bookStack, DURABILITY_COST, player);
+        }
+        return true;
     }
 
     // ==================== 切换法术 ====================
@@ -793,6 +856,42 @@ public class MagicBook extends TinkerToolCore {
         }
 
         return new HoldSpellTarget(page, entry.pageStack, entry.slot, selected.spell, selected.rawIndex, pageData);
+    }
+
+    @Nullable
+    private KeybindSkillTarget resolveKeybindSkill(ItemStack stack, String keyId) {
+        BookInventory inv = getInventory(stack);
+        for (int slot = 0; slot < inv.getSlots(); slot++) {
+            ItemStack pageStack = inv.getStackInSlot(slot);
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) {
+                continue;
+            }
+
+            UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
+            MagicPageItem.SlotType slotType = slot < inv.getLeftSlots()
+                    ? MagicPageItem.SlotType.LEFT
+                    : MagicPageItem.SlotType.RIGHT;
+
+            List<ISpell> spells = page.getRawSpells(slotType);
+            for (int rawIndex = 0; rawIndex < spells.size(); rawIndex++) {
+                ISpell spell = spells.get(rawIndex);
+                if (!(spell instanceof IKeybindSkillSpell)) {
+                    continue;
+                }
+
+                IKeybindSkillSpell keySpell = (IKeybindSkillSpell) spell;
+                if (!keyId.equalsIgnoreCase(keySpell.getKeyBindingId())) {
+                    continue;
+                }
+
+                NBTTagCompound pageData = pageStack.getTagCompound();
+                if (pageData == null) {
+                    pageData = new NBTTagCompound();
+                }
+                return new KeybindSkillTarget(page, pageStack, slot, keySpell, rawIndex, slotType, pageData);
+            }
+        }
+        return null;
     }
 
     @Nullable

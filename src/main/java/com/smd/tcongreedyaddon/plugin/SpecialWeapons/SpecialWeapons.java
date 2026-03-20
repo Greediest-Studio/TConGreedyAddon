@@ -3,6 +3,7 @@ package com.smd.tcongreedyaddon.plugin.SpecialWeapons;
 import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.client.ClientEventHandler;
 import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
+import com.smd.tcongreedyaddon.client.StrandConnectionRenderer;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
@@ -15,6 +16,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FreezeRayPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.RangePulsePage;
+import com.smd.tcongreedyaddon.tools.magicbook.page.StrandGrapplePage;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -28,8 +30,10 @@ import slimeknights.tconstruct.library.tools.Pattern;
 import slimeknights.tconstruct.library.tools.ToolPart;
 import slimeknights.tconstruct.tools.TinkerTools;
 
+import static com.smd.tcongreedyaddon.client.KeyBindings.grappleMelee;
 import static com.smd.tcongreedyaddon.client.KeyBindings.leftpage;
 import static com.smd.tcongreedyaddon.client.KeyBindings.rightpage;
+import static com.smd.tcongreedyaddon.client.KeyBindings.utilitySkill;
 
 public class SpecialWeapons implements IModule {
 
@@ -49,6 +53,7 @@ public class SpecialWeapons implements IModule {
     public static DefaultAttackPage defaultAttackPage;
     public static JumpBoostPage jumoboostpage;
     public static RangePulsePage rangePulsePage;
+    public static StrandGrapplePage strandGrapplePage;
 
 
     @Override
@@ -74,6 +79,7 @@ public class SpecialWeapons implements IModule {
         registerKeyBindings();
         MinecraftForge.EVENT_BUS.register(new SpellOverlayRenderer());
         MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
+        MinecraftForge.EVENT_BUS.register(new StrandConnectionRenderer());
     }
 
 
@@ -137,10 +143,15 @@ public class SpecialWeapons implements IModule {
 
         rangePulsePage = new RangePulsePage();
         event.getRegistry().register(rangePulsePage);
+
+        strandGrapplePage = new StrandGrapplePage();
+        event.getRegistry().register(strandGrapplePage);
     }
 
     public void registerKeyBindings() {
         ClientRegistry.registerKeyBinding(leftpage);
         ClientRegistry.registerKeyBinding(rightpage);
+        ClientRegistry.registerKeyBinding(utilitySkill);
+        ClientRegistry.registerKeyBinding(grappleMelee);
     }
 }

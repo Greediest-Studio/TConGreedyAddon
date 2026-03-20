@@ -10,5 +10,8 @@ public class NetworkHandler {
 
     public static void register() {
         INSTANCE.registerMessage(SwitchSpellPacketHandler.class, SwitchSpellPacket.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(SkillKeyPacketHandler.class, SkillKeyPacket.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(GrappleMeleePacketHandler.class, GrappleMeleePacket.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(StrandConnectionSyncPacketHandler.class, StrandConnectionSyncPacket.class, id++, Side.CLIENT);
     }
 }

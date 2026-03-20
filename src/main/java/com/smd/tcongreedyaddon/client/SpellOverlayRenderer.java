@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.client;
 
 import com.smd.tcongreedyaddon.config.SpellOverlayConfig;
+import com.smd.tcongreedyaddon.event.StrandConnectionManager;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
@@ -170,6 +171,7 @@ public class SpellOverlayRenderer {
                 hash = 31 * hash + i;
             }
         }
+        hash = 31 * hash + StrandConnectionManager.getClientVisualHash();
         return hash;
     }
 

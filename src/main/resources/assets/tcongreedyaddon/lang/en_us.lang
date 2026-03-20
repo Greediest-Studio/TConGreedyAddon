@@ -6,6 +6,7 @@ item.allinonetool.name=item.allinonetool.name
 
 item.greatbladeCore.name=Greatblade Core
 item.freeze_ray_page.name=Freeze Ray Bookmark
+item.strand_grapple_page.name=Strand Grapple Bookmark
 
 item.greatblade.desc=The Great Equalizer. The heavy Greatblade sacrifices raw damage for enemy percent HP damage, and excels vs bosses. Slow, Requires two hands!
 item.battleaxe.desc=The Battleaxe is a heavy offensive weapon. As a berserker, you deal and take significantly more damage. \n It is capable of bringing down small trees.
@@ -80,6 +81,7 @@ spell.large_fire_ball=BigFireball
 spell.small_fire_ball=SmallFireball
 spell.hold_fireball=Charged Fireball Stream
 spell.freeze_ray=Freeze Ray
+spell.strand_grapple=Strand Grapple
 overlay.hold_charge=Charging %s/%s s
 overlay.hold_charge_ready=Charge complete, streaming fireballs
 
@@ -107,3 +109,5 @@ spell.unknown=Unnamed
 key.tcongreedyaddon=Tcongreedyaddon
 key.tcongreedyaddon.leftpage=ToggleLeftClickSpells
 key.tcongreedyaddon.rightpage=ToggleRightClickSpells
+key.tcongreedyaddon.utilityskill=Cast Utility Skill
+key.tcongreedyaddon.grapplemelee=Cast Grapple Melee
