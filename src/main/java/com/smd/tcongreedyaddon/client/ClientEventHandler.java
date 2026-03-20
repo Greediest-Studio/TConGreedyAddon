@@ -47,13 +47,12 @@ public class ClientEventHandler {
                 }
             }
 
-            boolean skillPressed = KeyBindings.utilitySkill.isPressed();
             boolean skillDown = KeyBindings.utilitySkill.isKeyDown();
             if (holdingBook) {
-                if (skillPressed) {
+                if (skillDown && !utilitySkillWasDown) {
                     NetworkHandler.INSTANCE.sendToServer(new SkillKeyPacket(SkillKeyPacket.Action.PRESS));
                 }
-                if ((!skillDown && utilitySkillWasDown) || (skillPressed && !skillDown)) {
+                if (!skillDown && utilitySkillWasDown) {
                     NetworkHandler.INSTANCE.sendToServer(new SkillKeyPacket(SkillKeyPacket.Action.RELEASE));
                 }
                 if (KeyBindings.grappleMelee.isPressed()) {
