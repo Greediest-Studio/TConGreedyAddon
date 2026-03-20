@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class StrandNodeManager {
     public static final int NODE_LIFE_TICKS = 20 * 60;
-    private static final double REUSE_RADIUS = 1.6D;
+    private static final double REUSE_RADIUS = 4.0D;
 
     private static final Map<Integer, Map<Integer, StrandNode>> WORLD_NODES = new ConcurrentHashMap<>();
 

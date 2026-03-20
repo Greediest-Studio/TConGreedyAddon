@@ -11,9 +11,12 @@ import com.smd.tcongreedyaddon.network.StrandConnectionSyncPacket;
 import com.smd.tcongreedyaddon.util.MagicBookHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.EntityDragon;
+import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
@@ -60,15 +63,20 @@ public final class StrandConnectionManager {
     private static final double MAX_CONNECTION_SPEED = 2.65D;
 
     private static final int MELEE_DASH_TICKS = 6;
+    private static final int MELEE_GRACE_TICKS = 7;
     private static final double MELEE_DASH_SPEED = 1.1D;
     private static final double MELEE_COLLISION_GROW = 0.24D;
     private static final int MELEE_IMPACT_LIFE = 4;
     private static final double MELEE_IMPACT_RADIUS = 2.2D;
     private static final float MELEE_DAMAGE_MULTIPLIER = 1.1F;
+    private static final double MELEE_KNOCKBACK_SPEED = 0.78D;
+    private static final double MELEE_BOSS_KNOCKBACK_SCALE = 0.2D;
+    private static final double MELEE_RECOIL_SPEED = 0.16D;
+    private static final String IMPACT_HIT_KEY_PREFIX = "strand_grapple_hit_";
 
     private static final Map<UUID, ActiveConnection> ACTIVE_CONNECTIONS = new ConcurrentHashMap<>();
     private static final Map<UUID, MeleeDashState> ACTIVE_MELEE_DASHES = new ConcurrentHashMap<>();
-    private static final Map<Integer, ImpactBulletState> ACTIVE_IMPACT_BULLETS = new ConcurrentHashMap<>();
+    private static final Map<UUID, MeleeGraceState> ACTIVE_MELEE_GRACES = new ConcurrentHashMap<>();
 
     private static volatile boolean clientConnectionActive;
     private static volatile boolean clientMeleeReady;
@@ -86,8 +94,9 @@ public final class StrandConnectionManager {
             return false;
         }
 
-        disconnect(player, false);
+        disconnectInternal(player, false, false);
         ACTIVE_MELEE_DASHES.remove(player.getUniqueID());
+        ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
 
         Vec3d anchorPos = node.anchorPos;
         Vec3d playerCenter = getPlayerCenter(player);
@@ -113,6 +122,10 @@ public final class StrandConnectionManager {
     }
 
     public static boolean disconnect(EntityPlayer player, boolean launchForward) {
+        return disconnectInternal(player, launchForward, true);
+    }
+
+    private static boolean disconnectInternal(EntityPlayer player, boolean launchForward, boolean grantMeleeGrace) {
         if (player == null) {
             return false;
         }
@@ -120,6 +133,12 @@ public final class StrandConnectionManager {
         ActiveConnection connection = ACTIVE_CONNECTIONS.remove(player.getUniqueID());
         if (connection == null) {
             return false;
+        }
+        if (grantMeleeGrace && connection.isMeleeReady()) {
+            ACTIVE_MELEE_GRACES.put(player.getUniqueID(),
+                    new MeleeGraceState(player.world.provider.getDimension(), MELEE_GRACE_TICKS));
+        } else {
+            ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
         }
         syncClientDisconnect(player);
 
@@ -148,7 +167,9 @@ public final class StrandConnectionManager {
         }
 
         ActiveConnection connection = ACTIVE_CONNECTIONS.get(player.getUniqueID());
-        if (connection == null || !connection.isMeleeReady()) {
+        boolean meleeReady = connection != null && connection.isMeleeReady();
+        boolean graceReady = !meleeReady && hasActiveMeleeGrace(player);
+        if (!meleeReady && !graceReady) {
             return false;
         }
 
@@ -162,7 +183,12 @@ public final class StrandConnectionManager {
             return false;
         }
 
-        clearConnection(player);
+        if (connection != null) {
+            disconnectInternal(player, false, false);
+        } else {
+            ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
+            syncClientDisconnect(player);
+        }
 
         ACTIVE_MELEE_DASHES.put(player.getUniqueID(),
                 new MeleeDashState(player.world.provider.getDimension(), dashDir));
@@ -189,7 +215,7 @@ public final class StrandConnectionManager {
 
     public static void setClientVisualState(boolean active, boolean meleeReady) {
         clientConnectionActive = active;
-        clientMeleeReady = active && meleeReady;
+        clientMeleeReady = meleeReady;
     }
 
     @SubscribeEvent
@@ -207,6 +233,7 @@ public final class StrandConnectionManager {
         if (connection != null) {
             maintainConnection(player, connection);
         } else {
+            maintainMeleeGrace(player);
             maintainMeleeDash(player);
         }
     }
@@ -215,16 +242,6 @@ public final class StrandConnectionManager {
     public static void onWorldTick(TickEvent.WorldTickEvent event) {
         if (event.world.isRemote || event.phase != TickEvent.Phase.END) {
             return;
-        }
-
-        Iterator<Map.Entry<Integer, ImpactBulletState>> iterator = ACTIVE_IMPACT_BULLETS.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Integer, ImpactBulletState> entry = iterator.next();
-            ImpactBulletState state = entry.getValue();
-            if (state.dimension != event.world.provider.getDimension()
-                    || !Battlefield.of(event.world).bullets().contains(entry.getKey())) {
-                iterator.remove();
-            }
         }
     }
 
@@ -252,7 +269,7 @@ public final class StrandConnectionManager {
         int dimension = ((World) event.getWorld()).provider.getDimension();
         ACTIVE_CONNECTIONS.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);
         ACTIVE_MELEE_DASHES.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);
-        ACTIVE_IMPACT_BULLETS.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);
+        ACTIVE_MELEE_GRACES.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);
     }
 
     private static void maintainConnection(EntityPlayer player, ActiveConnection connection) {
@@ -260,7 +277,7 @@ public final class StrandConnectionManager {
         if (connection.dimension != world.provider.getDimension()
                 || !StrandNodeManager.isNodeValid(world, connection.bulletId)
                 || player.isDead) {
-            clearConnection(player);
+            clearConnection(player, false);
             return;
         }
 
@@ -286,7 +303,6 @@ public final class StrandConnectionManager {
         Vec3d tangentialMotion = motion.subtract(ropeDir.scale(towardSpeed));
         double tangentialSpeed = tangentialMotion.length();
 
-        boolean meleeReadyBefore = connection.isMeleeReady();
         double lookDot = normalizeOrZero(player.getLookVec()).dotProduct(ropeDir);
         if (lookDot < DETACH_OBTUSE_DOT) {
             connection.detachWarningTicks++;
@@ -297,9 +313,6 @@ public final class StrandConnectionManager {
         if (connection.detachWarningTicks >= DETACH_WARNING_TICKS) {
             disconnect(player, false);
             return;
-        }
-        if (meleeReadyBefore != connection.isMeleeReady()) {
-            syncClientConnection(player, connection);
         }
 
         connection.ticksConnected++;
@@ -320,6 +333,23 @@ public final class StrandConnectionManager {
         setMotion(player, adjustedMotion);
         player.fallDistance = 0.0F;
         player.velocityChanged = true;
+    }
+
+    private static void maintainMeleeGrace(EntityPlayer player) {
+        MeleeGraceState graceState = ACTIVE_MELEE_GRACES.get(player.getUniqueID());
+        if (graceState == null) {
+            return;
+        }
+        if (graceState.dimension != player.world.provider.getDimension() || player.isDead) {
+            ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
+            syncClientDisconnect(player);
+            return;
+        }
+
+        if (--graceState.ticksRemaining <= 0) {
+            ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
+            syncClientDisconnect(player);
+        }
     }
 
     private static void maintainMeleeDash(EntityPlayer player) {
@@ -460,15 +490,14 @@ public final class StrandConnectionManager {
                 .velocity(Vec3d.ZERO)
                 .life(MELEE_IMPACT_LIFE)
                 .damage(0.0F)
+                .size(4.0f)
                 .collisionShape(new SphereShape(MELEE_IMPACT_RADIUS))
                 .collisionFilter((world, bullet, entity) -> entity != null && entity != player && entity.isEntityAlive())
                 .hitBehavior(StrandConnectionManager::onMeleeImpactHit)
                 .shooter(player)
                 .shooterHeldItem(player.getHeldItemMainhand())
+                .set("strand_grapple_impact", true)
                 .spawnHandle();
-
-        ACTIVE_IMPACT_BULLETS.put(handle.getId(),
-                new ImpactBulletState(player.world.provider.getDimension()));
     }
 
     private static void onMeleeImpactHit(CollisionContext context) {
@@ -477,10 +506,16 @@ public final class StrandConnectionManager {
             return;
         }
 
-        ImpactBulletState bulletState = ACTIVE_IMPACT_BULLETS.get(context.bullet.getId());
-        if (bulletState == null || !bulletState.hitEntityIds.add(context.hitEntity.getEntityId())) {
+        NBTTagCompound bulletData = context.bullet.getCustomData();
+        if (bulletData == null) {
+            bulletData = new NBTTagCompound();
+        }
+        String hitKey = IMPACT_HIT_KEY_PREFIX + context.hitEntity.getEntityId();
+        if (bulletData.getBoolean(hitKey)) {
             return;
         }
+        bulletData.setBoolean(hitKey, true);
+        context.bullet.setCustomData(bulletData);
 
         EntityPlayer player = (EntityPlayer) context.shooter;
         ItemStack held = player.getHeldItemMainhand();
@@ -496,6 +531,8 @@ public final class StrandConnectionManager {
                 MELEE_DAMAGE_MULTIPLIER,
                 DamageSource.causePlayerDamage(player)
         );
+        applyMeleeRecoil(player, (EntityLivingBase) context.hitEntity);
+        applyMeleeKnockback(player, (EntityLivingBase) context.hitEntity);
     }
 
     private static Vec3d horizontalize(Vec3d vector) {
@@ -546,15 +583,22 @@ public final class StrandConnectionManager {
         if (player == null) {
             return;
         }
-        clearConnection(player);
+        clearConnection(player, false);
         ACTIVE_MELEE_DASHES.remove(player.getUniqueID());
+        ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
     }
 
-    private static void clearConnection(EntityPlayer player) {
+    private static void clearConnection(EntityPlayer player, boolean grantMeleeGrace) {
         if (player == null) {
             return;
         }
         if (ACTIVE_CONNECTIONS.remove(player.getUniqueID()) != null) {
+            if (grantMeleeGrace) {
+                ACTIVE_MELEE_GRACES.put(player.getUniqueID(),
+                        new MeleeGraceState(player.world.provider.getDimension(), MELEE_GRACE_TICKS));
+            } else {
+                ACTIVE_MELEE_GRACES.remove(player.getUniqueID());
+            }
             syncClientDisconnect(player);
         }
     }
@@ -579,9 +623,60 @@ public final class StrandConnectionManager {
             return;
         }
         NetworkHandler.INSTANCE.sendTo(
-                new StrandConnectionSyncPacket(false, false, 0, 0.0D, 0.0D, 0.0D),
+                new StrandConnectionSyncPacket(false, hasActiveMeleeGrace(player), 0, 0.0D, 0.0D, 0.0D),
                 (EntityPlayerMP) player
         );
+    }
+
+    private static boolean hasActiveMeleeGrace(EntityPlayer player) {
+        if (player == null || player.world == null) {
+            return false;
+        }
+        MeleeGraceState graceState = ACTIVE_MELEE_GRACES.get(player.getUniqueID());
+        return graceState != null
+                && graceState.dimension == player.world.provider.getDimension()
+                && graceState.ticksRemaining > 0;
+    }
+
+    private static void applyMeleeKnockback(EntityPlayer player, EntityLivingBase target) {
+        if (player == null || target == null) {
+            return;
+        }
+
+        Vec3d pushDir = horizontalize(player.getLookVec());
+        if (pushDir.lengthSquared() < 1.0E-6D) {
+            pushDir = horizontalize(getPlayerCenter(target).subtract(getPlayerCenter(player)));
+        }
+        pushDir = normalizeOrZero(pushDir);
+        if (pushDir.lengthSquared() < 1.0E-6D) {
+            return;
+        }
+
+        double strength = isBossLike(target)
+                ? MELEE_KNOCKBACK_SPEED * MELEE_BOSS_KNOCKBACK_SCALE
+                : MELEE_KNOCKBACK_SPEED;
+        target.motionX += pushDir.x * strength;
+        target.motionZ += pushDir.z * strength;
+        target.velocityChanged = true;
+    }
+
+    private static void applyMeleeRecoil(EntityPlayer player, EntityLivingBase target) {
+        if (player == null || target == null) {
+            return;
+        }
+
+        Vec3d recoilDir = horizontalize(getPlayerCenter(player).subtract(getPlayerCenter(target)));
+        recoilDir = normalizeOrZero(recoilDir);
+        setMotion(player, new Vec3d(recoilDir.x * MELEE_RECOIL_SPEED, 0.0D, recoilDir.z * MELEE_RECOIL_SPEED));
+        player.velocityChanged = true;
+        player.fallDistance = 0.0F;
+    }
+
+    private static boolean isBossLike(EntityLivingBase target) {
+        return target != null
+                && (!target.isNonBoss()
+                || target instanceof EntityDragon
+                || target instanceof EntityWither);
     }
 
     private enum Phase {
@@ -596,6 +691,7 @@ public final class StrandConnectionManager {
         private final double maxRange;
         private final double speedFactor;
         private final double minRopeLength;
+        private final boolean meleeArmed = true;
         private Phase phase = Phase.TRACTION;
         private int ticksConnected;
         private int detachWarningTicks;
@@ -613,7 +709,7 @@ public final class StrandConnectionManager {
         }
 
         private boolean isMeleeReady() {
-            return detachWarningTicks > 0;
+            return meleeArmed;
         }
     }
 
@@ -628,12 +724,13 @@ public final class StrandConnectionManager {
         }
     }
 
-    private static final class ImpactBulletState {
+    private static final class MeleeGraceState {
         private final int dimension;
-        private final Set<Integer> hitEntityIds = ConcurrentHashMap.newKeySet();
+        private int ticksRemaining;
 
-        private ImpactBulletState(int dimension) {
+        private MeleeGraceState(int dimension, int ticksRemaining) {
             this.dimension = dimension;
+            this.ticksRemaining = ticksRemaining;
         }
     }
 }
