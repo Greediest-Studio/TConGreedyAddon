@@ -20,7 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class StrandNodeManager {
     public static final int NODE_LIFE_TICKS = 20 * 60;
-    private static final double REUSE_RADIUS = 2.5D;
+    public static final float NODE_BASE_SCALE = 0.9F;
+    public static final float NODE_HIGHLIGHT_SCALE = NODE_BASE_SCALE * 2.0F;
+    private static final double REUSE_RADIUS = 1.2D;
 
     private static final Map<Integer, Map<Integer, StrandNode>> WORLD_NODES = new ConcurrentHashMap<>();
 
@@ -65,7 +67,7 @@ public final class StrandNodeManager {
                 .size(1.0F)
                 .set("model", "minecraft:ender_pearl")
                 .set("variant", "inventory")
-                .set("scale", 0.9F)
+                .set("scale", NODE_BASE_SCALE)
                 .set("rot_mode", "face_camera")
                 .set("tint", 0x00FF00)
                 .shooter(player)
@@ -97,6 +99,11 @@ public final class StrandNodeManager {
 
     public static boolean isNodeValid(World world, int bulletId) {
         return world != null && bulletId >= 0 && BulletApi.handle(world, bulletId).exists();
+    }
+
+    @Nullable
+    public static Map<Integer, StrandNode> getNodesInDimension(int dimension) {
+        return WORLD_NODES.get(dimension);
     }
 
     private static boolean isNodeNearSightLine(Vec3d eyePos, Vec3d look, Vec3d nodePos, double maxDistance) {
