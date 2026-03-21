@@ -3,6 +3,8 @@ package com.smd.tcongreedyaddon.client;
 import com.smd.tcongreedyaddon.config.SpellOverlayConfig;
 import com.smd.tcongreedyaddon.event.StrandConnectionManager;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import com.smd.tcongreedyaddon.tools.magicbook.MagicBookKeys;
+import com.smd.tcongreedyaddon.tools.magicbook.MagicBookStateHelper;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
@@ -117,7 +119,7 @@ public class SpellOverlayRenderer {
             return;
         }
 
-        MagicBook.HoldDisplayInfo holdInfo = MagicBook.getSelectedMainHandHoldDisplayInfo(player);
+        MagicBookStateHelper.HoldDisplayInfo holdInfo = MagicBook.getSelectedMainHandHoldDisplayInfo(player);
         if (holdInfo == null) {
             return;
         }
@@ -187,8 +189,8 @@ public class SpellOverlayRenderer {
         EntityPlayer player = mc.player;
         NBTTagCompound bookTag = player.getHeldItemMainhand().getTagCompound();
         if (bookTag == null) bookTag = new NBTTagCompound();
-        int leftCurrentIndex = bookTag.getInteger(MagicBook.TAG_CUR_LEFT_INDEX);
-        int rightCurrentIndex = bookTag.getInteger(MagicBook.TAG_CUR_RIGHT_INDEX);
+        int leftCurrentIndex = bookTag.getInteger(MagicBookKeys.TAG_CUR_LEFT_INDEX);
+        int rightCurrentIndex = bookTag.getInteger(MagicBookKeys.TAG_CUR_RIGHT_INDEX);
         long worldTime = player.world.getTotalWorldTime();
 
         int leftSelectableRows = getRows(leftSelectable.size());
@@ -334,7 +336,7 @@ public class SpellOverlayRenderer {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
             if (info.cooldownTicks > 0) {
-                NBTTagCompound cooldowns = info.pageData.getCompoundTag(MagicBook.TAG_COOLDOWNS);
+                NBTTagCompound cooldowns = info.pageData.getCompoundTag(MagicBookKeys.TAG_COOLDOWNS);
                 long lastUsed = cooldowns.getLong(String.valueOf(info.internalIndex));
                 long endTick = lastUsed + info.cooldownTicks;
                 int remainingTicks = (int) (endTick - worldTime);

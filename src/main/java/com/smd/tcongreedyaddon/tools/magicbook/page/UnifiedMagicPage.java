@@ -131,6 +131,13 @@ public class UnifiedMagicPage extends MagicPageItem {
         return new SelectedSpell(all.get(rawIndex), rawIndex);
     }
 
+    public SelectedSpell resolveSelectedSpellFromData(SlotType slot, NBTTagCompound pageData) {
+        if (pageData == null) {
+            return null;
+        }
+        return resolveSelectedSpell(slot, pageData.getInteger("spellIndex"));
+    }
+
     public boolean isRawSpellOnCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
         SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
         if (selected == null) {
@@ -179,6 +186,22 @@ public class UnifiedMagicPage extends MagicPageItem {
         return success;
     }
 
+    public boolean executeRawSpell(int rawIndex, SpellContext context) {
+        SelectedSpell selected = resolveRawSpell(context.slot, rawIndex);
+        if (selected == null) {
+            return false;
+        }
+        return executeSpellWithRawIndex(selected.spell, rawIndex, context, context.pageStack);
+    }
+
+    public boolean executeSelectedSpell(SpellContext context) {
+        SelectedSpell selected = resolveSelectedSpellFromData(context.slot, context.pageData);
+        if (selected == null) {
+            return false;
+        }
+        return executeSpellWithRawIndex(selected.spell, selected.rawIndex, context, context.pageStack);
+    }
+
     // ==================== 实现父类抽象方法 ====================
 
     @Override
@@ -210,24 +233,8 @@ public class UnifiedMagicPage extends MagicPageItem {
     @Override
     public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData, ItemStack pageStack) {
         if (player.world.isRemote) return false;
-
-        int selectableIndex = pageData.getInteger("spellIndex");
-        List<ISpell> selectable = getSelectableSpells(SlotType.LEFT);
-        if (selectableIndex < 0 || selectableIndex >= selectable.size()) return false;
-        ISpell spell = selectable.get(selectableIndex);
-
-        // 在原始列表中查找该法术的原始索引
-        int rawIndex = -1;
-        for (int i = 0; i < leftSpells.size(); i++) {
-            if (leftSpells.get(i) == spell) {
-                rawIndex = i;
-                break;
-            }
-        }
-        if (rawIndex == -1) return false; // 不应发生
-
         SpellContext context = new SpellContext(player.world, player, toolStack, pageStack, pageData, SlotType.LEFT, TriggerSource.leftClick(), target);
-        boolean success = executeSpellWithRawIndex(spell, rawIndex, context, pageStack);
+        boolean success = executeSelectedSpell(context);
         if (success) {
             pageStack.setTagCompound(pageData);
         }
@@ -237,24 +244,8 @@ public class UnifiedMagicPage extends MagicPageItem {
     @Override
     public boolean onRightClick(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, ItemStack pageStack) {
         if (world.isRemote) return false;
-
-        int selectableIndex = pageData.getInteger("spellIndex");
-        List<ISpell> selectable = getSelectableSpells(SlotType.RIGHT);
-        if (selectableIndex < 0 || selectableIndex >= selectable.size()) return false;
-        ISpell spell = selectable.get(selectableIndex);
-
-        // 在原始列表中查找该法术的原始索引
-        int rawIndex = -1;
-        for (int i = 0; i < rightSpells.size(); i++) {
-            if (rightSpells.get(i) == spell) {
-                rawIndex = i;
-                break;
-            }
-        }
-        if (rawIndex == -1) return false;
-
         SpellContext context = new SpellContext(world, player, toolStack, pageStack, pageData, SlotType.RIGHT, TriggerSource.rightClick(), null);
-        boolean success = executeSpellWithRawIndex(spell, rawIndex, context, pageStack);
+        boolean success = executeSelectedSpell(context);
         if (success) {
             pageStack.setTagCompound(pageData);
         }
