@@ -4,8 +4,7 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.IModRegistry;
 import mezz.jei.api.ISubtypeRegistry;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
-import slimeknights.tconstruct.library.TinkerRegistry;
-import slimeknights.tconstruct.library.tools.ToolCore;
+import net.minecraft.item.Item;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -16,8 +15,8 @@ public class TraitOverviewJeiPlugin implements IModPlugin {
     @Override
     public void registerItemSubtypes(ISubtypeRegistry registry) {
         TraitOverviewToolSubtypeInterpreter interpreter = new TraitOverviewToolSubtypeInterpreter();
-        for (ToolCore tool : TinkerRegistry.getTools()) {
-            registry.registerSubtypeInterpreter(tool, interpreter);
+        for (Item item : TraitOverviewDataProvider.collectRecipeItems()) {
+            registry.registerSubtypeInterpreter(item, interpreter);
         }
     }
 

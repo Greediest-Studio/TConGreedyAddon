@@ -1,9 +1,12 @@
 package com.smd.tcongreedyaddon.integration.jei;
 
+import com.smd.tcongreedyaddon.TConGreedyAddon;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.modifiers.IModifier;
@@ -14,24 +17,32 @@ import slimeknights.tconstruct.library.traits.ITrait;
 import slimeknights.tconstruct.library.utils.TagUtil;
 import slimeknights.tconstruct.library.utils.ToolBuilder;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 final class TraitOverviewDataProvider {
 
     private static final int SYNTHETIC_EXTRA_TRAIT_PAGES = 1;
+    private static final String CONARM_MOD_ID = "conarm";
+    private static final String CONARM_REGISTRY_CLASS = "c4.conarm.lib.ArmoryRegistry";
+    private static final String CONARM_GET_ARMOR_METHOD = "getArmor";
 
     private TraitOverviewDataProvider() {
     }
 
     static List<TraitOverviewWrapper> createRecipes() {
         List<TraitOverviewWrapper> recipes = new ArrayList<>();
-        for (ToolCore tool : TinkerRegistry.getTools()) {
-            List<ItemStack> matchingStacks = collectKnownStacks(tool);
+        for (Item item : collectRecipeItems()) {
+            List<ItemStack> matchingStacks = collectKnownStacks(item);
             if (matchingStacks.isEmpty()) {
-                ItemStack displayStack = buildRepresentativeStack(tool, matchingStacks);
+                ItemStack displayStack = buildRepresentativeStack(item, matchingStacks);
                 if (!displayStack.isEmpty()) {
                     matchingStacks.add(displayStack.copy());
                 }
@@ -43,12 +54,19 @@ final class TraitOverviewDataProvider {
                     int pageCount = entry.getKey();
                     ItemStack matchingStack = entry.getValue();
                     for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-                        recipes.add(new TraitOverviewWrapper(tool, stack, matchingStack, pageIndex, pageCount));
+                        recipes.add(new TraitOverviewWrapper(item, stack, matchingStack, pageIndex, pageCount));
                     }
                 }
             }
         }
         return recipes;
+    }
+
+    static List<Item> collectRecipeItems() {
+        Set<Item> items = new LinkedHashSet<>();
+        items.addAll(TinkerRegistry.getTools());
+        items.addAll(collectArmoryItems());
+        return new ArrayList<>(items);
     }
 
     private static Map<Integer, ItemStack> createMatchingVariants(ItemStack displayStack) {
@@ -119,9 +137,9 @@ final class TraitOverviewDataProvider {
         return traits;
     }
 
-    private static List<ItemStack> collectKnownStacks(ToolCore tool) {
+    private static List<ItemStack> collectKnownStacks(Item item) {
         NonNullList<ItemStack> subItems = NonNullList.create();
-        tool.getSubItems(CreativeTabs.SEARCH, subItems);
+        item.getSubItems(CreativeTabs.SEARCH, subItems);
         List<ItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : subItems) {
             if (!stack.isEmpty()) {
@@ -131,7 +149,12 @@ final class TraitOverviewDataProvider {
         return stacks;
     }
 
-    private static ItemStack buildRepresentativeStack(ToolCore tool, List<ItemStack> fallbackStacks) {
+    private static ItemStack buildRepresentativeStack(Item item, List<ItemStack> fallbackStacks) {
+        if (!(item instanceof ToolCore)) {
+            return fallbackStacks.isEmpty() ? ItemStack.EMPTY : fallbackStacks.get(0).copy();
+        }
+
+        ToolCore tool = (ToolCore) item;
         List<PartMaterialType> components = tool.getRequiredComponents();
         if (components.isEmpty()) {
             return fallbackStacks.isEmpty() ? ItemStack.EMPTY : fallbackStacks.get(0).copy();
@@ -189,5 +212,30 @@ final class TraitOverviewDataProvider {
             }
         }
         return null;
+    }
+
+    private static List<Item> collectArmoryItems() {
+        if (!Loader.isModLoaded(CONARM_MOD_ID)) {
+            return Collections.emptyList();
+        }
+
+        try {
+            Class<?> registryClass = Class.forName(CONARM_REGISTRY_CLASS);
+            Method getArmorMethod = registryClass.getMethod(CONARM_GET_ARMOR_METHOD);
+            Object result = getArmorMethod.invoke(null);
+            if (result instanceof Collection<?>) {
+                List<Item> items = new ArrayList<>();
+                for (Object entry : (Collection<?>) result) {
+                    if (entry instanceof Item) {
+                        items.add((Item) entry);
+                    }
+                }
+                return items;
+            }
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            TConGreedyAddon.LOGGER.warn("Failed to load Construct's Armory armor items for JEI trait overview.", e);
+        }
+
+        return Collections.emptyList();
     }
 }

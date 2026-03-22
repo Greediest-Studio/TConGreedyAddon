@@ -4,9 +4,9 @@ import com.smd.tcongreedyaddon.config.JeiTraitOverviewConfig;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagList;
-import slimeknights.tconstruct.library.tools.ToolCore;
 import slimeknights.tconstruct.library.traits.ITrait;
 import slimeknights.tconstruct.library.utils.TagUtil;
 import slimeknights.tconstruct.library.utils.TinkerUtil;
@@ -20,15 +20,15 @@ import java.util.Map;
 
 class TraitOverviewWrapper implements IRecipeWrapper {
 
-    private final ToolCore tool;
+    private final Item toolItem;
     private final ItemStack displayStack;
     private final ItemStack matchingStack;
     private final int pageIndex;
     private final int registeredPageCount;
     private ItemStack focusedStack = ItemStack.EMPTY;
 
-    TraitOverviewWrapper(ToolCore tool, ItemStack displayStack, ItemStack matchingStack, int pageIndex, int registeredPageCount) {
-        this.tool = tool;
+    TraitOverviewWrapper(Item toolItem, ItemStack displayStack, ItemStack matchingStack, int pageIndex, int registeredPageCount) {
+        this.toolItem = toolItem;
         this.displayStack = displayStack.copy();
         this.matchingStack = matchingStack.copy();
         this.pageIndex = pageIndex;
@@ -73,7 +73,7 @@ class TraitOverviewWrapper implements IRecipeWrapper {
             return;
         }
 
-        if (focusStack.getItem() != tool) {
+        if (focusStack.getItem() != toolItem) {
             focusedStack = ItemStack.EMPTY;
             return;
         }
