@@ -107,3 +107,6 @@ key.tcongreedyaddon.leftpage=切换左键法术
 key.tcongreedyaddon.rightpage=切换右键法术
 key.tcongreedyaddon.utilityskill=释放泛用技能
 key.tcongreedyaddon.grapplemelee=释放缚丝近战
+gui.jei.trait_overview.title=词条属性全览
+gui.jei.trait_overview.empty=当前工具没有可显示的词条
+gui.jei.trait_overview.page=%s / %s

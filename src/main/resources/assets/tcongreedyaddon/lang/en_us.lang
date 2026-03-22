@@ -111,3 +111,6 @@ key.tcongreedyaddon.leftpage=ToggleLeftClickSpells
 key.tcongreedyaddon.rightpage=ToggleRightClickSpells
 key.tcongreedyaddon.utilityskill=Cast Utility Skill
 key.tcongreedyaddon.grapplemelee=Cast Grapple Melee
+gui.jei.trait_overview.title=Trait Overview
+gui.jei.trait_overview.empty=No visible traits on this tool
+gui.jei.trait_overview.page=%s / %s
