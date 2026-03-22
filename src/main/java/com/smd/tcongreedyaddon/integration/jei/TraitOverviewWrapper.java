@@ -86,8 +86,7 @@ class TraitOverviewWrapper implements IRecipeWrapper {
     }
 
     private boolean hasMatchingSubtype(ItemStack focusStack) {
-        return hasSameBaseSubtype(matchingStack, focusStack)
-                && collectVisibleTraits(focusStack).size() == registeredPageCount;
+        return hasSameBaseSubtype(matchingStack, focusStack);
     }
 
     private static boolean hasSameBaseSubtype(ItemStack left, ItemStack right) {

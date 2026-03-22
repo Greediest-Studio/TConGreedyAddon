@@ -23,7 +23,6 @@ public class TraitOverviewToolSubtypeInterpreter implements ISubtypeInterpreter 
             }
         }
 
-        builder.append('|').append(TraitOverviewWrapper.collectVisibleTraits(itemStack).size());
         return builder.toString();
     }
 }
