@@ -25,8 +25,8 @@ class TraitOverviewCategory implements IRecipeCategory<TraitOverviewWrapper> {
     private static final int WIDTH = 178;
     private static final int HEIGHT = 150;
     private static final int TOOL_SLOT = 0;
-    private static final int CONTENT_LEFT = 24;
-    private static final int CONTENT_WIDTH = WIDTH - CONTENT_LEFT;
+    private static final int CONTENT_LEFT = 12;
+    private static final int CONTENT_WIDTH = WIDTH - (CONTENT_LEFT * 2);
 
     private final IDrawable background;
     private final IDrawable icon;
@@ -92,23 +92,21 @@ class TraitOverviewCategory implements IRecipeCategory<TraitOverviewWrapper> {
         FontRenderer fontRenderer = minecraft.fontRenderer;
         slot.draw(minecraft, 0, 0);
 
-        drawCentered(fontRenderer, TextFormatting.UNDERLINE + I18n.format("gui.jei.trait_overview.title") + TextFormatting.RESET, 3, 0xFFFFFF, true);
-
         String toolName = currentRecipe.getDisplayStack().getDisplayName();
-        fontRenderer.drawSplitString(toolName, CONTENT_LEFT, 14, CONTENT_WIDTH, 0xE0E0E0);
+        drawCenteredSplit(fontRenderer, toolName, 6, CONTENT_WIDTH, 0xE0E0E0);
 
         String pageText = I18n.format("gui.jei.trait_overview.page", currentRecipe.getCurrentPage(), Math.max(1, currentRecipe.getPageCount()));
         fontRenderer.drawStringWithShadow(pageText, WIDTH - fontRenderer.getStringWidth(pageText), 2, 0xA0A0A0);
 
         ITrait trait = currentRecipe.getCurrentTrait();
         if (trait == null) {
-            fontRenderer.drawSplitString(I18n.format("gui.jei.trait_overview.empty"), CONTENT_LEFT, 42, CONTENT_WIDTH, 0xC8C8C8);
+            fontRenderer.drawSplitString(I18n.format("gui.jei.trait_overview.empty"), CONTENT_LEFT, 34, CONTENT_WIDTH, 0xC8C8C8);
             return;
         }
 
-        drawCentered(fontRenderer, TextFormatting.UNDERLINE + trait.getLocalizedName() + TextFormatting.RESET, 34, 0xFFF0F0F0, true);
+        drawCentered(fontRenderer, TextFormatting.UNDERLINE + trait.getLocalizedName() + TextFormatting.RESET, 26, 0xFFF0F0F0, true);
         String descriptionKey = String.format("tcongreedyaddon.jei.modifier.%s.text", trait.getIdentifier());
-        fontRenderer.drawSplitString(I18n.format(descriptionKey), CONTENT_LEFT, 50, CONTENT_WIDTH, 0xD8D8D8);
+        fontRenderer.drawSplitString(I18n.format(descriptionKey), CONTENT_LEFT, 42, CONTENT_WIDTH, 0xD8D8D8);
     }
 
     @Nonnull
@@ -127,5 +125,14 @@ class TraitOverviewCategory implements IRecipeCategory<TraitOverviewWrapper> {
 
     private void drawCentered(FontRenderer fontRenderer, String text, int y, int color, boolean shadow) {
         fontRenderer.drawString(text, (WIDTH - fontRenderer.getStringWidth(text)) / 2f, y, color, shadow);
+    }
+
+    private void drawCenteredSplit(FontRenderer fontRenderer, String text, int y, int maxWidth, int color) {
+        List<String> lines = fontRenderer.listFormattedStringToWidth(text, maxWidth);
+        int lineY = y;
+        for (String line : lines) {
+            fontRenderer.drawString(line, (WIDTH - fontRenderer.getStringWidth(line)) / 2f, lineY, color, false);
+            lineY += fontRenderer.FONT_HEIGHT;
+        }
     }
 }
