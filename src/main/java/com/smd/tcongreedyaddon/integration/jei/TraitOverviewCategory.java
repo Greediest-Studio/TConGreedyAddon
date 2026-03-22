@@ -107,7 +107,8 @@ class TraitOverviewCategory implements IRecipeCategory<TraitOverviewWrapper> {
         }
 
         drawCentered(fontRenderer, TextFormatting.UNDERLINE + trait.getLocalizedName() + TextFormatting.RESET, 34, 0xFFF0F0F0, true);
-        fontRenderer.drawSplitString(String.format("tcongreedyaddon.jei.modifier.%s.text", trait.getIdentifier()), CONTENT_LEFT, 50, CONTENT_WIDTH, 0xD8D8D8);
+        String descriptionKey = String.format("tcongreedyaddon.jei.modifier.%s.text", trait.getIdentifier());
+        fontRenderer.drawSplitString(I18n.format(descriptionKey), CONTENT_LEFT, 50, CONTENT_WIDTH, 0xD8D8D8);
     }
 
     @Nonnull
