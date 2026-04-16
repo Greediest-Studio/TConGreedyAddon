@@ -26,7 +26,37 @@ public abstract class MagicPageItem extends Item {
         RIGHT
     }
 
+    public enum PlacementPolicy {
+        LEFT_ONLY,
+        RIGHT_ONLY,
+        BOTH
+    }
+
     public abstract SlotType getSlotType();
+
+    public PlacementPolicy getPlacementPolicy() {
+        return getSlotType() == SlotType.LEFT
+                ? PlacementPolicy.LEFT_ONLY
+                : PlacementPolicy.RIGHT_ONLY;
+    }
+
+    public boolean supportsSlot(SlotType slotType) {
+        PlacementPolicy policy = getPlacementPolicy();
+        if (policy == PlacementPolicy.BOTH) {
+            return true;
+        }
+        if (policy == PlacementPolicy.LEFT_ONLY) {
+            return slotType == SlotType.LEFT;
+        }
+        return slotType == SlotType.RIGHT;
+    }
+
+    /**
+     * 是否为按键技能书签。按键书签在每侧仅允许安装一个，避免触发冲突。
+     */
+    public boolean isKeybindPage() {
+        return false;
+    }
 
     public String getPageIdentifier() {
         if (getRegistryName() == null) {

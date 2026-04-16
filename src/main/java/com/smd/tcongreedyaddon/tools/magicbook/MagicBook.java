@@ -2,6 +2,9 @@ package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import net.minecraft.block.state.IBlockState;
@@ -66,9 +69,10 @@ public class MagicBook extends TinkerToolCore {
         return stateHelper.hasSpell(bookStack, spellRegistryName);
     }
 
-    public boolean triggerKeybindSkill(ItemStack bookStack, EntityPlayer player, String keyId,
-                                       com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindSkillSpell.KeyAction action) {
-        return castingCore.triggerKeybindSkill(bookStack, player, keyId, action);
+    public boolean handleKeybindInput(ItemStack bookStack, EntityPlayer player, int sequence,
+                                      KeybindSide side, KeybindChannel channel,
+                                      KeybindAction action, int clientTick) {
+        return castingCore.handleKeybindInput(bookStack, player, sequence, side, channel, action, clientTick);
     }
 
     public int[] getSlotCounts(ItemStack stack) {

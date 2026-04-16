@@ -9,8 +9,7 @@ public class TriggerSource {
         TICK,
         HOLD_TICK,
         HOLD_RELEASE,
-        SKILL_PRESS,
-        SKILL_RELEASE
+        KEY_GESTURE
     }
 
     private static final TriggerSource LEFT_CLICK = new TriggerSource(Type.LEFT_CLICK, null);
@@ -18,8 +17,7 @@ public class TriggerSource {
     private static final TriggerSource TICK = new TriggerSource(Type.TICK, null);
     private static final TriggerSource HOLD_TICK = new TriggerSource(Type.HOLD_TICK, null);
     private static final TriggerSource HOLD_RELEASE = new TriggerSource(Type.HOLD_RELEASE, null);
-    private static final TriggerSource SKILL_PRESS = new TriggerSource(Type.SKILL_PRESS, null);
-    private static final TriggerSource SKILL_RELEASE = new TriggerSource(Type.SKILL_RELEASE, null);
+    private static final TriggerSource KEY_GESTURE = new TriggerSource(Type.KEY_GESTURE, null);
 
     private final Type type;
     private final Event event;
@@ -49,12 +47,8 @@ public class TriggerSource {
         return HOLD_RELEASE;
     }
 
-    public static TriggerSource skillPress() {
-        return SKILL_PRESS;
-    }
-
-    public static TriggerSource skillRelease() {
-        return SKILL_RELEASE;
+    public static TriggerSource keyGesture() {
+        return KEY_GESTURE;
     }
 
     public static TriggerSource event(Event event) {

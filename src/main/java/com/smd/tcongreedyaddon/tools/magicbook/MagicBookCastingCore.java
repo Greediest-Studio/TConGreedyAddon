@@ -2,11 +2,17 @@ package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.event.SpellUseEvent;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.GestureType;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
-import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindSkillSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindGestureSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -166,27 +172,45 @@ final class MagicBookCastingCore {
         stateHelper.clearHoldState(player, EnumHand.MAIN_HAND, world);
     }
 
-    public boolean triggerKeybindSkill(ItemStack bookStack, EntityPlayer player, String keyId,
-                                       IKeybindSkillSpell.KeyAction action) {
-        if (ToolHelper.isBroken(bookStack) || player == null || keyId == null || keyId.isEmpty()) {
+    public boolean handleKeybindInput(ItemStack bookStack, EntityPlayer player, int sequence,
+                                      KeybindSide side, KeybindChannel channel,
+                                      KeybindAction action, int clientTick) {
+        if (ToolHelper.isBroken(bookStack) || player == null || side == null || channel == null || action == null) {
             return false;
         }
 
-        MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveKeybindSpell(bookStack, keyId);
-        if (target == null) {
+        java.util.List<GestureType> gestures = stateHelper.consumeKeybindGestures(
+                player,
+                player.world,
+                sequence,
+                side,
+                channel,
+                action,
+                clientTick
+        );
+        if (gestures.isEmpty()) {
             return false;
         }
 
-        TriggerSource triggerSource = action == IKeybindSkillSpell.KeyAction.PRESS
-                ? TriggerSource.skillPress()
-                : TriggerSource.skillRelease();
-        if (!canCastKeybind(bookStack, player, target, triggerSource)) {
-            return false;
+        boolean anySuccess = false;
+        for (GestureType gesture : gestures) {
+            MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveGestureSpell(
+                    bookStack,
+                    side.toSlotType(),
+                    gesture
+            );
+            if (target == null) {
+                continue;
+            }
+            TriggerSource triggerSource = TriggerSource.keyGesture();
+            if (!canCastKeybind(bookStack, player, target, triggerSource)) {
+                continue;
+            }
+            boolean success = castKeybindGesture(bookStack, player, target, gesture, triggerSource);
+            postSpellUsePost(player, bookStack, target, triggerSource, success);
+            anySuccess |= success;
         }
-
-        boolean success = castKeybind(bookStack, player, target, action, triggerSource);
-        postSpellUsePost(player, bookStack, target, triggerSource, success);
-        return success;
+        return anySuccess;
     }
 
     private boolean canCastSelectedSpell(ItemStack bookStack, EntityPlayer player,
@@ -232,12 +256,24 @@ final class MagicBookCastingCore {
                 && postSpellUsePre(player, bookStack, target, triggerSource);
     }
 
-    private boolean castKeybind(ItemStack bookStack, EntityPlayer player,
-                                MagicBookStateHelper.ResolvedSpellTarget target,
-                                IKeybindSkillSpell.KeyAction action,
-                                TriggerSource triggerSource) {
+    private boolean castKeybindGesture(ItemStack bookStack, EntityPlayer player,
+                                       MagicBookStateHelper.ResolvedSpellTarget target,
+                                       GestureType gesture,
+                                       TriggerSource triggerSource) {
+        if (!(target.spell instanceof IKeybindGestureSpell)) {
+            return false;
+        }
+
         boolean onCooldown = target.page.isRawSpellOnCooldown(
                 target.pageStack, target.rawIndex, player.world, player, bookStack);
+        int castActionTicks = resolveCastActionTicks(target.spell, player, bookStack);
+        if (castActionTicks < 0) {
+            return false;
+        }
+        if (isActionLocked(target.pageData, target.rawIndex, player.world.getTotalWorldTime(), castActionTicks)) {
+            return false;
+        }
+
         SpellContext context = new SpellContext(
                 player.world,
                 player,
@@ -246,22 +282,50 @@ final class MagicBookCastingCore {
                 target.pageData,
                 target.slotType,
                 triggerSource,
-                null
+                null,
+                gesture
         );
 
-        IKeybindSkillSpell.KeybindResult result = ((IKeybindSkillSpell) target.spell).onKeybindTriggered(context, action, onCooldown);
+        IKeybindGestureSpell.GestureResult result = ((IKeybindGestureSpell) target.spell).onGestureTriggered(context, gesture, onCooldown);
         if (!result.isSuccess()) {
             return false;
         }
 
-        stateHelper.savePageData(bookStack, target);
         if (result.shouldApplyCooldown()) {
             target.page.applyRawSpellCooldown(target.pageStack, target.rawIndex, player.world, player, bookStack);
         }
-        if (action == IKeybindSkillSpell.KeyAction.PRESS) {
-            ToolHelper.damageTool(bookStack, MagicBook.DURABILITY_COST, player);
-        }
+        applyActionLock(target.pageData, target.rawIndex, player.world.getTotalWorldTime(), castActionTicks);
+        stateHelper.savePageData(bookStack, target);
+        ToolHelper.damageTool(bookStack, MagicBook.DURABILITY_COST, player);
         return true;
+    }
+
+    private int resolveCastActionTicks(ISpell spell, EntityPlayer player, ItemStack bookStack) {
+        int cooldownTicks = Math.max(0, spell.getCooldownTicks(player, bookStack));
+        int castActionTicks = Math.max(0, spell.getCastActionTicks(player, bookStack));
+        if (cooldownTicks <= 0 && castActionTicks <= 0) {
+            TConGreedyAddon.LOGGER.warn("Keybind spell {} has zero cooldown but no castActionTicks, rejecting cast.", spell.getNameKey());
+            return -1;
+        }
+        return castActionTicks;
+    }
+
+    private boolean isActionLocked(NBTTagCompound pageData, int rawIndex, long worldTick, int castActionTicks) {
+        if (castActionTicks <= 0) {
+            return false;
+        }
+        NBTTagCompound locks = pageData.getCompoundTag(MagicBookKeys.TAG_ACTION_LOCKS);
+        long lastCast = locks.getLong(String.valueOf(rawIndex));
+        return worldTick < lastCast + castActionTicks;
+    }
+
+    private void applyActionLock(NBTTagCompound pageData, int rawIndex, long worldTick, int castActionTicks) {
+        if (castActionTicks <= 0) {
+            return;
+        }
+        NBTTagCompound locks = pageData.getCompoundTag(MagicBookKeys.TAG_ACTION_LOCKS);
+        locks.setLong(String.valueOf(rawIndex), worldTick);
+        pageData.setTag(MagicBookKeys.TAG_ACTION_LOCKS, locks);
     }
 
     private ActionResult<ItemStack> beginHoldCast(World world, EntityPlayer player, EnumHand hand, ItemStack stack,

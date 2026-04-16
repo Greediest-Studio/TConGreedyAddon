@@ -2,6 +2,7 @@ package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBookToolNBT;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.GestureType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -18,6 +19,7 @@ public class SpellContext {
     public final NBTTagCompound pageData;
     public final MagicPageItem.SlotType slot;
     public final TriggerSource trigger;
+    @Nullable public final GestureType gesture;
     @Nullable public final Entity target;
 
     private MagicBookToolNBT cachedToolStats;
@@ -26,6 +28,13 @@ public class SpellContext {
                         ItemStack pageStack, NBTTagCompound pageData,
                         MagicPageItem.SlotType slot, TriggerSource trigger,
                         @Nullable Entity target) {
+        this(world, player, bookStack, pageStack, pageData, slot, trigger, target, null);
+    }
+
+    public SpellContext(World world, EntityPlayer player, ItemStack bookStack,
+                        ItemStack pageStack, NBTTagCompound pageData,
+                        MagicPageItem.SlotType slot, TriggerSource trigger,
+                        @Nullable Entity target, @Nullable GestureType gesture) {
         this.world = world;
         this.player = player;
         this.bookStack = bookStack;
@@ -34,6 +43,7 @@ public class SpellContext {
         this.slot = slot;
         this.trigger = trigger;
         this.target = target;
+        this.gesture = gesture;
     }
 
     public float getRange() {

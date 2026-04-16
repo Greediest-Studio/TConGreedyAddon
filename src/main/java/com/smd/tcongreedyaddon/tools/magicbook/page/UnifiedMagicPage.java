@@ -39,7 +39,9 @@ public class UnifiedMagicPage extends MagicPageItem {
         }
     }
 
-    private final SlotType slotType;
+    private final SlotType preferredSlotType;
+    private final PlacementPolicy placementPolicy;
+    private final boolean keybindPage;
     private final List<ISpell> leftSpells;
     private final List<ISpell> rightSpells;
     private final List<ISpell> leftSelectable;
@@ -49,7 +51,9 @@ public class UnifiedMagicPage extends MagicPageItem {
     private String displayNameKey = "unified.page.default";
 
     protected UnifiedMagicPage(Builder builder) {
-        this.slotType = builder.slotType;
+        this.preferredSlotType = builder.preferredSlotType;
+        this.placementPolicy = builder.placementPolicy;
+        this.keybindPage = builder.keybindPage;
 
         this.leftSpells = Collections.unmodifiableList(new ArrayList<>(builder.leftSpells));
         this.rightSpells = Collections.unmodifiableList(new ArrayList<>(builder.rightSpells));
@@ -87,7 +91,17 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     @Override
     public SlotType getSlotType() {
-        return slotType;
+        return preferredSlotType;
+    }
+
+    @Override
+    public PlacementPolicy getPlacementPolicy() {
+        return placementPolicy;
+    }
+
+    @Override
+    public boolean isKeybindPage() {
+        return keybindPage;
     }
 
     // ==================== 索引管理 ====================
@@ -371,13 +385,23 @@ public class UnifiedMagicPage extends MagicPageItem {
     }
 
     public static class Builder {
-        private final SlotType slotType;
+        private final PlacementPolicy placementPolicy;
+        private SlotType preferredSlotType;
         private final List<ISpell> leftSpells = new ArrayList<>();
         private final List<ISpell> rightSpells = new ArrayList<>();
         private String displayNameKey;
+        private boolean keybindPage;
 
         public Builder(SlotType slotType) {
-            this.slotType = slotType;
+            this(slotType == SlotType.LEFT ? PlacementPolicy.LEFT_ONLY : PlacementPolicy.RIGHT_ONLY);
+            this.preferredSlotType = slotType;
+        }
+
+        public Builder(PlacementPolicy placementPolicy) {
+            this.placementPolicy = placementPolicy == null ? PlacementPolicy.RIGHT_ONLY : placementPolicy;
+            this.preferredSlotType = this.placementPolicy == PlacementPolicy.LEFT_ONLY
+                    ? SlotType.LEFT
+                    : SlotType.RIGHT;
         }
 
         public Builder addLeftSpell(ISpell spell) {
@@ -395,15 +419,27 @@ public class UnifiedMagicPage extends MagicPageItem {
             return this;
         }
 
+        public Builder keybindPage(boolean keybindPage) {
+            this.keybindPage = keybindPage;
+            return this;
+        }
+
+        public Builder preferredSlot(SlotType slotType) {
+            if (slotType != null) {
+                this.preferredSlotType = slotType;
+            }
+            return this;
+        }
+
         public UnifiedMagicPage build() {
-            if (slotType == SlotType.LEFT && !rightSpells.isEmpty()) {
+            if (placementPolicy == PlacementPolicy.LEFT_ONLY && !rightSpells.isEmpty()) {
                 throw new IllegalStateException("Left page cannot have right spells");
             }
-            if (slotType == SlotType.RIGHT && !leftSpells.isEmpty()) {
+            if (placementPolicy == PlacementPolicy.RIGHT_ONLY && !leftSpells.isEmpty()) {
                 throw new IllegalStateException("Right page cannot have left spells");
             }
             UnifiedMagicPage page = new UnifiedMagicPage(this);
-            SpellRegistry.registerPage(page, new ArrayList<>(leftSpells), new ArrayList<>(rightSpells));
+            SpellRegistry.registerPage(page, new ArrayList<>(leftSpells), new ArrayList<>(rightSpells), keybindPage);
             return page;
         }
     }
@@ -411,8 +447,12 @@ public class UnifiedMagicPage extends MagicPageItem {
     // ==================== HUD 显示数据 ====================
 
     public List<SpellDisplayData> getAllSpellDisplayData(ItemStack pageStack) {
+        return getAllSpellDisplayData(pageStack, getSlotType());
+    }
+
+    public List<SpellDisplayData> getAllSpellDisplayData(ItemStack pageStack, SlotType installedSlotType) {
         List<SpellDisplayData> list = new ArrayList<>();
-        List<ISpell> spells = (slotType == SlotType.LEFT) ? leftSpells : rightSpells;
+        List<ISpell> spells = (installedSlotType == SlotType.LEFT) ? leftSpells : rightSpells;
         NBTTagCompound pageData = pageStack.getTagCompound();
         if (pageData == null) pageData = new NBTTagCompound();
 

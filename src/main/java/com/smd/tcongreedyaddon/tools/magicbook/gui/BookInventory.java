@@ -89,10 +89,13 @@ public class BookInventory implements IItemHandlerModifiable {
     public boolean isItemValid(int slot, @Nonnull ItemStack stack) {
         if (!(stack.getItem() instanceof MagicPageItem)) return false;
         MagicPageItem page = (MagicPageItem) stack.getItem();
+        MagicPageItem.SlotType targetSlot = slot < leftSlots
+                ? MagicPageItem.SlotType.LEFT
+                : MagicPageItem.SlotType.RIGHT;
 
         // 侧别检查
-        if (slot < leftSlots && page.getSlotType() != MagicPageItem.SlotType.LEFT) return false;
-        if (slot >= leftSlots && page.getSlotType() != MagicPageItem.SlotType.RIGHT) return false;
+        if (!page.supportsSlot(targetSlot)) return false;
+        if (page.isKeybindPage() && hasSideKeybindPage(targetSlot, slot)) return false;
 
         // 重复检查
         return !isDuplicatePage(stack, slot);
@@ -162,6 +165,37 @@ public class BookInventory implements IItemHandlerModifiable {
             ItemStack stack = rightHandler.getStackInSlot(i);
             if (!stack.isEmpty() && stack.getItem() instanceof MagicPageItem) {
                 if (newId.equals(((MagicPageItem) stack.getItem()).getPageIdentifier())) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasSideKeybindPage(MagicPageItem.SlotType slotType, int excludeSlot) {
+        if (slotType == MagicPageItem.SlotType.LEFT) {
+            for (int i = 0; i < leftHandler.getSlots(); i++) {
+                if (i == excludeSlot) {
+                    continue;
+                }
+                ItemStack stack = leftHandler.getStackInSlot(i);
+                if (!stack.isEmpty()
+                        && stack.getItem() instanceof MagicPageItem
+                        && ((MagicPageItem) stack.getItem()).isKeybindPage()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        for (int i = 0; i < rightHandler.getSlots(); i++) {
+            int globalSlot = leftSlots + i;
+            if (globalSlot == excludeSlot) {
+                continue;
+            }
+            ItemStack stack = rightHandler.getStackInSlot(i);
+            if (!stack.isEmpty()
+                    && stack.getItem() instanceof MagicPageItem
+                    && ((MagicPageItem) stack.getItem()).isKeybindPage()) {
+                return true;
             }
         }
         return false;

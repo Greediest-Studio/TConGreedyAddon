@@ -1,18 +1,26 @@
 package com.smd.tcongreedyaddon.client;
 
+import com.smd.tcongreedyaddon.network.KeybindInputPacket;
 import com.smd.tcongreedyaddon.network.NetworkHandler;
-import com.smd.tcongreedyaddon.network.GrappleMeleePacket;
-import com.smd.tcongreedyaddon.network.SkillKeyPacket;
 import com.smd.tcongreedyaddon.network.SwitchSpellPacket;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class ClientEventHandler {
-    private boolean utilitySkillWasDown;
+    private boolean leftSkillAWasDown;
+    private boolean leftSkillBWasDown;
+    private boolean rightSkillAWasDown;
+    private boolean rightSkillBWasDown;
+    private int inputSequence;
+    private int clientTick;
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
@@ -47,19 +55,56 @@ public class ClientEventHandler {
                 }
             }
 
-            boolean skillDown = KeyBindings.utilitySkill.isKeyDown();
-            if (holdingBook) {
-                if (skillDown && !utilitySkillWasDown) {
-                    NetworkHandler.INSTANCE.sendToServer(new SkillKeyPacket(SkillKeyPacket.Action.PRESS));
-                }
-                if (!skillDown && utilitySkillWasDown) {
-                    NetworkHandler.INSTANCE.sendToServer(new SkillKeyPacket(SkillKeyPacket.Action.RELEASE));
-                }
-                if (KeyBindings.grappleMelee.isPressed()) {
-                    NetworkHandler.INSTANCE.sendToServer(new GrappleMeleePacket());
-                }
-            }
-            utilitySkillWasDown = skillDown;
+            clientTick++;
+            handleKeyEdge(holdingBook, KeyBindings.leftSkillA, KeybindSide.LEFT, KeybindChannel.A);
+            handleKeyEdge(holdingBook, KeyBindings.leftSkillB, KeybindSide.LEFT, KeybindChannel.B);
+            handleKeyEdge(holdingBook, KeyBindings.rightSkillA, KeybindSide.RIGHT, KeybindChannel.A);
+            handleKeyEdge(holdingBook, KeyBindings.rightSkillB, KeybindSide.RIGHT, KeybindChannel.B);
         }
+    }
+
+    private void handleKeyEdge(boolean holdingBook, KeyBinding keyBinding, KeybindSide side, KeybindChannel channel) {
+        boolean isDown = keyBinding.isKeyDown();
+        boolean wasDown = getWasDown(side, channel);
+        if (holdingBook && isDown != wasDown) {
+            KeybindAction action = isDown ? KeybindAction.PRESS : KeybindAction.RELEASE;
+            NetworkHandler.INSTANCE.sendToServer(new KeybindInputPacket(
+                    ++inputSequence,
+                    side,
+                    channel,
+                    action,
+                    clientTick
+            ));
+        }
+        setWasDown(side, channel, isDown);
+    }
+
+    private boolean getWasDown(KeybindSide side, KeybindChannel channel) {
+        if (side == KeybindSide.LEFT && channel == KeybindChannel.A) {
+            return leftSkillAWasDown;
+        }
+        if (side == KeybindSide.LEFT) {
+            return leftSkillBWasDown;
+        }
+        if (channel == KeybindChannel.A) {
+            return rightSkillAWasDown;
+        }
+        return rightSkillBWasDown;
+    }
+
+    private void setWasDown(KeybindSide side, KeybindChannel channel, boolean value) {
+        if (side == KeybindSide.LEFT && channel == KeybindChannel.A) {
+            leftSkillAWasDown = value;
+            return;
+        }
+        if (side == KeybindSide.LEFT) {
+            leftSkillBWasDown = value;
+            return;
+        }
+        if (channel == KeybindChannel.A) {
+            rightSkillAWasDown = value;
+            return;
+        }
+        rightSkillBWasDown = value;
     }
 }
