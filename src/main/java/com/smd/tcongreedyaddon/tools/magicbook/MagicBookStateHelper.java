@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
@@ -13,12 +12,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
-import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.utils.TagUtil;
-import slimeknights.tconstruct.library.utils.TinkerUtil;
 import slimeknights.tconstruct.library.utils.ToolHelper;
 
 import javax.annotation.Nullable;
@@ -112,11 +108,9 @@ public final class MagicBookStateHelper {
     private static final Map<String, HoldRuntimeState> SERVER_HOLD_STATES = new ConcurrentHashMap<>();
     private static final Map<String, HoldRuntimeState> CLIENT_HOLD_STATES = new ConcurrentHashMap<>();
 
-    private final MagicBook book;
     private final Map<Integer, WeakReference<BookInventory>> inventoryCache = new ConcurrentHashMap<>();
 
-    public MagicBookStateHelper(MagicBook book) {
-        this.book = book;
+    public MagicBookStateHelper() {
     }
 
     public BookInventory getInventory(ItemStack stack) {
@@ -464,10 +458,8 @@ public final class MagicBookStateHelper {
     }
 
     public int[] getSlotCounts(ItemStack stack) {
-        BookPageStats stats = getCoreBookPageStats(stack);
-        int left = stats != null ? stats.leftSlots : 1;
-        int right = stats != null ? stats.rightSlots : 1;
-        return new int[]{left, right};
+        MagicBookToolNBT toolData = MagicBookToolNBT.from(stack);
+        return new int[]{toolData.leftSlots, toolData.rightSlots};
     }
 
     public HoldRuntimeState getMainHandHoldState(EntityPlayer player, World world) {
@@ -532,17 +524,6 @@ public final class MagicBookStateHelper {
         if (player != null) {
             CLIENT_HOLD_STATES.remove(getHoldStateKey(player, EnumHand.MAIN_HAND));
         }
-    }
-
-    @Nullable
-    private BookPageStats getCoreBookPageStats(ItemStack toolStack) {
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(toolStack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() < 3) {
-            return null;
-        }
-        Material pageMat = materials.get(2);
-        return pageMat.getStats(BookPageStats.TYPE);
     }
 
     private void cleanupExcessPages(ItemStack stack, @Nullable EntityPlayer player) {

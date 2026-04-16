@@ -5,9 +5,11 @@ import com.smd.bulletapi.client.ClientDanmakuCache;
 import com.smd.tcongreedyaddon.Tags;
 import com.smd.tcongreedyaddon.event.StrandNodeManager;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import com.smd.tcongreedyaddon.tools.magicbook.MagicBookToolNBT;
 import com.smd.tcongreedyaddon.util.MagicBookHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -162,10 +164,10 @@ public final class StrandNodeHighlightRenderer {
         if (player == null) {
             return MagicBook.BEAM_RANGE;
         }
-        Float range = MagicBookHelper.getRange(player.getHeldItemMainhand());
-        if (range == null || range <= 0.0F) {
+        ItemStack mainHand = player.getHeldItemMainhand();
+        if (mainHand.isEmpty() || !(mainHand.getItem() instanceof MagicBook)) {
             return MagicBook.BEAM_RANGE;
         }
-        return range;
+        return MagicBookToolNBT.from(mainHand).range;
     }
 }

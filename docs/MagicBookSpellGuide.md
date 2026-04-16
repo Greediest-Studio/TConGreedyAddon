@@ -6,7 +6,7 @@
 1. **SpellBlueprint** 负责把名字 key、图标、冷却、默认是否可选/渲染、监听的 Forge 事件等 metadata 用链式调用组织成一个不可变配置。
 2. **AbstractSpell** 把 blueprint 拿来当默认 impl：子类在构造器里 `super(BLUEPRINT)` 即可复用 getter、metadata，自己只需 override `canTriggerInternal(SpellContext)`、`executeInternal(SpellContext)`、必要时 override `computeCooldownTicks`/`onEvent` 来补充行为。
 3. **UnifiedMagicPage.Builder** 负责收集左右法术，每个 `addLeftSpell/addRightSpell` 会把 `ISpell` 实例按顺序加入。`build()` 会构造 `UnifiedMagicPage` 并自动把页面连同左右法术注册到 **SpellRegistry**，让游戏 UI/冷却显示/调试视图都能统一读取。页面类（如 `RangePulsePage`）构造完成后只需 `setRegistryName`/`setTranslationKey` 并在模块中 `event.getRegistry().register` 即可。
-4. **SpellContext** 负责把 `world`/`player`/`bookStack`/`pageStack`/`pageData`/`slot`/`trigger`（`TriggerSource`）/`target` 传给法术，内置懒加载 helper：`getRange()`/`getCritChance()`/`getSpellSpeed()`/`getLeftSlotCount()`/`getRightSlotCount()`/`getCurrentSlotCount()` 均来自 `MagicBookHelper`，可用于让法术随核心 Stats 与页面插槽动态变化。
+4. **SpellContext** 负责把 `world`/`player`/`bookStack`/`pageStack`/`pageData`/`slot`/`trigger`（`TriggerSource`）/`target` 传给法术，内置懒加载 helper：`getRange()`/`getCritChance()`/`getSpellSpeed()`/`getLeftSlotCount()`/`getRightSlotCount()`/`getCurrentSlotCount()` 均来自 `MagicBookToolNBT`，可用于让法术随核心 Stats 与页面插槽动态变化。
 5. **MagicBookEventHandler** 订阅 Forge 事件（目前包括 `LivingJumpEvent` 与 `LivingAttackEvent`），把持书玩家转交给 `handleEvent`，再由 `UnifiedMagicPage` 查找注册了对应事件的法术并调用 `executeSpellWithRawIndex`。
 6. **MagicBook** 本体管理冷却计时（`TAG_COOLDOWNS`）、客户端同步、图标渲染、`player.swingArm` 动画与 `SpellOverlayRenderer` 渲染数据，只要 blueprint + `AbstractSpell` 实现没问题，视觉与逻辑就保持一致。
 
@@ -17,7 +17,7 @@
 
 ## 样例法术与书签
 - `DefaultAttackPage`/`BeamAttackPage`/`FireballPage`/`JumpBoostPage` 分别组合了 `StandardAttackSpell`（左键近战）、`BeamAttackSpell`/`SmallFireballSpell`/`LargeFireballSpell`（右键远程）、`JumpBoostSpell`（监听 `LivingJumpEvent` 的被动）与 `PassiveMessageSpell`（每 40 tick 发消息）。这些都可作为不同 `TriggerSource.Type` 与 `SpellContext` 的参考。
-- 新增的 `RangePulseSpell` 展示了右键法术如何利用 `context.getRange()`、`context.getCritChance()`、`context.getSpellSpeed()` 与 `player.getHealth()` 计算范围伤害与动态冷却，并通过 `MagicBookHelper` 的属性适配核心/页面装备。
+- 新增的 `RangePulseSpell` 展示了右键法术如何利用 `context.getRange()`、`context.getCritChance()`、`context.getSpellSpeed()` 与 `player.getHealth()` 计算范围伤害与动态冷却，并通过 `MagicBookToolNBT` 的属性适配核心/页面装备。
 - `DeflectiveWardSpell` 是事件法术：监听 `LivingAttackEvent`、验证 `context.trigger.isEvent()`、用 `context.getCurrentSlotCount()` 决定反击力度；只要 `MagicBookEventHandler` 有对应 `@SubscribeEvent`，它就能在玩家受击时自动执行并走冷却流程。
 - `AdaptiveGuardSpell` 同时监听 `LivingAttackEvent` 与 `LivingJumpEvent`，在 `executeInternal` 里分别设置 `pageData` 的 `adaptive_guard_icon` 为 `attack` 或 `jump`，再 override `getDisplayIcon(pageData, rawIndex)` 返回 `iron_sword`/`feather` 图标，从而在 GUI 中根据最近一次事件类型自动切换图标。
 - 这些法术都被加入了 `RangePulsePage`（右槽），Builder 会在 `build()` 时自动把页面与所有 `ISpell` 注册到 `SpellRegistry`，`SpecialWeapons.initItems` 只要 `event.getRegistry().register(new RangePulsePage())` 就能让玩家拿到这组法术。

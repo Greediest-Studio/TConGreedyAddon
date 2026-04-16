@@ -13,7 +13,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -29,7 +28,6 @@ import slimeknights.tconstruct.library.tinkering.PartMaterialType;
 import slimeknights.tconstruct.library.tools.TinkerToolCore;
 import slimeknights.tconstruct.library.tools.ToolNBT;
 import slimeknights.tconstruct.library.utils.TagUtil;
-import slimeknights.tconstruct.library.utils.TinkerUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -52,7 +50,7 @@ public class MagicBook extends TinkerToolCore {
         );
         addCategory(Category.WEAPON);
         setTranslationKey("magicbook").setRegistryName("magicbook");
-        this.stateHelper = new MagicBookStateHelper(this);
+        this.stateHelper = new MagicBookStateHelper();
         this.castingCore = new MagicBookCastingCore(this, stateHelper);
     }
 
@@ -147,11 +145,19 @@ public class MagicBook extends TinkerToolCore {
     protected ToolNBT buildTagData(List<Material> materials) {
         HeadMaterialStats head = materials.get(0).getStatsOrUnknown(HeadMaterialStats.TYPE);
         HandleMaterialStats handle = materials.get(1).getStatsOrUnknown(HandleMaterialStats.TYPE);
-        ToolNBT data = new ToolNBT();
+        BookPageStats pageStats = materials.get(2).getStatsOrUnknown(BookPageStats.TYPE);
+        MagicCoreStats coreStats = materials.get(3).getStatsOrUnknown(MagicCoreStats.TYPE);
+
+        MagicBookToolNBT data = new MagicBookToolNBT();
         data.head(head);
         data.handle(handle);
         data.attack += 1.0f;
         data.modifiers = DEFAULT_MODIFIERS;
+        data.leftSlots = pageStats.leftSlots;
+        data.rightSlots = pageStats.rightSlots;
+        data.spellSpeed = pageStats.spellspeed;
+        data.range = coreStats.range;
+        data.critChance = coreStats.critchance;
         return data;
     }
 
@@ -175,42 +181,20 @@ public class MagicBook extends TinkerToolCore {
         return "magicbook";
     }
 
-    public static float getBeamRangeFromBook(ItemStack bookStack) {
-        if (!(bookStack.getItem() instanceof MagicBook)) {
-            return MagicBook.BEAM_RANGE;
-        }
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(bookStack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() < 3) {
-            return MagicBook.BEAM_RANGE;
-        }
-        Material coreMat = materials.get(2);
-        MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
-        return coreStats != null ? coreStats.range : MagicBook.BEAM_RANGE;
-    }
-
     @SideOnly(Side.CLIENT)
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(stack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() >= 4) {
-            Material pageMat = materials.get(2);
-            Material coreMat = materials.get(3);
-            BookPageStats pageStats = pageMat.getStats(BookPageStats.TYPE);
-            if (pageStats != null) {
-                for (String line : pageStats.getLocalizedInfo()) {
-                    tooltip.add(TextFormatting.GOLD + line);
-                }
-            }
-            MagicCoreStats coreStats = coreMat.getStats(MagicCoreStats.TYPE);
-            if (coreStats != null) {
-                for (String infoLine : coreStats.getLocalizedInfo()) {
-                    tooltip.add(TextFormatting.GOLD + infoLine);
-                }
-            }
+        MagicBookToolNBT toolData = MagicBookToolNBT.from(stack);
+        BookPageStats pageStats = new BookPageStats(toolData.leftSlots, toolData.rightSlots, toolData.spellSpeed);
+        for (String line : pageStats.getLocalizedInfo()) {
+            tooltip.add(TextFormatting.GOLD + line);
+        }
+
+        MagicCoreStats coreStats = new MagicCoreStats(toolData.range, toolData.critChance);
+        for (String infoLine : coreStats.getLocalizedInfo()) {
+            tooltip.add(TextFormatting.GOLD + infoLine);
         }
 
         NBTTagCompound tag = TagUtil.getTagSafe(stack);
