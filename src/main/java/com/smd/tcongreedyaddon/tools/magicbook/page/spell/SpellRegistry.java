@@ -17,13 +17,18 @@ public final class SpellRegistry {
     private SpellRegistry() {}
 
     public static void registerPage(UnifiedMagicPage page, List<ISpell> leftSpells, List<ISpell> rightSpells) {
+        registerPage(page, leftSpells, rightSpells, false);
+    }
+
+    public static void registerPage(UnifiedMagicPage page, List<ISpell> leftSpells, List<ISpell> rightSpells, boolean keybindPage) {
         if (page == null) {
             throw new IllegalArgumentException("page cannot be null");
         }
         PAGE_DEFINITIONS.put(page, new PageDefinition(
                 page,
                 unmodifiableCopy(leftSpells),
-                unmodifiableCopy(rightSpells)
+                unmodifiableCopy(rightSpells),
+                keybindPage
         ));
     }
 
@@ -39,11 +44,13 @@ public final class SpellRegistry {
         private final UnifiedMagicPage page;
         private final List<ISpell> leftSpells;
         private final List<ISpell> rightSpells;
+        private final boolean keybindPage;
 
-        private PageDefinition(UnifiedMagicPage page, List<ISpell> leftSpells, List<ISpell> rightSpells) {
+        private PageDefinition(UnifiedMagicPage page, List<ISpell> leftSpells, List<ISpell> rightSpells, boolean keybindPage) {
             this.page = page;
             this.leftSpells = leftSpells;
             this.rightSpells = rightSpells;
+            this.keybindPage = keybindPage;
         }
 
         public UnifiedMagicPage getPage() {
@@ -56,6 +63,10 @@ public final class SpellRegistry {
 
         public List<ISpell> getRightSpells() {
             return rightSpells;
+        }
+
+        public boolean isKeybindPage() {
+            return keybindPage;
         }
 
         public List<ISpell> getAllSpells() {

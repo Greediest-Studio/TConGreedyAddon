@@ -71,6 +71,15 @@ public abstract class AbstractSpell implements ISpell {
     }
 
     @Override
+    public int getCastActionTicks(EntityPlayer player, ItemStack bookStack) {
+        return computeCastActionTicks(player, bookStack);
+    }
+
+    protected int computeCastActionTicks(EntityPlayer player, ItemStack bookStack) {
+        return blueprint.getCastActionTicks();
+    }
+
+    @Override
     public List<Class<? extends Event>> getListeningEvents() {
         return blueprint.getListeningEvents();
     }

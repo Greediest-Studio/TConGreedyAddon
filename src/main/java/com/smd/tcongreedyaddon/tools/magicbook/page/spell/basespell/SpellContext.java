@@ -1,8 +1,8 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
-import com.smd.tcongreedyaddon.util.MagicBookHelper;
-import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
+import com.smd.tcongreedyaddon.tools.magicbook.MagicBookToolNBT;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.GestureType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -19,18 +19,22 @@ public class SpellContext {
     public final NBTTagCompound pageData;
     public final MagicPageItem.SlotType slot;
     public final TriggerSource trigger;
+    @Nullable public final GestureType gesture;
     @Nullable public final Entity target;
 
-    private Float cachedRange;
-    private Float cachedCritChance;
-    private Integer cachedSpellSpeed;
-    private Integer cachedLeftSlots;
-    private Integer cachedRightSlots;
+    private MagicBookToolNBT cachedToolStats;
 
     public SpellContext(World world, EntityPlayer player, ItemStack bookStack,
                         ItemStack pageStack, NBTTagCompound pageData,
                         MagicPageItem.SlotType slot, TriggerSource trigger,
                         @Nullable Entity target) {
+        this(world, player, bookStack, pageStack, pageData, slot, trigger, target, null);
+    }
+
+    public SpellContext(World world, EntityPlayer player, ItemStack bookStack,
+                        ItemStack pageStack, NBTTagCompound pageData,
+                        MagicPageItem.SlotType slot, TriggerSource trigger,
+                        @Nullable Entity target, @Nullable GestureType gesture) {
         this.world = world;
         this.player = player;
         this.bookStack = bookStack;
@@ -39,46 +43,27 @@ public class SpellContext {
         this.slot = slot;
         this.trigger = trigger;
         this.target = target;
+        this.gesture = gesture;
     }
 
     public float getRange() {
-        if (cachedRange == null) {
-            Float range = MagicBookHelper.getRange(bookStack);
-            cachedRange = range != null ? range : MagicBook.BEAM_RANGE;
-        }
-        return cachedRange;
+        return getToolStats().range;
     }
 
     public float getCritChance() {
-        if (cachedCritChance == null) {
-            Float chance = MagicBookHelper.getCritChance(bookStack);
-            cachedCritChance = chance != null ? chance : 0.0f;
-        }
-        return cachedCritChance;
+        return getToolStats().critChance;
     }
 
     public int getSpellSpeed() {
-        if (cachedSpellSpeed == null) {
-            Integer speed = MagicBookHelper.getSpellSpeed(bookStack);
-            cachedSpellSpeed = speed != null ? speed : 1;
-        }
-        return cachedSpellSpeed;
+        return getToolStats().spellSpeed;
     }
 
     public int getLeftSlotCount() {
-        if (cachedLeftSlots == null) {
-            Integer count = MagicBookHelper.getLeftSlotCount(bookStack);
-            cachedLeftSlots = count != null ? count : 1;
-        }
-        return cachedLeftSlots;
+        return getToolStats().leftSlots;
     }
 
     public int getRightSlotCount() {
-        if (cachedRightSlots == null) {
-            Integer count = MagicBookHelper.getRightSlotCount(bookStack);
-            cachedRightSlots = count != null ? count : 1;
-        }
-        return cachedRightSlots;
+        return getToolStats().rightSlots;
     }
 
     public boolean isLeftSlot() {
@@ -91,5 +76,12 @@ public class SpellContext {
 
     public int getCurrentSlotCount() {
         return isLeftSlot() ? getLeftSlotCount() : getRightSlotCount();
+    }
+
+    private MagicBookToolNBT getToolStats() {
+        if (cachedToolStats == null) {
+            cachedToolStats = MagicBookToolNBT.from(bookStack);
+        }
+        return cachedToolStats;
     }
 }

@@ -287,7 +287,7 @@ public class SpellOverlayRenderer {
             if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) continue;
 
             UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
-            List<UnifiedMagicPage.SpellDisplayData> allData = page.getAllSpellDisplayData(pageStack);
+            List<UnifiedMagicPage.SpellDisplayData> allData = page.getAllSpellDisplayData(pageStack, slotType);
             for (UnifiedMagicPage.SpellDisplayData data : allData) {
                 if (!data.renderInOverlay) continue;
                 SpellRenderInfo info = new SpellRenderInfo(

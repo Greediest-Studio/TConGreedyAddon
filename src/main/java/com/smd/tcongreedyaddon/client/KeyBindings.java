@@ -25,19 +25,35 @@ public class KeyBindings {
             KEY_CATEGORY
     );
 
-    public static final KeyBinding utilitySkill = new KeyBinding(
-            "key.tcongreedyaddon.utilityskill",
+    public static final KeyBinding leftSkillA = new KeyBinding(
+            "key.tcongreedyaddon.leftskilla",
             KeyConflictContext.IN_GAME,
             KeyModifier.NONE,
             Keyboard.KEY_Q,
             KEY_CATEGORY
     );
 
-    public static final KeyBinding grappleMelee = new KeyBinding(
-            "key.tcongreedyaddon.grapplemelee",
+    public static final KeyBinding leftSkillB = new KeyBinding(
+            "key.tcongreedyaddon.leftskillb",
             KeyConflictContext.IN_GAME,
             KeyModifier.NONE,
             Keyboard.KEY_R,
+            KEY_CATEGORY
+    );
+
+    public static final KeyBinding rightSkillA = new KeyBinding(
+            "key.tcongreedyaddon.rightskilla",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            Keyboard.KEY_Z,
+            KEY_CATEGORY
+    );
+
+    public static final KeyBinding rightSkillB = new KeyBinding(
+            "key.tcongreedyaddon.rightskillb",
+            KeyConflictContext.IN_GAME,
+            KeyModifier.NONE,
+            Keyboard.KEY_X,
             KEY_CATEGORY
     );
 

@@ -30,10 +30,12 @@ import slimeknights.tconstruct.library.tools.Pattern;
 import slimeknights.tconstruct.library.tools.ToolPart;
 import slimeknights.tconstruct.tools.TinkerTools;
 
-import static com.smd.tcongreedyaddon.client.KeyBindings.grappleMelee;
 import static com.smd.tcongreedyaddon.client.KeyBindings.leftpage;
+import static com.smd.tcongreedyaddon.client.KeyBindings.leftSkillA;
+import static com.smd.tcongreedyaddon.client.KeyBindings.leftSkillB;
 import static com.smd.tcongreedyaddon.client.KeyBindings.rightpage;
-import static com.smd.tcongreedyaddon.client.KeyBindings.utilitySkill;
+import static com.smd.tcongreedyaddon.client.KeyBindings.rightSkillA;
+import static com.smd.tcongreedyaddon.client.KeyBindings.rightSkillB;
 
 public class SpecialWeapons implements IModule {
 
@@ -151,7 +153,9 @@ public class SpecialWeapons implements IModule {
     public void registerKeyBindings() {
         ClientRegistry.registerKeyBinding(leftpage);
         ClientRegistry.registerKeyBinding(rightpage);
-        ClientRegistry.registerKeyBinding(utilitySkill);
-        ClientRegistry.registerKeyBinding(grappleMelee);
+        ClientRegistry.registerKeyBinding(leftSkillA);
+        ClientRegistry.registerKeyBinding(leftSkillB);
+        ClientRegistry.registerKeyBinding(rightSkillA);
+        ClientRegistry.registerKeyBinding(rightSkillB);
     }
 }

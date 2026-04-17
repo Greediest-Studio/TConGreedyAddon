@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page.spell.impl;
 
-import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.AbstractSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellBlueprint;
@@ -36,7 +35,7 @@ public class BeamAttackSpell extends AbstractSpell {
         if (context.world.isRemote) {
             return true;
         }
-        float range = MagicBook.getBeamRangeFromBook(context.bookStack);
+        float range = context.getRange();
         AxisAlignedBB aabb = context.player.getEntityBoundingBox().grow(range);
         List<EntityLivingBase> targets = context.world.getEntitiesWithinAABB(EntityLivingBase.class, aabb,
                 entity -> entity != context.player && entity.isEntityAlive());

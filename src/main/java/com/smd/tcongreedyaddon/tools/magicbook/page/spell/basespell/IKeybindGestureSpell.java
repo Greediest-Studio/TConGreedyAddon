@@ -1,13 +1,11 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
-public interface IKeybindSkillSpell extends ISpell {
+import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.GestureType;
 
-    enum KeyAction {
-        PRESS,
-        RELEASE
-    }
+public interface IKeybindGestureSpell extends ISpell {
 
-    enum KeybindResult {
+    enum GestureResult {
         PASS(false, false),
         SUCCESS_NO_COOLDOWN(true, false),
         SUCCESS_APPLY_COOLDOWN(true, true);
@@ -15,7 +13,7 @@ public interface IKeybindSkillSpell extends ISpell {
         private final boolean success;
         private final boolean applyCooldown;
 
-        KeybindResult(boolean success, boolean applyCooldown) {
+        GestureResult(boolean success, boolean applyCooldown) {
             this.success = success;
             this.applyCooldown = applyCooldown;
         }
@@ -29,9 +27,7 @@ public interface IKeybindSkillSpell extends ISpell {
         }
     }
 
-    default String getKeyBindingId() {
-        return "q";
-    }
+    boolean supportsGesture(MagicPageItem.SlotType slotType, GestureType gesture);
 
-    KeybindResult onKeybindTriggered(SpellContext context, KeyAction action, boolean onCooldown);
+    GestureResult onGestureTriggered(SpellContext context, GestureType gesture, boolean onCooldown);
 }

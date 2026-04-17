@@ -78,6 +78,17 @@ public interface ISpell {
     }
 
     /**
+     * 施法动作锁持续时间（tick）。用于约束低冷却/无冷却触发频率。
+     */
+    default int getCastActionTicks() {
+        return 0;
+    }
+
+    default int getCastActionTicks(EntityPlayer player, ItemStack bookStack) {
+        return getCastActionTicks();
+    }
+
+    /**
      * 获取冷却时间（刻），基于玩家状态动态计算（无魔导书）。
      */
     default int getCooldownTicks(EntityPlayer player) {

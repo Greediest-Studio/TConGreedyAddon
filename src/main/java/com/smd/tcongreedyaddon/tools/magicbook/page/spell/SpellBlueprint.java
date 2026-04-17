@@ -15,16 +15,18 @@ public final class SpellBlueprint {
     private final boolean selectable;
     private final boolean renderInOverlay;
     private final int cooldownTicks;
+    private final int castActionTicks;
     private final List<Class<? extends Event>> listeningEvents;
 
     private SpellBlueprint(String nameKey, ResourceLocation icon, boolean selectable,
-                           boolean renderInOverlay, int cooldownTicks,
+                           boolean renderInOverlay, int cooldownTicks, int castActionTicks,
                            List<Class<? extends Event>> listeningEvents) {
         this.nameKey = nameKey;
         this.icon = icon;
         this.selectable = selectable;
         this.renderInOverlay = renderInOverlay;
         this.cooldownTicks = cooldownTicks;
+        this.castActionTicks = castActionTicks;
         this.listeningEvents = Collections.unmodifiableList(new ArrayList<>(listeningEvents));
     }
 
@@ -52,6 +54,10 @@ public final class SpellBlueprint {
         return cooldownTicks;
     }
 
+    public int getCastActionTicks() {
+        return castActionTicks;
+    }
+
     public List<Class<? extends Event>> getListeningEvents() {
         return listeningEvents;
     }
@@ -62,6 +68,7 @@ public final class SpellBlueprint {
         private boolean selectable = true;
         private boolean renderInOverlay = true;
         private int cooldownTicks = 0;
+        private int castActionTicks = 0;
         private final List<Class<? extends Event>> listeningEvents = new ArrayList<>();
 
         private Builder(String nameKey) {
@@ -94,6 +101,14 @@ public final class SpellBlueprint {
             return this;
         }
 
+        public Builder castActionTicks(int ticks) {
+            if (ticks < 0) {
+                throw new IllegalArgumentException("castActionTicks must be >= 0");
+            }
+            this.castActionTicks = ticks;
+            return this;
+        }
+
         public Builder listeningEvents(Class<? extends Event>... events) {
             if (events != null) {
                 this.listeningEvents.addAll(Arrays.asList(events));
@@ -109,7 +124,7 @@ public final class SpellBlueprint {
         }
 
         public SpellBlueprint build() {
-            return new SpellBlueprint(nameKey, icon, selectable, renderInOverlay, cooldownTicks, listeningEvents);
+            return new SpellBlueprint(nameKey, icon, selectable, renderInOverlay, cooldownTicks, castActionTicks, listeningEvents);
         }
     }
 }

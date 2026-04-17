@@ -5,6 +5,7 @@ public final class MagicBookKeys {
     public static final String TAG_CUR_LEFT_INDEX = "currentLeftSpellIndex";
     public static final String TAG_CUR_RIGHT_INDEX = "currentRightSpellIndex";
     public static final String TAG_COOLDOWNS = "cooldowns";
+    public static final String TAG_ACTION_LOCKS = "actionLocks";
     public static final String TAG_SPELL_INDEX = "spellIndex";
     public static final String TAG_BOOK_INVENTORY = "BookInventory";
     public static final String TAG_LAST_LEFT_SLOTS = "LastLeftSlots";

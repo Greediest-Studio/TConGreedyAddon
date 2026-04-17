@@ -1,11 +1,15 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.GestureType;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindGestureState;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
-import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindSkillSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindGestureSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
@@ -13,12 +17,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
-import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.utils.TagUtil;
-import slimeknights.tconstruct.library.utils.TinkerUtil;
 import slimeknights.tconstruct.library.utils.ToolHelper;
 
 import javax.annotation.Nullable;
@@ -111,12 +112,11 @@ public final class MagicBookStateHelper {
 
     private static final Map<String, HoldRuntimeState> SERVER_HOLD_STATES = new ConcurrentHashMap<>();
     private static final Map<String, HoldRuntimeState> CLIENT_HOLD_STATES = new ConcurrentHashMap<>();
+    private static final Map<String, KeybindGestureState> SERVER_KEYBIND_STATES = new ConcurrentHashMap<>();
 
-    private final MagicBook book;
     private final Map<Integer, WeakReference<BookInventory>> inventoryCache = new ConcurrentHashMap<>();
 
-    public MagicBookStateHelper(MagicBook book) {
-        this.book = book;
+    public MagicBookStateHelper() {
     }
 
     public BookInventory getInventory(ItemStack stack) {
@@ -227,27 +227,28 @@ public final class MagicBookStateHelper {
     }
 
     @Nullable
-    public ResolvedSpellTarget resolveKeybindSpell(ItemStack stack, String keyId) {
+    public ResolvedSpellTarget resolveGestureSpell(ItemStack stack, MagicPageItem.SlotType slotType, GestureType gesture) {
+        if (slotType == null || gesture == null) {
+            return null;
+        }
         BookInventory inv = getInventory(stack);
-        for (int slot = 0; slot < inv.getSlots(); slot++) {
+        int start = slotType == MagicPageItem.SlotType.LEFT ? 0 : inv.getLeftSlots();
+        int end = slotType == MagicPageItem.SlotType.LEFT ? inv.getLeftSlots() : inv.getSlots();
+        for (int slot = start; slot < end; slot++) {
             ItemStack pageStack = inv.getStackInSlot(slot);
             if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) {
                 continue;
             }
 
             UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
-            MagicPageItem.SlotType slotType = slot < inv.getLeftSlots()
-                    ? MagicPageItem.SlotType.LEFT
-                    : MagicPageItem.SlotType.RIGHT;
-
             List<ISpell> spells = page.getRawSpells(slotType);
             for (int rawIndex = 0; rawIndex < spells.size(); rawIndex++) {
                 ISpell spell = spells.get(rawIndex);
-                if (!(spell instanceof IKeybindSkillSpell)) {
+                if (!(spell instanceof IKeybindGestureSpell)) {
                     continue;
                 }
-                IKeybindSkillSpell keySpell = (IKeybindSkillSpell) spell;
-                if (!keyId.equalsIgnoreCase(keySpell.getKeyBindingId())) {
+                IKeybindGestureSpell keybindSpell = (IKeybindGestureSpell) spell;
+                if (!keybindSpell.supportsGesture(slotType, gesture)) {
                     continue;
                 }
 
@@ -255,10 +256,23 @@ public final class MagicBookStateHelper {
                 if (pageData == null) {
                     pageData = new NBTTagCompound();
                 }
-                return new ResolvedSpellTarget(page, pageStack, slot, keySpell, rawIndex, slotType, pageData);
+                return new ResolvedSpellTarget(page, pageStack, slot, keybindSpell, rawIndex, slotType, pageData);
             }
         }
         return null;
+    }
+
+    public List<GestureType> consumeKeybindGestures(EntityPlayer player, World world, int sequence,
+                                                    KeybindSide side, KeybindChannel channel,
+                                                    KeybindAction action, int clientTick) {
+        if (player == null || world == null || world.isRemote || side == null || channel == null || action == null) {
+            return java.util.Collections.emptyList();
+        }
+        KeybindGestureState state = SERVER_KEYBIND_STATES.computeIfAbsent(
+                player.getUniqueID().toString(),
+                ignored -> new KeybindGestureState()
+        );
+        return state.onInput(sequence, side, channel, action, world.getTotalWorldTime());
     }
 
     @Nullable
@@ -464,10 +478,8 @@ public final class MagicBookStateHelper {
     }
 
     public int[] getSlotCounts(ItemStack stack) {
-        BookPageStats stats = getCoreBookPageStats(stack);
-        int left = stats != null ? stats.leftSlots : 1;
-        int right = stats != null ? stats.rightSlots : 1;
-        return new int[]{left, right};
+        MagicBookToolNBT toolData = MagicBookToolNBT.from(stack);
+        return new int[]{toolData.leftSlots, toolData.rightSlots};
     }
 
     public HoldRuntimeState getMainHandHoldState(EntityPlayer player, World world) {
@@ -532,17 +544,6 @@ public final class MagicBookStateHelper {
         if (player != null) {
             CLIENT_HOLD_STATES.remove(getHoldStateKey(player, EnumHand.MAIN_HAND));
         }
-    }
-
-    @Nullable
-    private BookPageStats getCoreBookPageStats(ItemStack toolStack) {
-        NBTTagList materialsTag = TagUtil.getBaseMaterialsTagList(toolStack);
-        List<Material> materials = TinkerUtil.getMaterialsFromTagList(materialsTag);
-        if (materials.size() < 3) {
-            return null;
-        }
-        Material pageMat = materials.get(2);
-        return pageMat.getStats(BookPageStats.TYPE);
     }
 
     private void cleanupExcessPages(ItemStack stack, @Nullable EntityPlayer player) {
