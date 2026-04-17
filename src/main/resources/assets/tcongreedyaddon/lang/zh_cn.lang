@@ -39,6 +39,8 @@ modifier.death_boost.name=向死而生
 modifier.death_boost.desc=杀不死我的，将使我更强大
 modifier.speed.name=矢量
 modifier.speed.desc=不好，攻击物是水滴
+modifier.travel.name=究竟是eio出了轨还是匠魂劈了腿
+modifier.travel.desc=旅行权杖免费啦
 modifier.clever_translation.name=循环翻译
 modifier.clever_translation.desc=§o当用谷歌翻译循环翻译20遍……\n§r每60秒机翻一次名称并按译文长度与原文长度的比例提供增伤。
 modifier.connection_404.name=网络封锁
@@ -88,11 +90,12 @@ default_attack=默认攻击模式
 tooltip.leftpage=左键效果
 tooltip.rightpage=右键效果
 tooltip.current=(当前激活)
-
 tooltip.unavailable=不可用
+
 message.slot_unavailable=槽位不可用
 
 page.installed=已安装至%s书签槽
+
 slot.left=左
 slot.right=右
 

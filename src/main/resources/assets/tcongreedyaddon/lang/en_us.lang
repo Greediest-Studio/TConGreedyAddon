@@ -2,11 +2,16 @@ item.greatblade.name=Greatblade
 item.battleaxe.name=Battleaxe
 item.dagger.name=Dagger
 item.tconstruct:crossbow.name=Crossbow
+item.magicbook.name=Magic Book
 item.allinonetool.name=item.allinonetool.name
 
 item.greatbladeCore.name=Greatblade Core
 item.freeze_ray_page.name=Freeze Ray Bookmark
 item.strand_grapple_page.name=Strand Grapple Bookmark
+item.magiccore.name=The Core Of The Technique
+item.cover.name=Book Case
+item.hinge.name=hinged
+item.bookpage.name=Pages
 
 item.greatblade.desc=The Great Equalizer. The heavy Greatblade sacrifices raw damage for enemy percent HP damage, and excels vs bosses. Slow, Requires two hands!
 item.battleaxe.desc=The Battleaxe is a heavy offensive weapon. As a berserker, you deal and take significantly more damage. \n It is capable of bringing down small trees.
@@ -23,6 +28,8 @@ modifier.death_boost.name=What Doesn't Kill Me
 modifier.death_boost.desc=What does not kill me makes me stronger.
 modifier.speed.name=Vector
 modifier.speed.desc=Uh-oh, the projectile is a water droplet.
+modifier.travel.name=Was it EIO that went off the rails or did TConstruct cheat?
+modifier.travel.desc=the TravelStaff Is Free
 modifier.clever_translation.name=Clever Translation
 modifier.clever_translation.desc=Every 60s, translate the name and scale damage by translation length.
 modifier.connection_404.name=Connection 404
@@ -39,9 +46,7 @@ tinkers.greatblade.bossmultiplier.percentMaxHp=Enemy Maximum HP Damage: §9%1$,.
 tinkers.greatblade.bossmultiplier.hpHover=§9+%1$,.2f%% Enemy Maximum HP Damage
 tinkers.greatblade.bossmultiplier.positive=§9Enemy HP Based Damage to Bosses: +%1$,.2f%%
 tinkers.greatblade.bossmultiplier.negative=§cEnemy HP Based Damage to Bosses: -%1$,.2f%%
-
 tinkers.battleaxe.extradamage.hover=§c%1$,.2fx damage taken
-
 tinkers.scimitar.bleed.hover=§c%1$,.2fs bleed duration
 tinkers.scimitar.bleed.duration=Bleed duration: §c%1$,.2fs
 
@@ -75,6 +80,7 @@ stat.slot.left=LeftKeyway: %s
 stat.slot.right=RightKeyway: %s
 stat.slot.available=allow
 stat.slot.unavailable=prohibited
+stat.mattock.picklevel.name=Pickaxe Level
 tooltip.empty=EmptySlot
 
 spell.large_fire_ball=BigFireball
