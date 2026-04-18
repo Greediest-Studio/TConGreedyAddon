@@ -2,13 +2,14 @@ package com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindTuningConfig;
 
 public interface IKeybindHoldSpell extends ISpell {
 
     boolean supportsHold(MagicPageItem.SlotType slotType, KeybindChannel channel);
 
     default int getHoldTriggerTicks(SpellContext context, KeybindChannel channel) {
-        return 10;
+        return KeybindTuningConfig.getHoldTriggerTicks();
     }
 
     default int getMaxHoldTicks(SpellContext context, KeybindChannel channel) {

@@ -6,6 +6,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.keybind.GestureType;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindTuningConfig;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindGestureSpell;
@@ -455,6 +456,9 @@ final class MagicBookCastingCore {
     private int resolveCastActionTicks(ISpell spell, EntityPlayer player, ItemStack bookStack) {
         int cooldownTicks = Math.max(0, spell.getCooldownTicks(player, bookStack));
         int castActionTicks = Math.max(0, spell.getCastActionTicks(player, bookStack));
+        if (castActionTicks > 0) {
+            castActionTicks = Math.max(castActionTicks, KeybindTuningConfig.getActionLockMinTicks());
+        }
         if (cooldownTicks <= 0 && castActionTicks <= 0) {
             TConGreedyAddon.LOGGER.warn("Keybind spell {} has zero cooldown but no castActionTicks, rejecting cast.", spell.getNameKey());
             return -1;

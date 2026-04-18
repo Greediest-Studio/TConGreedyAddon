@@ -8,6 +8,7 @@ import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
+import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindTuningConfig;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
@@ -19,6 +20,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.ThermalSunderPage;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Loader;
@@ -66,6 +68,105 @@ public class SpecialWeapons implements IModule {
     @Override
     public boolean hasDetailedConfig() {
         return true;
+    }
+
+    @Override
+    public void setupModuleConfig(Configuration config) {
+        config.getCategory(getModuleName()).setComment("Special weapons / magic book tuning");
+        config.get(
+                getModuleName(),
+                "keybindLongPressTicks",
+                KeybindTuningConfig.DEFAULT_LONG_PRESS_TICKS,
+                "Ticks to classify a key as long-press.",
+                1,
+                40
+        );
+        config.get(
+                getModuleName(),
+                "keybindTapMaxTicks",
+                KeybindTuningConfig.DEFAULT_TAP_MAX_TICKS,
+                "Max key-down ticks still counted as tap.",
+                1,
+                20
+        );
+        config.get(
+                getModuleName(),
+                "keybindChordLongTicks",
+                KeybindTuningConfig.DEFAULT_CHORD_LONG_TICKS,
+                "Overlap ticks required for CHORD_LONG.",
+                1,
+                40
+        );
+        config.get(
+                getModuleName(),
+                "keybindChordTapMaxTicks",
+                KeybindTuningConfig.DEFAULT_CHORD_TAP_MAX_TICKS,
+                "Max overlap ticks counted as CHORD_TAP.",
+                1,
+                20
+        );
+        config.get(
+                getModuleName(),
+                "keybindHoldTriggerTicks",
+                KeybindTuningConfig.DEFAULT_HOLD_TRIGGER_TICKS,
+                "Default trigger ticks for hold-spells that do not override threshold.",
+                1,
+                40
+        );
+        config.get(
+                getModuleName(),
+                "keybindActionLockMinTicks",
+                KeybindTuningConfig.DEFAULT_ACTION_LOCK_MIN_TICKS,
+                "Minimum cast action lock for keybind spells when castActionTicks > 0.",
+                0,
+                20
+        );
+    }
+
+    @Override
+    public void loadModuleConfig(Configuration config) {
+        if (!config.isChild) {
+            config.load();
+        }
+        int longPressTicks = config.get(
+                getModuleName(),
+                "keybindLongPressTicks",
+                KeybindTuningConfig.DEFAULT_LONG_PRESS_TICKS
+        ).getInt();
+        int tapMaxTicks = config.get(
+                getModuleName(),
+                "keybindTapMaxTicks",
+                KeybindTuningConfig.DEFAULT_TAP_MAX_TICKS
+        ).getInt();
+        int chordLongTicks = config.get(
+                getModuleName(),
+                "keybindChordLongTicks",
+                KeybindTuningConfig.DEFAULT_CHORD_LONG_TICKS
+        ).getInt();
+        int chordTapMaxTicks = config.get(
+                getModuleName(),
+                "keybindChordTapMaxTicks",
+                KeybindTuningConfig.DEFAULT_CHORD_TAP_MAX_TICKS
+        ).getInt();
+        int holdTriggerTicks = config.get(
+                getModuleName(),
+                "keybindHoldTriggerTicks",
+                KeybindTuningConfig.DEFAULT_HOLD_TRIGGER_TICKS
+        ).getInt();
+        int actionLockMinTicks = config.get(
+                getModuleName(),
+                "keybindActionLockMinTicks",
+                KeybindTuningConfig.DEFAULT_ACTION_LOCK_MIN_TICKS
+        ).getInt();
+
+        KeybindTuningConfig.apply(
+                longPressTicks,
+                tapMaxTicks,
+                chordLongTicks,
+                chordTapMaxTicks,
+                holdTriggerTicks,
+                actionLockMinTicks
+        );
     }
 
 

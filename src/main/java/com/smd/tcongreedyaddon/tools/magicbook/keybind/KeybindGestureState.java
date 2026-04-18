@@ -5,9 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 public final class KeybindGestureState {
-    private static final int LONG_PRESS_TICKS = 10;
-    private static final int TAP_MAX_TICKS = 6;
-
     private final SideState left = new SideState();
     private final SideState right = new SideState();
     private int lastSequence = -1;
@@ -102,7 +99,7 @@ public final class KeybindGestureState {
                 pendingChordTap = false;
             } else if (otherDown && overlapStartTick >= 0L && !isConsumed(channel) && !isConsumed(other)) {
                 long overlapDuration = tick - overlapStartTick + 1L;
-                if (overlapDuration >= LONG_PRESS_TICKS) {
+                if (isChordLongDuration(overlapDuration)) {
                     result.add(GestureType.CHORD_LONG);
                     setConsumed(channel, true);
                     setConsumed(other, true);
@@ -123,7 +120,7 @@ public final class KeybindGestureState {
                 long overlapDuration = tick - pendingChordStartTick + 1L;
                 pendingChordTap = false;
                 pendingChordStartTick = -1L;
-                if (overlapDuration < LONG_PRESS_TICKS) {
+                if (isChordTapDuration(overlapDuration)) {
                     result.add(GestureType.CHORD_TAP);
                     setConsumed(KeybindChannel.A, false);
                     setConsumed(KeybindChannel.B, false);
@@ -208,15 +205,39 @@ public final class KeybindGestureState {
         }
 
         private boolean isLongPressed(KeybindChannel channel, long tick) {
-            return getDuration(channel, tick) >= LONG_PRESS_TICKS;
+            return getDuration(channel, tick) >= getLongPressTicks();
         }
 
         private boolean isTapDuration(long duration) {
-            return duration > 0L && duration <= TAP_MAX_TICKS;
+            return duration > 0L && duration <= getTapMaxTicks();
         }
 
         private boolean isLongDuration(long duration) {
-            return duration >= LONG_PRESS_TICKS;
+            return duration >= getLongPressTicks();
+        }
+
+        private boolean isChordLongDuration(long duration) {
+            return duration >= getChordLongTicks();
+        }
+
+        private boolean isChordTapDuration(long duration) {
+            return duration > 0L && duration <= getChordTapMaxTicks();
+        }
+
+        private int getLongPressTicks() {
+            return KeybindTuningConfig.getLongPressTicks();
+        }
+
+        private int getTapMaxTicks() {
+            return KeybindTuningConfig.getTapMaxTicks();
+        }
+
+        private int getChordLongTicks() {
+            return KeybindTuningConfig.getChordLongTicks();
+        }
+
+        private int getChordTapMaxTicks() {
+            return KeybindTuningConfig.getChordTapMaxTicks();
         }
     }
 }
