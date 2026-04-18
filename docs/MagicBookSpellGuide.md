@@ -25,7 +25,9 @@
   - 边沿：`PRESS_A`/`PRESS_B`/`RELEASE_A`/`RELEASE_B`
   - 单键：`TAP_A`/`TAP_B`/`LONG_A`/`LONG_B`
   - 组合：`CHORD_TAP`/`CHORD_LONG`/`HOLD_A_TAP_B`/`HOLD_B_TAP_A`
+- `LONG_A/LONG_B` 当前语义为“达到长按阈值即触发一次”，不再等到抬手触发；同一次按住仅触发一次，抬手后重置。
 - 键绑法术实现 `IKeybindGestureSpell`，在 `supportsGesture(slotType, gesture)` 声明支持手势，并在 `onGestureTriggered` 中执行逻辑。
+- 若需要“按住持续生效，抬手结束”的技能，可实现 `IKeybindHoldSpell`（`onKeyHoldStart/onKeyHoldTick/onKeyHoldEnd`）；服务端会在按住期间按 tick 驱动。
 - `MagicPageItem` 新增放置策略：`LEFT_ONLY`/`RIGHT_ONLY`/`BOTH`。`BookInventory` 通过 `supportsSlot` 校验可放置侧别；若页面配置 `BOTH`，会按安装侧读取对应侧法术集合。
 - `UnifiedMagicPage.Builder.keybindPage(true)` 可把页面注册为按键书签；放置时每侧（左/右）最多允许 1 个按键书签，防止手势冲突。普通书签不受这条限制。
 - 对于 `0` 冷却法术，建议在 blueprint 配置 `castActionTicks`。服务端会在键绑触发中应用动作锁，防止持续连发。
@@ -97,3 +99,4 @@
 - `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/spell/impl/ThermalSunderSpell.java`
 - `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/effect/ThermalHeatPotion.java`
 - `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/effect/ThermalSunderRuntime.java`
+- `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/spell/basespell/IKeybindHoldSpell.java`

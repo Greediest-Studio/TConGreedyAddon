@@ -142,7 +142,11 @@ public class MagicBook extends TinkerToolCore {
         if (!(entity instanceof EntityPlayer) || !isSelected) {
             return;
         }
-        stateHelper.onSelectedUpdate(stack, world, (EntityPlayer) entity);
+        EntityPlayer player = (EntityPlayer) entity;
+        stateHelper.onSelectedUpdate(stack, world, player);
+        if (!world.isRemote) {
+            castingCore.onSelectedTick(stack, player);
+        }
     }
 
     @Override

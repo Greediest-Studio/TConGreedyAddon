@@ -9,6 +9,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindGestureSpell;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindHoldSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
@@ -25,6 +26,7 @@ import net.minecraftforge.common.MinecraftForge;
 import slimeknights.tconstruct.library.utils.ToolHelper;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 final class MagicBookCastingCore {
 
@@ -172,12 +174,23 @@ final class MagicBookCastingCore {
         stateHelper.clearHoldState(player, EnumHand.MAIN_HAND, world);
     }
 
+    public void onSelectedTick(ItemStack bookStack, EntityPlayer player) {
+        if (player == null || player.world.isRemote || ToolHelper.isBroken(bookStack)) {
+            return;
+        }
+
+        handleTickKeybindGestures(bookStack, player);
+        tickActiveKeyHolds(bookStack, player);
+    }
+
     public boolean handleKeybindInput(ItemStack bookStack, EntityPlayer player, int sequence,
                                       KeybindSide side, KeybindChannel channel,
                                       KeybindAction action, int clientTick) {
         if (ToolHelper.isBroken(bookStack) || player == null || side == null || channel == null || action == null) {
             return false;
         }
+
+        handleKeyHoldEdge(bookStack, player, side, channel, action);
 
         java.util.List<GestureType> gestures = stateHelper.consumeKeybindGestures(
                 player,
@@ -194,23 +207,162 @@ final class MagicBookCastingCore {
 
         boolean anySuccess = false;
         for (GestureType gesture : gestures) {
-            MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveGestureSpell(
-                    bookStack,
-                    side.toSlotType(),
-                    gesture
-            );
-            if (target == null) {
-                continue;
-            }
-            TriggerSource triggerSource = TriggerSource.keyGesture();
-            if (!canCastKeybind(bookStack, player, target, triggerSource)) {
-                continue;
-            }
-            boolean success = castKeybindGesture(bookStack, player, target, gesture, triggerSource);
-            postSpellUsePost(player, bookStack, target, triggerSource, success);
-            anySuccess |= success;
+            anySuccess |= tryCastKeybindGesture(bookStack, player, side.toSlotType(), gesture, TriggerSource.keyGesture());
         }
         return anySuccess;
+    }
+
+    private void handleTickKeybindGestures(ItemStack bookStack, EntityPlayer player) {
+        List<MagicBookStateHelper.KeybindTickGesture> gestures = stateHelper.consumeKeybindTickGestures(player, player.world);
+        if (gestures.isEmpty()) {
+            return;
+        }
+        for (MagicBookStateHelper.KeybindTickGesture gesture : gestures) {
+            if (gesture == null || gesture.side == null || gesture.gesture == null) {
+                continue;
+            }
+            tryCastKeybindGesture(bookStack, player, gesture.side.toSlotType(), gesture.gesture, TriggerSource.keyGesture());
+        }
+    }
+
+    private boolean tryCastKeybindGesture(ItemStack bookStack, EntityPlayer player,
+                                          MagicPageItem.SlotType slotType, GestureType gesture,
+                                          TriggerSource triggerSource) {
+        MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveGestureSpell(bookStack, slotType, gesture);
+        if (!canCastKeybind(bookStack, player, target, triggerSource)) {
+            return false;
+        }
+        boolean success = castKeybindGesture(bookStack, player, target, gesture, triggerSource);
+        postSpellUsePost(player, bookStack, target, triggerSource, success);
+        return success;
+    }
+
+    private void handleKeyHoldEdge(ItemStack bookStack, EntityPlayer player, KeybindSide side,
+                                   KeybindChannel channel, KeybindAction action) {
+        if (action == KeybindAction.PRESS) {
+            startKeyHoldIfSupported(bookStack, player, side, channel);
+            return;
+        }
+        finishKeyHoldIfPresent(bookStack, player, side, channel, false);
+    }
+
+    private void startKeyHoldIfSupported(ItemStack bookStack, EntityPlayer player,
+                                         KeybindSide side, KeybindChannel channel) {
+        MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveKeyHoldSpell(
+                bookStack, side.toSlotType(), channel);
+        if (target == null || !(target.spell instanceof IKeybindHoldSpell)) {
+            return;
+        }
+
+        SpellContext context = new SpellContext(
+                player.world,
+                player,
+                bookStack,
+                target.pageStack,
+                target.pageData,
+                target.slotType,
+                TriggerSource.keyHoldStart(),
+                null
+        );
+        IKeybindHoldSpell holdSpell = (IKeybindHoldSpell) target.spell;
+        int triggerTicks = Math.max(0, holdSpell.getHoldTriggerTicks(context, channel));
+        int maxHoldTicks = holdSpell.getMaxHoldTicks(context, channel);
+        stateHelper.startKeyHoldState(player, player.world, side, channel, target, triggerTicks, maxHoldTicks);
+    }
+
+    private void tickActiveKeyHolds(ItemStack bookStack, EntityPlayer player) {
+        List<MagicBookStateHelper.KeyHoldRuntimeState> states = stateHelper.getAllKeyHoldStates(player, player.world);
+        if (states.isEmpty()) {
+            return;
+        }
+        for (MagicBookStateHelper.KeyHoldRuntimeState state : states) {
+            if (state == null) {
+                continue;
+            }
+            tickSingleKeyHold(bookStack, player, state);
+        }
+    }
+
+    private void tickSingleKeyHold(ItemStack bookStack, EntityPlayer player, MagicBookStateHelper.KeyHoldRuntimeState state) {
+        MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveKeyHoldSpellFromState(bookStack, state);
+        if (target == null || !(target.spell instanceof IKeybindHoldSpell)) {
+            stateHelper.clearKeyHoldState(player, state.side, state.channel);
+            return;
+        }
+
+        IKeybindHoldSpell holdSpell = (IKeybindHoldSpell) target.spell;
+        int heldTicks = (int) Math.max(0L, player.world.getTotalWorldTime() - state.startWorldTick + 1L);
+        boolean effectTriggered = false;
+
+        if (!state.active && heldTicks >= state.triggerTicks) {
+            SpellContext startContext = new SpellContext(
+                    player.world,
+                    player,
+                    bookStack,
+                    target.pageStack,
+                    target.pageData,
+                    target.slotType,
+                    TriggerSource.keyHoldStart(),
+                    null
+            );
+            effectTriggered = holdSpell.onKeyHoldStart(startContext, state.channel, heldTicks);
+            state.active = true;
+            target.pageStack.setTagCompound(startContext.pageData);
+            stateHelper.savePageData(bookStack, target);
+        }
+
+        if (state.active) {
+            SpellContext tickContext = new SpellContext(
+                    player.world,
+                    player,
+                    bookStack,
+                    target.pageStack,
+                    target.pageData,
+                    target.slotType,
+                    TriggerSource.keyHoldTick(),
+                    null
+            );
+            effectTriggered |= holdSpell.onKeyHoldTick(tickContext, state.channel, heldTicks);
+            target.pageStack.setTagCompound(tickContext.pageData);
+            stateHelper.savePageData(bookStack, target);
+        }
+
+        if (effectTriggered) {
+            ToolHelper.damageTool(bookStack, MagicBook.DURABILITY_COST, player);
+        }
+
+        if (state.maxHoldTicks > 0 && heldTicks >= state.maxHoldTicks) {
+            finishKeyHoldIfPresent(bookStack, player, state.side, state.channel, true);
+        }
+    }
+
+    private void finishKeyHoldIfPresent(ItemStack bookStack, EntityPlayer player, KeybindSide side,
+                                        KeybindChannel channel, boolean interrupted) {
+        MagicBookStateHelper.KeyHoldRuntimeState state = stateHelper.getKeyHoldState(player, player.world, side, channel);
+        if (state == null) {
+            return;
+        }
+
+        MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveKeyHoldSpellFromState(bookStack, state);
+        if (target != null && target.spell instanceof IKeybindHoldSpell) {
+            IKeybindHoldSpell holdSpell = (IKeybindHoldSpell) target.spell;
+            int heldTicks = (int) Math.max(0L, player.world.getTotalWorldTime() - state.startWorldTick + 1L);
+            SpellContext endContext = new SpellContext(
+                    player.world,
+                    player,
+                    bookStack,
+                    target.pageStack,
+                    target.pageData,
+                    target.slotType,
+                    TriggerSource.keyHoldEnd(),
+                    null
+            );
+            holdSpell.onKeyHoldEnd(endContext, state.channel, heldTicks, state.active, interrupted);
+            target.pageStack.setTagCompound(endContext.pageData);
+            stateHelper.savePageData(bookStack, target);
+        }
+
+        stateHelper.clearKeyHoldState(player, side, channel);
     }
 
     private boolean canCastSelectedSpell(ItemStack bookStack, EntityPlayer player,

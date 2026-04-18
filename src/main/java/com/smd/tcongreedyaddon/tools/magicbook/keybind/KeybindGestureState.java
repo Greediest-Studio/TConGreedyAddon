@@ -12,6 +12,16 @@ public final class KeybindGestureState {
     private final SideState right = new SideState();
     private int lastSequence = -1;
 
+    public static final class SideGesture {
+        public final KeybindSide side;
+        public final GestureType gesture;
+
+        public SideGesture(KeybindSide side, GestureType gesture) {
+            this.side = side;
+            this.gesture = gesture;
+        }
+    }
+
     public List<GestureType> onInput(int sequence, KeybindSide side, KeybindChannel channel, KeybindAction action, long serverTick) {
         if (side == null || channel == null || action == null) {
             return Collections.emptyList();
@@ -25,6 +35,17 @@ public final class KeybindGestureState {
         return state.onInput(channel, action, serverTick);
     }
 
+    public List<SideGesture> pollTickGestures(long serverTick) {
+        List<SideGesture> gestures = new ArrayList<>(2);
+        for (GestureType gesture : left.pollTickGestures(serverTick)) {
+            gestures.add(new SideGesture(KeybindSide.LEFT, gesture));
+        }
+        for (GestureType gesture : right.pollTickGestures(serverTick)) {
+            gestures.add(new SideGesture(KeybindSide.RIGHT, gesture));
+        }
+        return gestures;
+    }
+
     private static final class SideState {
         private boolean downA;
         private boolean downB;
@@ -35,6 +56,8 @@ public final class KeybindGestureState {
         private long overlapStartTick = -1L;
         private boolean pendingChordTap;
         private long pendingChordStartTick = -1L;
+        private boolean longFiredA;
+        private boolean longFiredB;
 
         private List<GestureType> onInput(KeybindChannel channel, KeybindAction action, long tick) {
             if (action == KeybindAction.PRESS) {
@@ -51,6 +74,7 @@ public final class KeybindGestureState {
             setDown(channel, true);
             setPressTick(channel, tick);
             setConsumed(channel, false);
+            setLongFired(channel, false);
             result.add(channel == KeybindChannel.A ? GestureType.PRESS_A : GestureType.PRESS_B);
             if (downA && downB) {
                 overlapStartTick = tick;
@@ -112,10 +136,21 @@ public final class KeybindGestureState {
                 return result;
             }
 
-            if (isLongDuration(releasedDuration)) {
-                result.add(channel == KeybindChannel.A ? GestureType.LONG_A : GestureType.LONG_B);
-            } else {
+            if (!isLongFired(channel) && isTapDuration(releasedDuration)) {
                 result.add(channel == KeybindChannel.A ? GestureType.TAP_A : GestureType.TAP_B);
+            }
+            return result;
+        }
+
+        private List<GestureType> pollTickGestures(long tick) {
+            List<GestureType> result = new ArrayList<>(2);
+            if (downA && !longFiredA && isLongDuration(getDuration(KeybindChannel.A, tick))) {
+                longFiredA = true;
+                result.add(GestureType.LONG_A);
+            }
+            if (downB && !longFiredB && isLongDuration(getDuration(KeybindChannel.B, tick))) {
+                longFiredB = true;
+                result.add(GestureType.LONG_B);
             }
             return result;
         }
@@ -141,6 +176,18 @@ public final class KeybindGestureState {
                 consumedA = consumed;
             } else {
                 consumedB = consumed;
+            }
+        }
+
+        private boolean isLongFired(KeybindChannel channel) {
+            return channel == KeybindChannel.A ? longFiredA : longFiredB;
+        }
+
+        private void setLongFired(KeybindChannel channel, boolean fired) {
+            if (channel == KeybindChannel.A) {
+                longFiredA = fired;
+            } else {
+                longFiredB = fired;
             }
         }
 
