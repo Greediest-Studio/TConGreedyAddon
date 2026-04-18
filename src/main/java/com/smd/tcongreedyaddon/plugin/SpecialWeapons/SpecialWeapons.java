@@ -7,8 +7,6 @@ import com.smd.tcongreedyaddon.client.StrandConnectionRenderer;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.BookPageStats;
-import com.smd.tcongreedyaddon.tools.magicbook.materialstats.MagicCoreStats;
 import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
@@ -17,6 +15,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.FreezeRayPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.RangePulsePage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.StrandGrapplePage;
+import com.smd.tcongreedyaddon.tools.magicbook.page.ThermalSunderPage;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -56,11 +55,12 @@ public class SpecialWeapons implements IModule {
     public static JumpBoostPage jumoboostpage;
     public static RangePulsePage rangePulsePage;
     public static StrandGrapplePage strandGrapplePage;
+    public static ThermalSunderPage thermalSunderPage;
 
 
     @Override
     public boolean isModAvailable() {
-        return Loader.isModLoaded("tconstruct");
+        return Loader.isModLoaded("tconstruct") && Loader.isModLoaded("bulletapi");
     }
 
     @Override
@@ -148,6 +148,9 @@ public class SpecialWeapons implements IModule {
 
         strandGrapplePage = new StrandGrapplePage();
         event.getRegistry().register(strandGrapplePage);
+
+        thermalSunderPage = new ThermalSunderPage();
+        event.getRegistry().register(thermalSunderPage);
     }
 
     public void registerKeyBindings() {

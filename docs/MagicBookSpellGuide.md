@@ -39,6 +39,14 @@
   - `PRESS_B`/`TAP_B`/`HOLD_A_TAP_B`：触发缚丝近战
 - 近战触发窗口来自 `StrandConnectionManager` 的连接状态与 `MELEE_GRACE_TICKS`，窗口内图标会切换为近战就绪图标。
 
+## 热能抽离书签（当前实现）
+- 热能抽离是左侧按键书签，使用 `TAP_A`（火）与 `LONG_A`（冰），长按阈值当前为 `10 tick`。
+- 火模式给范围内敌对生物叠加 `gauss_heat`（最多 5 层、持续 8 秒），并点燃 5 秒。
+- `gauss_heat` 每秒按层数指数倍率结算一次：`0.1 * 2^(层数-1)`，对应 `0.1/0.2/0.4/0.8/1.6`。
+- 冰模式给范围内敌对生物施加 `Slowness`（持续 8 秒）。
+- 当目标同时具有热与冰时，立即触发融合：结算剩余 DoT 总伤（`每秒倍率 * 剩余秒数`）、移除热与缓慢、并给非玩家目标附加一次性 `-50%` 护甲修饰符（固定 UUID 去重）。
+- 该法术配置 `cooldown(0) + castActionTicks(3)`，并在触发时根据模式播放红/蓝粒子环与 actionbar 文案。
+
 ## 样例法术与书签
 - `DefaultAttackPage`/`BeamAttackPage`/`FireballPage`/`JumpBoostPage` 分别组合了 `StandardAttackSpell`（左键近战）、`BeamAttackSpell`/`SmallFireballSpell`/`LargeFireballSpell`（右键远程）、`JumpBoostSpell`（监听 `LivingJumpEvent` 的被动）与 `PassiveMessageSpell`（每 40 tick 发消息）。这些都可作为不同 `TriggerSource.Type` 与 `SpellContext` 的参考。
 - 新增的 `RangePulseSpell` 展示了右键法术如何利用 `context.getRange()`、`context.getCritChance()`、`context.getSpellSpeed()` 与 `player.getHealth()` 计算范围伤害与动态冷却，并通过 `MagicBookToolNBT` 的属性适配核心/页面装备。
@@ -85,3 +93,7 @@
 - `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/spell/impl/RangePulseSpell.java`
 - `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/spell/impl/DeflectiveWardSpell.java`
 - `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/spell/impl/AdaptiveGuardSpell.java`
+- `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/ThermalSunderPage.java`
+- `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/page/spell/impl/ThermalSunderSpell.java`
+- `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/effect/ThermalHeatPotion.java`
+- `src/main/java/com/smd/tcongreedyaddon/tools/magicbook/effect/ThermalSunderRuntime.java`

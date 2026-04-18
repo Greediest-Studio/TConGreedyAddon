@@ -17,6 +17,7 @@ public class ModelRegistrationHandler {
     public static void registerModels(ModelRegistryEvent event) {
         registerItemModel(SpecialWeapons.fireballPage);
         registerItemModel(SpecialWeapons.freezeRayPage);
+        registerItemModel(SpecialWeapons.thermalSunderPage);
     }
 
     private static void registerItemModel(Item item) {

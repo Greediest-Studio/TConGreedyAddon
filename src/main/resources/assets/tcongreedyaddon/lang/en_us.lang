@@ -8,6 +8,7 @@ item.allinonetool.name=item.allinonetool.name
 item.greatbladeCore.name=Greatblade Core
 item.freeze_ray_page.name=Freeze Ray Bookmark
 item.strand_grapple_page.name=Strand Grapple Bookmark
+item.thermal_sunder_page.name=Thermal Sunder Bookmark
 item.magiccore.name=The Core Of The Technique
 item.cover.name=Book Case
 item.hinge.name=hinged
@@ -88,8 +89,12 @@ spell.small_fire_ball=SmallFireball
 spell.hold_fireball=Charged Fireball Stream
 spell.freeze_ray=Freeze Ray
 spell.strand_grapple=Strand Grapple
+spell.thermal_sunder=Thermal Sunder
 overlay.hold_charge=Charging %s/%s s
 overlay.hold_charge_ready=Charge complete, streaming fireballs
+message.gauss_thermal.mode_heat=Thermal Sunder: Heat
+message.gauss_thermal.mode_cold=Thermal Sunder: Cold
+effect.tcongreedyaddon.gauss_heat=Heat Burn
 
 beam_attack=AoEAttack
 

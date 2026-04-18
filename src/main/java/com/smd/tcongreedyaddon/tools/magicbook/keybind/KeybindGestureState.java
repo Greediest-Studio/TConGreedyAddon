@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class KeybindGestureState {
-    private static final int LONG_PRESS_TICKS = 2;
+    private static final int LONG_PRESS_TICKS = 10;
     private static final int TAP_MAX_TICKS = 6;
 
     private final SideState left = new SideState();
