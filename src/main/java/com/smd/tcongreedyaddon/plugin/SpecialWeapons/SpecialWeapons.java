@@ -1,11 +1,11 @@
 package com.smd.tcongreedyaddon.plugin.SpecialWeapons;
 
-import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.client.ClientEventHandler;
 import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
 import com.smd.tcongreedyaddon.client.StrandConnectionRenderer;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 import com.smd.tcongreedyaddon.plugin.IModule;
+import com.smd.tcongreedyaddon.plugin.ModuleConfig;
 import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindTuningConfig;
@@ -18,25 +18,15 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.RangePulsePage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.StrandGrapplePage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.ThermalSunderPage;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
-import slimeknights.tconstruct.library.tools.Pattern;
 import slimeknights.tconstruct.library.tools.ToolPart;
-import slimeknights.tconstruct.tools.TinkerTools;
-
-import static com.smd.tcongreedyaddon.client.KeyBindings.leftpage;
-import static com.smd.tcongreedyaddon.client.KeyBindings.leftSkillA;
-import static com.smd.tcongreedyaddon.client.KeyBindings.leftSkillB;
-import static com.smd.tcongreedyaddon.client.KeyBindings.rightpage;
-import static com.smd.tcongreedyaddon.client.KeyBindings.rightSkillA;
-import static com.smd.tcongreedyaddon.client.KeyBindings.rightSkillB;
+import com.smd.tcongreedyaddon.client.KeyBindings;
 
 public class SpecialWeapons implements IModule {
 
@@ -71,163 +61,61 @@ public class SpecialWeapons implements IModule {
     }
 
     @Override
-    public void setupModuleConfig(Configuration config) {
-        config.getCategory(getModuleName()).setComment("Special weapons / magic book tuning");
-        config.get(
-                getModuleName(),
-                "keybindLongPressTicks",
-                KeybindTuningConfig.DEFAULT_LONG_PRESS_TICKS,
-                "Ticks to classify a key as long-press.",
-                1,
-                40
-        );
-        config.get(
-                getModuleName(),
-                "keybindTapMaxTicks",
-                KeybindTuningConfig.DEFAULT_TAP_MAX_TICKS,
-                "Max key-down ticks still counted as tap.",
-                1,
-                20
-        );
-        config.get(
-                getModuleName(),
-                "keybindChordLongTicks",
-                KeybindTuningConfig.DEFAULT_CHORD_LONG_TICKS,
-                "Overlap ticks required for CHORD_LONG.",
-                1,
-                40
-        );
-        config.get(
-                getModuleName(),
-                "keybindChordTapMaxTicks",
-                KeybindTuningConfig.DEFAULT_CHORD_TAP_MAX_TICKS,
-                "Max overlap ticks counted as CHORD_TAP.",
-                1,
-                20
-        );
-        config.get(
-                getModuleName(),
-                "keybindHoldTriggerTicks",
-                KeybindTuningConfig.DEFAULT_HOLD_TRIGGER_TICKS,
-                "Default trigger ticks for hold-spells that do not override threshold.",
-                1,
-                40
-        );
-        config.get(
-                getModuleName(),
-                "keybindActionLockMinTicks",
-                KeybindTuningConfig.DEFAULT_ACTION_LOCK_MIN_TICKS,
-                "Minimum cast action lock for keybind spells when castActionTicks > 0.",
-                0,
-                20
-        );
+    public void setupModuleConfig(ModuleConfig config) {
+        config.addInteger("keybindLongPressTicks", KeybindTuningConfig.DEFAULT_LONG_PRESS_TICKS,
+                1, 40, "Ticks to classify a key as long-press.");
+        config.addInteger("keybindTapMaxTicks", KeybindTuningConfig.DEFAULT_TAP_MAX_TICKS,
+                1, 20, "Max key-down ticks still counted as tap.");
+        config.addInteger("keybindChordLongTicks", KeybindTuningConfig.DEFAULT_CHORD_LONG_TICKS,
+                1, 40, "Overlap ticks required for CHORD_LONG.");
+        config.addInteger("keybindChordTapMaxTicks", KeybindTuningConfig.DEFAULT_CHORD_TAP_MAX_TICKS,
+                1, 20, "Max overlap ticks counted as CHORD_TAP.");
+        config.addInteger("keybindHoldTriggerTicks", KeybindTuningConfig.DEFAULT_HOLD_TRIGGER_TICKS,
+                1, 40, "Default trigger ticks for hold-spells that do not override threshold.");
+        config.addInteger("keybindActionLockMinTicks", KeybindTuningConfig.DEFAULT_ACTION_LOCK_MIN_TICKS,
+                0, 20, "Minimum cast action lock for keybind spells when castActionTicks > 0.");
     }
 
     @Override
-    public void loadModuleConfig(Configuration config) {
-        if (!config.isChild) {
-            config.load();
-        }
-        int longPressTicks = config.get(
-                getModuleName(),
-                "keybindLongPressTicks",
-                KeybindTuningConfig.DEFAULT_LONG_PRESS_TICKS
-        ).getInt();
-        int tapMaxTicks = config.get(
-                getModuleName(),
-                "keybindTapMaxTicks",
-                KeybindTuningConfig.DEFAULT_TAP_MAX_TICKS
-        ).getInt();
-        int chordLongTicks = config.get(
-                getModuleName(),
-                "keybindChordLongTicks",
-                KeybindTuningConfig.DEFAULT_CHORD_LONG_TICKS
-        ).getInt();
-        int chordTapMaxTicks = config.get(
-                getModuleName(),
-                "keybindChordTapMaxTicks",
-                KeybindTuningConfig.DEFAULT_CHORD_TAP_MAX_TICKS
-        ).getInt();
-        int holdTriggerTicks = config.get(
-                getModuleName(),
-                "keybindHoldTriggerTicks",
-                KeybindTuningConfig.DEFAULT_HOLD_TRIGGER_TICKS
-        ).getInt();
-        int actionLockMinTicks = config.get(
-                getModuleName(),
-                "keybindActionLockMinTicks",
-                KeybindTuningConfig.DEFAULT_ACTION_LOCK_MIN_TICKS
-        ).getInt();
-
+    public void loadModuleConfig(ModuleConfig config) {
         KeybindTuningConfig.apply(
-                longPressTicks,
-                tapMaxTicks,
-                chordLongTicks,
-                chordTapMaxTicks,
-                holdTriggerTicks,
-                actionLockMinTicks
+                config.getInteger("keybindLongPressTicks"),
+                config.getInteger("keybindTapMaxTicks"),
+                config.getInteger("keybindChordLongTicks"),
+                config.getInteger("keybindChordTapMaxTicks"),
+                config.getInteger("keybindHoldTriggerTicks"),
+                config.getInteger("keybindActionLockMinTicks")
         );
     }
 
 
     @Override
     public void preInit() {
-
         TConGreedyTypes.init();
-
     }
 
     @Override
     public void preInitClient(FMLPreInitializationEvent event) {
         registerKeyBindings();
+    }
+
+    @Override
+    public void initClient(FMLInitializationEvent event){
         MinecraftForge.EVENT_BUS.register(new SpellOverlayRenderer());
         MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
         MinecraftForge.EVENT_BUS.register(new StrandConnectionRenderer());
     }
 
-
-    @Override
-    public void init() {
-    }
-
-    @Override
-    public void postInit() {
-    }
-
     @Override
     public void initItems(RegistryEvent.Register<Item> event) {
 
-        cover = new ToolPart(Material.VALUE_Ingot * 24);
-        cover.setTranslationKey("cover").setRegistryName("cover");
-        event.getRegistry().register(cover);
-        TinkerRegistry.registerToolPart(cover);
-        TConGreedyAddon.proxy.registerToolPartModel(cover);
-        TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), cover));
+        cover = TotalTinkersRegister.registerToolPart(event, "cover", Material.VALUE_Ingot * 24);
+        hinge = TotalTinkersRegister.registerToolPart(event, "hinge", Material.VALUE_Ingot * 12);
+        bookpage = TotalTinkersRegister.registerToolPart(event, "bookpage", Material.VALUE_Ingot * 12);
+        magiccore = TotalTinkersRegister.registerToolPart(event, "magiccore", Material.VALUE_Ingot * 24);
 
-        hinge = new ToolPart(Material.VALUE_Ingot * 12);
-        hinge.setTranslationKey("hinge").setRegistryName("hinge");
-        event.getRegistry().register(hinge);
-        TinkerRegistry.registerToolPart(hinge);
-        TConGreedyAddon.proxy.registerToolPartModel(hinge);
-        TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), hinge));
-
-        bookpage = new ToolPart(Material.VALUE_Ingot * 12);
-        bookpage.setTranslationKey("bookpage").setRegistryName("bookpage");
-        event.getRegistry().register(bookpage);
-        TinkerRegistry.registerToolPart(bookpage);
-        TConGreedyAddon.proxy.registerToolPartModel(bookpage);
-        TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), bookpage));
-
-
-        magiccore = new ToolPart(Material.VALUE_Ingot * 24);
-        magiccore.setTranslationKey("magiccore").setRegistryName("magiccore");
-        event.getRegistry().register(magiccore);
-        TinkerRegistry.registerToolPart(magiccore);
-        TConGreedyAddon.proxy.registerToolPartModel(magiccore);
-        TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), magiccore));
-
-        SpecialWeapons.magicbook = new MagicBook();
-        TotalTinkersRegister.initForgeTool(SpecialWeapons.magicbook, event);
+        magicbook = new MagicBook();
+        TotalTinkersRegister.initForgeTool(magicbook, event);
 
         beamAttackPage = new BeamAttackPage();
         event.getRegistry().register(beamAttackPage);
@@ -255,11 +143,11 @@ public class SpecialWeapons implements IModule {
     }
 
     public void registerKeyBindings() {
-        ClientRegistry.registerKeyBinding(leftpage);
-        ClientRegistry.registerKeyBinding(rightpage);
-        ClientRegistry.registerKeyBinding(leftSkillA);
-        ClientRegistry.registerKeyBinding(leftSkillB);
-        ClientRegistry.registerKeyBinding(rightSkillA);
-        ClientRegistry.registerKeyBinding(rightSkillB);
+        ClientRegistry.registerKeyBinding(KeyBindings.leftpage);
+        ClientRegistry.registerKeyBinding(KeyBindings.rightpage);
+        ClientRegistry.registerKeyBinding(KeyBindings.leftSkillA);
+        ClientRegistry.registerKeyBinding(KeyBindings.leftSkillB);
+        ClientRegistry.registerKeyBinding(KeyBindings.rightSkillA);
+        ClientRegistry.registerKeyBinding(KeyBindings.rightSkillB);
     }
 }

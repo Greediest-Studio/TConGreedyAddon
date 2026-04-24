@@ -10,14 +10,14 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public interface IModule {
     String getModuleName();
     boolean isModAvailable();
-    void preInit();
-    void init();
-    void postInit();
+    default void preInit() {};
+    default void init() {}
+    default void postInit() {}
     void initItems(RegistryEvent.Register<Item> event);
     default boolean isEnabledByDefault() {return true;}
-    default void setupModuleConfig(Configuration config) {}
-    default void loadModuleConfig(Configuration config) {}
-    default boolean hasDetailedConfig() {return false;}
+    default void setupModuleConfig(ModuleConfig config) {}
+    default void loadModuleConfig(ModuleConfig config) {}
+    default boolean hasDetailedConfig() { return false; }
     default void preInitClient(FMLPreInitializationEvent event) {}
     default void preInitServer(FMLPreInitializationEvent event) {}
     default void initClient(FMLInitializationEvent event) {}

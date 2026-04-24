@@ -2,7 +2,6 @@ package com.smd.tcongreedyaddon.plugin;
 
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -17,9 +16,9 @@ import java.util.Set;
 
 public class ModuleManager {
     private static final Map<String, IModule> modules = new HashMap<>();
-    private static final Map<String, ModuleConfig> moduleConfigs = new HashMap<>();
     private static final Set<String> activeModules = new HashSet<>();
     private static Configuration config;
+    private static final Map<String, ModuleConfig> moduleConfigs = new HashMap<>();
 
     private static boolean isClientSide() {
         return FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT;
@@ -32,22 +31,18 @@ public class ModuleManager {
     public static void setupConfig(Configuration config) {
         ModuleManager.config = config;
         config.addCustomCategoryComment("modules", "Enable/disable integration modules");
-
         config.load();
 
         for (IModule module : modules.values()) {
-            Property prop = config.get(
-                    "modules",
-                    module.getModuleName(),
-                    module.isEnabledByDefault(),
-                    "Enable " + module.getModuleName() + " integration"
-            );
-            prop.setComment("Enable " + module.getModuleName() + " integration");
+            config.get("modules", module.getModuleName(), module.isEnabledByDefault(),
+                    "Enable " + module.getModuleName() + " integration");
         }
 
         for (IModule module : modules.values()) {
             if (module.hasDetailedConfig()) {
-                module.setupModuleConfig(config);
+                ModuleConfig mc = new ModuleConfig(module.getModuleName(), config);
+                moduleConfigs.put(module.getModuleName(), mc);
+                module.setupModuleConfig(mc);
             }
         }
 
@@ -58,16 +53,14 @@ public class ModuleManager {
 
     public static void preInitActiveModules(FMLPreInitializationEvent event) {
         for (IModule module : modules.values()) {
-            // 检查模块是否启用
-            boolean enabled = config.get(
-                    "modules",
-                    module.getModuleName(),
-                    module.isEnabledByDefault()
-            ).getBoolean() && module.isModAvailable();
+            boolean enabled = config.get("modules", module.getModuleName(),
+                    module.isEnabledByDefault()).getBoolean()
+                    && module.isModAvailable();
 
             if (enabled) {
                 if (module.hasDetailedConfig()) {
-                    module.loadModuleConfig(config);
+                    ModuleConfig mc = moduleConfigs.get(module.getModuleName());
+                    module.loadModuleConfig(mc);
                 }
 
                 module.preInit();
@@ -82,82 +75,33 @@ public class ModuleManager {
     }
 
     public static void initActiveModules(FMLInitializationEvent event) {
-        for (IModule module : modules.values()) {
-            boolean enabled = config.get(
-                    "modules",
-                    module.getModuleName(),
-                    module.isEnabledByDefault()
-            ).getBoolean() && module.isModAvailable();
-
-            if (enabled) {
-
-                if (module.hasDetailedConfig()) {
-                    module.loadModuleConfig(config);
-                }
-
-                module.init();
-                if (isClientSide()) {
-                    module.initClient(event);
-                } else {
-                    module.initServer(event);
-                }
-            }
+        for (String name : activeModules) {
+            IModule m = modules.get(name);
+            m.init();
+            if (isClientSide()) m.initClient(event);
+            else m.initServer(event);
         }
-
-        if (config.hasChanged()) {
-            config.save();
-        }
+        if (config.hasChanged()) config.save();
     }
 
     public static void postInitActiveModules(FMLPostInitializationEvent event) {
-        for (IModule module : modules.values()) {
-            boolean enabled = config.get(
-                    "modules",
-                    module.getModuleName(),
-                    module.isEnabledByDefault()
-            ).getBoolean() && module.isModAvailable();
-
-            if (enabled) {
-                module.postInit();
-                if (isClientSide()) {
-                    module.postInitClient(event);
-                } else {
-                    module.postInitServer(event);
-                }
-            }
+        for (String name : activeModules) {
+            IModule m = modules.get(name);
+            m.postInit();
+            if (isClientSide()) m.postInitClient(event);
+            else m.postInitServer(event);
         }
-
-        if (config.hasChanged()) {
-            config.save();
-        }
+        if (config.hasChanged()) config.save();
     }
 
     public static void initItems(RegistryEvent.Register<Item> event) {
-        for (IModule module : modules.values()) {
-            boolean enabled = config.get(
-                    "modules",
-                    module.getModuleName(),
-                    module.isEnabledByDefault()
-            ).getBoolean() && module.isModAvailable();
-
-            if (enabled) {
-                module.initItems(event);
-            }
+        for (String name : activeModules) {
+            modules.get(name).initItems(event);
         }
     }
 
     public static boolean isModuleActive(String name) {
         return activeModules.contains(name);
-    }
-
-    public static ModuleConfig getModuleConfig(String moduleName) {
-        return moduleConfigs.get(moduleName);
-    }
-
-    public static void saveAllConfigs() {
-        if (config.hasChanged()) {
-            config.save();
-        }
     }
 
     public static Configuration getConfig() {

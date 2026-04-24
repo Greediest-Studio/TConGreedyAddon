@@ -47,7 +47,6 @@ public class TConGreedyAddon {
         
         config = new Configuration(event.getSuggestedConfigurationFile());
 
-
         ModuleManager.registerModule(new OldWeapons());
         ModuleManager.registerModule(new AbyssalCraft());
         ModuleManager.registerModule(new something());
@@ -76,8 +75,7 @@ public class TConGreedyAddon {
         ModuleManager.postInitActiveModules(event);
         proxy.registerBookData();
         proxy.initToolGuis();
-        
-        // Log material shader fix summary
+
         MaterialRenderingDebugHelper.logMaterialShaderFixSummary();
     }
 

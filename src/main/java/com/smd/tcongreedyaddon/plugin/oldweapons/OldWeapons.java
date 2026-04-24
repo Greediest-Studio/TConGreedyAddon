@@ -1,18 +1,15 @@
 package com.smd.tcongreedyaddon.plugin.oldweapons;
 
 import com.smd.tcongreedyaddon.init.TraitRegistry;
+import com.smd.tcongreedyaddon.plugin.ModuleConfig;
 import com.smd.tcongreedyaddon.tools.oldweapons.*;
 import com.smd.tcongreedyaddon.traits.modifiers.base.ModTest;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
-import slimeknights.tconstruct.library.tools.Pattern;
 import slimeknights.tconstruct.library.tools.ToolPart;
-import slimeknights.tconstruct.tools.TinkerTools;
 import slimeknights.tconstruct.tools.ranged.TinkerRangedWeapons;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.TConGreedyAddon;
@@ -51,37 +48,25 @@ public class OldWeapons implements IModule {
     }
 
     @Override
-    public void setupModuleConfig(Configuration config) {
-        config.getCategory(getModuleName()).setComment("经典武器配置");
-
-        config.get(getModuleName(), "enabledrag", true, "是否启用短剑");
-        config.get(getModuleName(), "enableBattleAxe", true, "是否启用战斧");
-        config.get(getModuleName(), "enableGreatblade", true, "是否启用巨剑");
-        config.get(getModuleName(), "enableAllInOneTool", true, "是否启用多功能工具");
+    public void setupModuleConfig(ModuleConfig config) {
+        config.addBoolean("enabledrag", true, "是否启用短剑");
+        config.addBoolean("enableBattleAxe", true, "是否启用战斧");
+        config.addBoolean("enableGreatblade", true, "是否启用巨剑");
+        config.addBoolean("enableAllInOneTool", true, "是否启用多功能工具");
     }
 
     @Override
-    public void loadModuleConfig(Configuration config) {
-
-        if (!config.isChild) {
-            config.load();
-        }
-
-        enabledrag = config.get(getModuleName(), "enabledrag", true).getBoolean();
-        enableBattleAxe = config.get(getModuleName(), "enableBattleAxe", true).getBoolean();
-        enableGreatblade = config.get(getModuleName(), "enableGreatblade", true).getBoolean();
-        enableAllInOneTool = config.get(getModuleName(), "enableAllInOneTool", true).getBoolean();
+    public void loadModuleConfig(ModuleConfig config) {
+        enabledrag = config.getBoolean("enabledrag");
+        enableBattleAxe = config.getBoolean("enableBattleAxe");
+        enableGreatblade = config.getBoolean("enableGreatblade");
+        enableAllInOneTool = config.getBoolean("enableAllInOneTool");
     }
 
     @Override
     public void initItems(RegistryEvent.Register<Item> event) {
 
-        greatbladeCore = new ToolPart(Material.VALUE_Ingot * 24);
-        greatbladeCore.setTranslationKey("greatbladeCore").setRegistryName("greatbladeCore");
-        event.getRegistry().register(greatbladeCore);
-        TinkerRegistry.registerToolPart(greatbladeCore);
-        TConGreedyAddon.proxy.registerToolPartModel(greatbladeCore);
-        TinkerRegistry.registerStencilTableCrafting(Pattern.setTagForPart(new ItemStack(TinkerTools.pattern), greatbladeCore));
+        greatbladeCore = TotalTinkersRegister.registerToolPart(event, "greatbladeCore", Material.VALUE_Ingot * 24);
 
         if (enableBattleAxe) {
             OldWeapons.battleaxe = new WeaponBattleAxe();
