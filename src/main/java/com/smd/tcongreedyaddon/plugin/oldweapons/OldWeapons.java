@@ -1,10 +1,12 @@
 package com.smd.tcongreedyaddon.plugin.oldweapons;
 
+import com.smd.tcongreedyaddon.event.BattleaxeHandler;
 import com.smd.tcongreedyaddon.init.TraitRegistry;
 import com.smd.tcongreedyaddon.plugin.ModuleConfig;
 import com.smd.tcongreedyaddon.tools.oldweapons.*;
 import com.smd.tcongreedyaddon.traits.modifiers.base.ModTest;
 import net.minecraft.item.Item;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
@@ -101,13 +103,9 @@ public class OldWeapons implements IModule {
         test = new ModTest();
         TraitRegistry.REGISTERED_TRAITS.add(test);
         test.addItem("stone", 1, 1);
-    }
 
-    @Override
-    public void preInit() {
-    }
-
-    @Override
-    public void postInit() {
+        if (enableBattleAxe && battleaxe != null) {
+            MinecraftForge.EVENT_BUS.register(BattleaxeHandler.INSTANCE);
+        }
     }
 }

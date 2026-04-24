@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.plugin;
 
 import net.minecraft.item.Item;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -97,6 +98,12 @@ public class ModuleManager {
     public static void initItems(RegistryEvent.Register<Item> event) {
         for (String name : activeModules) {
             modules.get(name).initItems(event);
+        }
+    }
+
+    public static void onModelRegistry(ModelRegistryEvent event) {
+        for (String name : activeModules) {
+            modules.get(name).registerModels(event);
         }
     }
 

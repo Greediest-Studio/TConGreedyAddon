@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.plugin;
 
 import net.minecraft.item.Item;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -18,6 +19,7 @@ public interface IModule {
     default void setupModuleConfig(ModuleConfig config) {}
     default void loadModuleConfig(ModuleConfig config) {}
     default boolean hasDetailedConfig() { return false; }
+    default void registerModels(ModelRegistryEvent event) {}
     default void preInitClient(FMLPreInitializationEvent event) {}
     default void preInitServer(FMLPreInitializationEvent event) {}
     default void initClient(FMLInitializationEvent event) {}

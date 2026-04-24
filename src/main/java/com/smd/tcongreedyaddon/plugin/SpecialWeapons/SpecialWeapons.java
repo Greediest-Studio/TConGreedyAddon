@@ -17,7 +17,10 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.RangePulsePage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.StrandGrapplePage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.ThermalSunderPage;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -140,6 +143,25 @@ public class SpecialWeapons implements IModule {
 
         thermalSunderPage = new ThermalSunderPage();
         event.getRegistry().register(thermalSunderPage);
+    }
+
+    @Override
+    public void registerModels(ModelRegistryEvent event) {
+        registerPageModel(fireballPage);
+        registerPageModel(freezeRayPage);
+        registerPageModel(beamAttackPage);
+        registerPageModel(defaultAttackPage);
+        registerPageModel(jumoboostpage);
+        registerPageModel(rangePulsePage);
+        registerPageModel(strandGrapplePage);
+        registerPageModel(thermalSunderPage);
+    }
+
+    private void registerPageModel(Item page) {
+        if (page != null) {
+            ModelLoader.setCustomModelResourceLocation(page, 0,
+                    new ModelResourceLocation(page.getRegistryName(), "inventory"));
+        }
     }
 
     public void registerKeyBindings() {
