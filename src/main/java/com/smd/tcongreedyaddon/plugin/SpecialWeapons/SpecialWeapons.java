@@ -10,7 +10,6 @@ import com.smd.tcongreedyaddon.tools.magicbook.MagicBook;
 import com.smd.tcongreedyaddon.tools.magicbook.TConGreedyTypes;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindTuningConfig;
 import com.smd.tcongreedyaddon.tools.magicbook.page.BeamAttackPage;
-import com.smd.tcongreedyaddon.tools.magicbook.page.DefaultAttackPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FireballPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.FreezeRayPage;
 import com.smd.tcongreedyaddon.tools.magicbook.page.JumpBoostPage;
@@ -46,7 +45,6 @@ public class SpecialWeapons implements IModule {
     public static FireballPage fireballPage;
     public static BeamAttackPage beamAttackPage;
     public static FreezeRayPage freezeRayPage;
-    public static DefaultAttackPage defaultAttackPage;
     public static JumpBoostPage jumoboostpage;
     public static RangePulsePage rangePulsePage;
     public static StrandGrapplePage strandGrapplePage;
@@ -123,9 +121,6 @@ public class SpecialWeapons implements IModule {
         beamAttackPage = new BeamAttackPage();
         event.getRegistry().register(beamAttackPage);
 
-        defaultAttackPage = new DefaultAttackPage();
-        event.getRegistry().register(defaultAttackPage);
-
         fireballPage = new FireballPage();
         event.getRegistry().register(fireballPage);
 
@@ -150,7 +145,6 @@ public class SpecialWeapons implements IModule {
         registerPageModel(fireballPage);
         registerPageModel(freezeRayPage);
         registerPageModel(beamAttackPage);
-        registerPageModel(defaultAttackPage);
         registerPageModel(jumoboostpage);
         registerPageModel(rangePulsePage);
         registerPageModel(strandGrapplePage);

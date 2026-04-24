@@ -87,8 +87,4 @@ public class AbyssalCraft implements IModule {
                 new BowMaterialStats(0.65f, 1.3f, 3.5f));
         TinkerRegistry.integrate(dreadium, "Dreadium").toolforge().preInit();
     }
-
-    @Override
-    public void postInit() {
-    }
 }

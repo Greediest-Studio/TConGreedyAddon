@@ -50,10 +50,6 @@ public class something implements IModule {
     }
 
     @Override
-    public void preInit() {
-    }
-
-    @Override
     public void init() {
         TinkerRegistry.addTrait(ciallo);
         TinkerRegistry.addTrait(soundeffects);
@@ -64,10 +60,6 @@ public class something implements IModule {
         TinkerRegistry.addTrait(deathboost);
         TinkerRegistry.addTrait(speed);
         TinkerRegistry.addTrait(TravelStaff);
-    }
-
-    @Override
-    public void postInit() {
     }
 
     @Override

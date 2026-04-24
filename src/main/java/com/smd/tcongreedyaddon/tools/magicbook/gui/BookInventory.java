@@ -140,7 +140,6 @@ public class BookInventory implements IItemHandlerModifiable {
                     handler.setStackInSlot(slot, stack);
                 }
             }
-            // 超出 expectedSize 的忽略，后续由 cleanup 弹出
         }
     }
 
