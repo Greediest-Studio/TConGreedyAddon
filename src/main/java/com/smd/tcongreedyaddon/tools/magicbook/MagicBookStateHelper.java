@@ -7,6 +7,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindGestureState;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import com.smd.tcongreedyaddon.tools.magicbook.page.UnifiedMagicPage;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellTimingManager;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindHoldSpell;
@@ -14,7 +15,6 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindGest
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -453,7 +453,8 @@ public final class MagicBookStateHelper {
         stack.setTagCompound(tag);
     }
 
-    public boolean isSelectedSpellOnCooldown(ItemStack bookStack, EntityPlayer player, MagicPageItem.SlotType slotType) {
+    public boolean isSelectedSpellOnCooldown(ItemStack bookStack, EntityPlayer player,
+                                             MagicPageItem.SlotType slotType) {
         if (player == null) {
             return false;
         }
@@ -469,16 +470,15 @@ public final class MagicBookStateHelper {
         }
 
         SpellEntry entry = spells.get(selectedIndex);
-        long worldTime = player.world.getTotalWorldTime();
-        for (UnifiedMagicPage.SpellDisplayData data : entry.page.getAllSpellDisplayData(entry.pageStack)) {
-            if (data.internalIndex != entry.internalIndex || data.cooldownTicks <= 0) {
-                continue;
-            }
-            NBTTagCompound cooldowns = data.pageData.getCompoundTag(MagicBookKeys.TAG_COOLDOWNS);
-            long lastUsed = cooldowns.getLong(String.valueOf(entry.internalIndex));
-            return worldTime < lastUsed + data.cooldownTicks;
-        }
-        return false;
+
+        return SpellTimingManager.isOnCooldown(
+                entry.page.getRawSpells(slotType).get(entry.internalIndex),
+                entry.internalIndex,
+                entry.pageStack,
+                player.world,
+                player,
+                bookStack
+        );
     }
 
     @Nullable

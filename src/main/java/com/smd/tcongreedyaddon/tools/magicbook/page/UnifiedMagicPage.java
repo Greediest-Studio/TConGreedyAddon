@@ -1,7 +1,7 @@
 package com.smd.tcongreedyaddon.tools.magicbook.page;
 
 import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
-import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellRegistry;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellTimingManager;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
@@ -152,52 +152,28 @@ public class UnifiedMagicPage extends MagicPageItem {
         return resolveSelectedSpell(slot, pageData.getInteger("spellIndex"));
     }
 
-    public boolean isRawSpellOnCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
-        SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
-        if (selected == null) {
+    private boolean executeSpellWithRawIndex(ISpell spell, int rawIndex, SpellContext context, ItemStack pageStack) {
+        if (SpellTimingManager.isOnCooldown(spell, rawIndex, pageStack, context.world, context.player, context.bookStack)) {
             return false;
         }
-        return isSpellOnCooldownRaw(pageStack, rawIndex, world, player, bookStack, selected.spell);
+        if (!spell.canTrigger(context)) return false;
+        boolean success = spell.execute(context);
+        if (success) {
+            SpellTimingManager.applyCooldown(spell, rawIndex, pageStack, context.world, context.player, context.bookStack);
+        }
+        return success;
+    }
+
+    public boolean isRawSpellOnCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
+        SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
+        if (selected == null) return false;
+        return SpellTimingManager.isOnCooldown(selected.spell, rawIndex, pageStack, world, player, bookStack);
     }
 
     public void applyRawSpellCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
         SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
-        if (selected == null) {
-            return;
-        }
-        setSpellCooldownRaw(pageStack, rawIndex, world, player, bookStack, selected.spell);
-    }
-
-    private boolean isSpellOnCooldownRaw(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack, ISpell spell) {
-        NBTTagCompound pageData = pageStack.getTagCompound();
-        if (pageData == null) return false;
-        NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
-        long lastUsed = cooldowns.getLong(String.valueOf(rawIndex));
-        int cooldown = spell.getCooldownTicks(player, bookStack); // 传入 bookStack
-        if (cooldown <= 0) return false;
-        long now = world.getTotalWorldTime();
-        return now - lastUsed < cooldown;
-    }
-
-    private void setSpellCooldownRaw(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack, ISpell spell) {
-        int cooldown = spell.getCooldownTicks(player, bookStack);
-        if (cooldown <= 0) return;
-        NBTTagCompound pageData = pageStack.getTagCompound();
-        if (pageData == null) pageData = new NBTTagCompound();
-        NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
-        cooldowns.setLong(String.valueOf(rawIndex), world.getTotalWorldTime());
-        pageData.setTag(TAG_COOLDOWNS, cooldowns);
-        pageStack.setTagCompound(pageData);
-    }
-
-    private boolean executeSpellWithRawIndex(ISpell spell, int rawIndex, SpellContext context, ItemStack pageStack) {
-        if (isSpellOnCooldownRaw(pageStack, rawIndex, context.world, context.player, context.bookStack, spell)) return false;
-        if (!spell.canTrigger(context)) return false;
-        boolean success = spell.execute(context);
-        if (success) {
-            setSpellCooldownRaw(pageStack, rawIndex, context.world, context.player, context.bookStack, spell);
-        }
-        return success;
+        if (selected == null) return;
+        SpellTimingManager.applyCooldown(selected.spell, rawIndex, pageStack, world, player, bookStack);
     }
 
     public boolean executeRawSpell(int rawIndex, SpellContext context) {
@@ -439,7 +415,6 @@ public class UnifiedMagicPage extends MagicPageItem {
                 throw new IllegalStateException("Right page cannot have left spells");
             }
             UnifiedMagicPage page = new UnifiedMagicPage(this);
-            SpellRegistry.registerPage(page, new ArrayList<>(leftSpells), new ArrayList<>(rightSpells), keybindPage);
             return page;
         }
     }

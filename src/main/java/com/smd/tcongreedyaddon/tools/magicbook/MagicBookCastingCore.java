@@ -7,6 +7,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindSide;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindTuningConfig;
+import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellTimingManager;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IChannelReleaseSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IHoldTriggerSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindGestureSpell;
@@ -14,7 +15,6 @@ import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.IKeybindHold
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.ISpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,6 +28,7 @@ import slimeknights.tconstruct.library.utils.ToolHelper;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Supplier;
 
 final class MagicBookCastingCore {
 
@@ -230,12 +231,10 @@ final class MagicBookCastingCore {
                                           MagicPageItem.SlotType slotType, GestureType gesture,
                                           TriggerSource triggerSource) {
         MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveGestureSpell(bookStack, slotType, gesture);
-        if (!canCastKeybind(bookStack, player, target, triggerSource)) {
+        if (target == null) {
             return false;
         }
-        boolean success = castKeybindGesture(bookStack, player, target, gesture, triggerSource);
-        postSpellUsePost(player, bookStack, target, triggerSource, success);
-        return success;
+        return castKeybindGesture(bookStack, player, target, gesture, triggerSource);
     }
 
     private void handleKeyHoldEdge(ItemStack bookStack, EntityPlayer player, KeybindSide side,
@@ -366,47 +365,25 @@ final class MagicBookCastingCore {
         stateHelper.clearKeyHoldState(player, side, channel);
     }
 
-    private boolean canCastSelectedSpell(ItemStack bookStack, EntityPlayer player,
-                                         MagicBookStateHelper.ResolvedSpellTarget target,
-                                         TriggerSource triggerSource) {
-        return target != null
-                && !ToolHelper.isBroken(bookStack)
-                && postSpellUsePre(player, bookStack, target, triggerSource);
-    }
-
-    private boolean castSelectedSpell(ItemStack bookStack, EntityPlayer player, MagicPageItem.SlotType slotType,
+    private boolean castSelectedSpell(ItemStack bookStack, EntityPlayer player,
+                                      MagicPageItem.SlotType slotType,
                                       TriggerSource triggerSource, @Nullable Entity castTarget) {
-        MagicBookStateHelper.ResolvedSpellTarget target = stateHelper.resolveSelectedSpellTarget(bookStack, slotType);
-        if (!canCastSelectedSpell(bookStack, player, target, triggerSource)) {
+        MagicBookStateHelper.ResolvedSpellTarget target =
+                stateHelper.resolveSelectedSpellTarget(bookStack, slotType);
+        if (target == null || ToolHelper.isBroken(bookStack)) {
             return false;
         }
 
-        SpellContext context = new SpellContext(
-                player.world,
-                player,
-                bookStack,
-                target.pageStack,
-                target.pageData,
-                slotType,
-                triggerSource,
-                castTarget
-        );
-
-        boolean success = target.page.executeRawSpell(target.rawIndex, context);
-        if (success) {
-            stateHelper.savePageData(bookStack, target);
-            ToolHelper.damageTool(bookStack, MagicBook.DURABILITY_COST, player);
-        }
-        postSpellUsePost(player, bookStack, target, triggerSource, success);
-        return success;
-    }
-
-    private boolean canCastKeybind(ItemStack bookStack, EntityPlayer player,
-                                   MagicBookStateHelper.ResolvedSpellTarget target,
-                                   TriggerSource triggerSource) {
-        return target != null
-                && !ToolHelper.isBroken(bookStack)
-                && postSpellUsePre(player, bookStack, target, triggerSource);
+        return executeStandardSpell(bookStack, player, target, triggerSource,
+                true,
+                0,
+                () -> {
+                    SpellContext context = new SpellContext(
+                            player.world, player, bookStack,
+                            target.pageStack, target.pageData,
+                            slotType, triggerSource, castTarget);
+                    return target.page.executeRawSpell(target.rawIndex, context);
+                });
     }
 
     private boolean castKeybindGesture(ItemStack bookStack, EntityPlayer player,
@@ -417,40 +394,37 @@ final class MagicBookCastingCore {
             return false;
         }
 
-        boolean onCooldown = target.page.isRawSpellOnCooldown(
-                target.pageStack, target.rawIndex, player.world, player, bookStack);
         int castActionTicks = resolveCastActionTicks(target.spell, player, bookStack);
         if (castActionTicks < 0) {
             return false;
         }
-        if (isActionLocked(target.pageData, target.rawIndex, player.world.getTotalWorldTime(), castActionTicks)) {
-            return false;
-        }
 
-        SpellContext context = new SpellContext(
-                player.world,
-                player,
-                bookStack,
-                target.pageStack,
-                target.pageData,
-                target.slotType,
-                triggerSource,
-                null,
-                gesture
-        );
-
-        IKeybindGestureSpell.GestureResult result = ((IKeybindGestureSpell) target.spell).onGestureTriggered(context, gesture, onCooldown);
-        if (!result.isSuccess()) {
-            return false;
-        }
-
-        if (result.shouldApplyCooldown()) {
-            target.page.applyRawSpellCooldown(target.pageStack, target.rawIndex, player.world, player, bookStack);
-        }
-        applyActionLock(target.pageData, target.rawIndex, player.world.getTotalWorldTime(), castActionTicks);
-        stateHelper.savePageData(bookStack, target);
-        ToolHelper.damageTool(bookStack, MagicBook.DURABILITY_COST, player);
-        return true;
+        return executeStandardSpell(bookStack, player, target, triggerSource,
+                false,
+                castActionTicks,
+                () -> {
+                    boolean onCooldown = target.page.isRawSpellOnCooldown(
+                            target.pageStack, target.rawIndex,
+                            player.world, player, bookStack);
+                    SpellContext context = new SpellContext(
+                            player.world, player, bookStack,
+                            target.pageStack, target.pageData,
+                            target.slotType, triggerSource,
+                            null, gesture);
+                    IKeybindGestureSpell.GestureResult result =
+                            ((IKeybindGestureSpell) target.spell).onGestureTriggered(
+                                    context, gesture, onCooldown);
+                    if (result.isSuccess()) {
+                        // 手势法术可能自己决定是否消耗冷却
+                        if (result.shouldApplyCooldown()) {
+                            target.page.applyRawSpellCooldown(
+                                    target.pageStack, target.rawIndex,
+                                    player.world, player, bookStack);
+                        }
+                        return true;
+                    }
+                    return false;
+                });
     }
 
     private int resolveCastActionTicks(ISpell spell, EntityPlayer player, ItemStack bookStack) {
@@ -466,31 +440,13 @@ final class MagicBookCastingCore {
         return castActionTicks;
     }
 
-    private boolean isActionLocked(NBTTagCompound pageData, int rawIndex, long worldTick, int castActionTicks) {
-        if (castActionTicks <= 0) {
-            return false;
-        }
-        NBTTagCompound locks = pageData.getCompoundTag(MagicBookKeys.TAG_ACTION_LOCKS);
-        long lastCast = locks.getLong(String.valueOf(rawIndex));
-        return worldTick < lastCast + castActionTicks;
-    }
-
-    private void applyActionLock(NBTTagCompound pageData, int rawIndex, long worldTick, int castActionTicks) {
-        if (castActionTicks <= 0) {
-            return;
-        }
-        NBTTagCompound locks = pageData.getCompoundTag(MagicBookKeys.TAG_ACTION_LOCKS);
-        locks.setLong(String.valueOf(rawIndex), worldTick);
-        pageData.setTag(MagicBookKeys.TAG_ACTION_LOCKS, locks);
-    }
-
-    private ActionResult<ItemStack> beginHoldCast(World world, EntityPlayer player, EnumHand hand, ItemStack stack,
+    private ActionResult<ItemStack> beginHoldCast(World world, EntityPlayer player, EnumHand hand,
+                                                  ItemStack stack,
                                                   MagicBookStateHelper.ResolvedSpellTarget target,
                                                   MagicBookStateHelper.HoldCastModel model) {
-        if (world.isRemote && stateHelper.isSelectedSpellOnCooldown(stack, player, MagicPageItem.SlotType.RIGHT)) {
-            return new ActionResult<>(EnumActionResult.PASS, stack);
-        }
-        if (!world.isRemote && target.page.isRawSpellOnCooldown(target.pageStack, target.rawIndex, world, player, stack)) {
+
+        if (SpellTimingManager.isOnCooldown(target.spell, target.rawIndex,
+                target.pageStack, world, player, stack)) {
             return new ActionResult<>(EnumActionResult.PASS, stack);
         }
 
@@ -549,7 +505,7 @@ final class MagicBookCastingCore {
 
         if (interrupted) {
             channelSpell.onChannelInterrupted(finishContext, state.heldTicks);
-        } else if (!canReleaseChannel(bookStack, player, target)) {
+        } else if (!postSpellUsePre(player, bookStack, target, TriggerSource.holdRelease())) {
             canceled = true;
         } else {
             success = castChannelRelease(bookStack, player, target, finishContext, state);
@@ -557,11 +513,6 @@ final class MagicBookCastingCore {
         }
 
         postSpellUseFinish(player, bookStack, target, success, state.heldTicks, interrupted, canceled);
-    }
-
-    private boolean canReleaseChannel(ItemStack bookStack, EntityPlayer player,
-                                      MagicBookStateHelper.ResolvedSpellTarget target) {
-        return postSpellUsePre(player, bookStack, target, TriggerSource.holdRelease());
     }
 
     private boolean castChannelRelease(ItemStack bookStack, EntityPlayer player,
@@ -645,5 +596,45 @@ final class MagicBookCastingCore {
                 interrupted,
                 canceled
         ));
+    }
+
+    private boolean executeStandardSpell(ItemStack bookStack, EntityPlayer player,
+                                         MagicBookStateHelper.ResolvedSpellTarget target,
+                                         TriggerSource triggerSource,
+                                         boolean checkCooldown,
+                                         int actionLockTicks,
+                                         Supplier<Boolean> spellAction) {
+
+        if (!postSpellUsePre(player, bookStack, target, triggerSource)) {
+            return false;
+        }
+
+        if (checkCooldown && target.page.isRawSpellOnCooldown(
+                target.pageStack, target.rawIndex, player.world, player, bookStack)) {
+            return false;
+        }
+
+        if (actionLockTicks > 0 && SpellTimingManager.isActionLocked(
+                target.rawIndex, target.pageData, player.world.getTotalWorldTime(), actionLockTicks)) {
+            return false;
+        }
+
+        boolean success = spellAction.get();
+
+        if (success) {
+            if (checkCooldown) {
+                target.page.applyRawSpellCooldown(target.pageStack, target.rawIndex,
+                        player.world, player, bookStack);
+            }
+            if (actionLockTicks > 0) {
+                SpellTimingManager.applyActionLock(target.rawIndex, target.pageData,
+                        player.world.getTotalWorldTime(), actionLockTicks);
+            }
+            ToolHelper.damageTool(bookStack, MagicBook.DURABILITY_COST, player);
+            stateHelper.savePageData(bookStack, target);
+        }
+
+        postSpellUsePost(player, bookStack, target, triggerSource, success);
+        return success;
     }
 }
