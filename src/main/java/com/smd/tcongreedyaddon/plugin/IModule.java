@@ -25,4 +25,6 @@ public interface IModule {
     default void initServer(FMLInitializationEvent event) {}
     default void postInitClient(FMLPostInitializationEvent event) {}
     default void postInitServer(FMLPostInitializationEvent event) {}
+    default int priority() { return 0; }
+    default void onConfigReload() {}
 }

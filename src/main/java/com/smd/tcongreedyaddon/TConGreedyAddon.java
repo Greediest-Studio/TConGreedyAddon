@@ -26,11 +26,17 @@ import org.apache.logging.log4j.Logger;
 
 
 @Mod.EventBusSubscriber
-@Mod(name = Tags.MOD_NAME, modid = Tags.MOD_ID, version = Tags.VERSION, dependencies = "after:tconstruct;after:plustic;after:tconevo")
+@Mod(name = Tags.MOD_NAME,
+     modid = Tags.MOD_ID,
+     version = Tags.VERSION,
+     dependencies = "after:tconstruct;after:plustic;after:tconevo",
+     guiFactory = "com.smd.tcongreedyaddon.gui.TConGuiFactory")
 public class TConGreedyAddon {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);
     public static Configuration config;
+
+    public static ModuleManager modulemanager;
 
     @Mod.Instance(Tags.MOD_ID)
     public static TConGreedyAddon instance;
@@ -44,17 +50,18 @@ public class TConGreedyAddon {
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Pre-Initialization");
         LOGGER.info("Material Shader Fix Mixin is active!");
-        
+
         config = new Configuration(event.getSuggestedConfigurationFile());
+        modulemanager = new ModuleManager(config);
 
-        ModuleManager.registerModule(new OldWeapons());
-        ModuleManager.registerModule(new AbyssalCraft());
-        ModuleManager.registerModule(new something());
-        ModuleManager.registerModule(new SpecialWeapons());
+        modulemanager.registerModule(new OldWeapons());
+        modulemanager.registerModule(new AbyssalCraft());
+        modulemanager.registerModule(new something());
+        modulemanager.registerModule(new SpecialWeapons());
 
-        ModuleManager.setupConfig(config);
+        modulemanager.setupConfig();
 
-        ModuleManager.preInitActiveModules(event);
+        modulemanager.preInitActiveModules(event);
 
         proxy.registerSubscriptions();
         proxy.preInit();
@@ -63,7 +70,7 @@ public class TConGreedyAddon {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Initialization");
-        ModuleManager.initActiveModules(event);
+        modulemanager.initActiveModules(event);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new MagicBookGuiHandler());
         proxy.initToolGuis();
         proxy.init();
@@ -72,7 +79,7 @@ public class TConGreedyAddon {
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Post-Initialization");
-        ModuleManager.postInitActiveModules(event);
+        modulemanager.postInitActiveModules(event);
         proxy.registerBookData();
         proxy.initToolGuis();
 

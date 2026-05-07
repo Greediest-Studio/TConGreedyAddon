@@ -18,7 +18,7 @@ public class TotalTinkersRegister {
 
     @SubscribeEvent
     public static void initItems(RegistryEvent.Register<Item> event) {
-        ModuleManager.initItems(event);
+        TConGreedyAddon.modulemanager.initItems(event);
     }
 
     public static void initForgeTool(ToolCore core, RegistryEvent.Register<Item> event) {

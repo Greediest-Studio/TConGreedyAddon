@@ -72,6 +72,22 @@ public class ModuleConfig {
         return prop != null ? prop.getStringList() : new String[0];
     }
 
+    public Property addEnum(String key, String defaultValue, String[] validValues, String comment) {
+        Property prop = config.get(moduleName, key, defaultValue, comment, validValues);
+        properties.put(key, prop);
+        return prop;
+    }
+
+    public Property addBoundedInteger(String key, int defaultValue, int min, int max, String comment) {
+        Property prop = config.get(moduleName, key, defaultValue, comment, min, max);
+        properties.put(key, prop);
+        return prop;
+    }
+
+    public Property addPercent(String key, int defaultValue, String comment) {
+        return addBoundedInteger(key, defaultValue, 0, 100, comment);
+    }
+
     public void save() {
         if (config.hasChanged()) {
             config.save();
