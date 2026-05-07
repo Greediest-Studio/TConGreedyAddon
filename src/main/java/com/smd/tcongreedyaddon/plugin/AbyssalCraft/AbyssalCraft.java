@@ -1,21 +1,18 @@
 package com.smd.tcongreedyaddon.plugin.AbyssalCraft;
 
-import com.shinoow.abyssalcraft.api.AbyssalCraftAPI;
 import com.shinoow.abyssalcraft.api.item.ACItems;
 import com.smd.tcongreedyaddon.init.TraitRegistry;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitCoraliumPlague;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitDreadPlague;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitDreadPurity;
+import com.smd.tcongreedyaddon.traits.modifiers.base.abyssalcraft.ModLightPierce;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.*;
-import slimeknights.tconstruct.library.modifiers.Modifier;
-import slimeknights.tconstruct.library.modifiers.ModifierTrait;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
-import slimeknights.tconstruct.tools.modifiers.ModAntiMonsterType;
 import com.smd.tcongreedyaddon.plugin.IModule;
 
 public class AbyssalCraft implements IModule {
@@ -29,7 +26,7 @@ public class AbyssalCraft implements IModule {
     public static final AbstractTrait coralium_plague = new TraitCoraliumPlague();
     public static final AbstractTrait dread_purity = new TraitDreadPurity();
 
-    public static Modifier light_pierce;
+    public static ModLightPierce lightpierce;
 
     @Override
     public boolean isModAvailable() {
@@ -54,9 +51,9 @@ public class AbyssalCraft implements IModule {
         dreadium.setRepresentativeItem(new ItemStack(ACItems.dreadium_ingot));
         dreadium.addTrait(dread_plague);
 
-        light_pierce = new ModAntiMonsterType("light_pierce", 0xf2f2f2, 5, 24, AbyssalCraftAPI.SHADOW);
-        light_pierce.addItem(ACItems.shadow_gem);
-        TraitRegistry.REGISTERED_TRAITS.add((ModifierTrait) light_pierce);
+        lightpierce = new ModLightPierce();
+        TraitRegistry.REGISTERED_TRAITS.add(lightpierce);
+        lightpierce.addItem(ACItems.shadow_gem);
     }
 
     @Override
