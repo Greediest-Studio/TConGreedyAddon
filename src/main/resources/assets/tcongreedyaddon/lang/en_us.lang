@@ -68,6 +68,11 @@ modifier.dreadpurity.desc=modifier.dreadpurity.desc
 modifier.light_pierce.name=modifier.light_pierce.name
 modifier.light_pierce.desc=modifier.light_pierce.desc
 modifier.light_pierce.extra=modifier.light_pierce.extra
+modifier.erase_command.name=命令删除
+modifier.erase_command.desc=§o以命令主宰万物！\n§r对凋灵风暴造成巨额伤害！
+modifier.levelingdamage.name=等级伤害
+modifier.levelingdamage.desc=§o我要变得更强！§r\n§f随着工具等级的提升获得越来越高的攻击力。
+tooltip.damage_increase=§9武器伤害加成：%s%%
 
 stat.tcongreedyaddon.magiccore.name=TheCoreOfTheTechnique
 stat.magiccore.desc=TheCoreAttributesOfTheTechnique

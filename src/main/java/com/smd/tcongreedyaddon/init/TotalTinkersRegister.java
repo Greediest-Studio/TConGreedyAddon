@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.init;
 
-import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;

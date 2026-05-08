@@ -1,7 +1,10 @@
 package com.smd.tcongreedyaddon.plugin.something;
 
+import com.smd.tcongreedyaddon.init.TraitRegistry;
 import com.smd.tcongreedyaddon.plugin.IModule;
 import com.smd.tcongreedyaddon.plugin.ModuleConfig;
+import com.smd.tcongreedyaddon.traits.modifiers.base.something.TraitEraseCommand;
+import com.smd.tcongreedyaddon.traits.modifiers.base.something.TraitLevelingDamage;
 import com.smd.tcongreedyaddon.traits.something.*;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
@@ -23,6 +26,9 @@ public class something implements IModule {
     public static final AbstractTrait deathboost = new TraitDeathBoost();
     public static final AbstractTrait speed = new TraitSpeed();
     public static final AbstractTrait TravelStaff = new TraitTravel();
+
+    public static TraitLevelingDamage levelingdamage;
+    public static TraitEraseCommand erasecommand;
 
     public static String baiduAppId = "";
     public static String baiduAppKey = "";
@@ -60,6 +66,11 @@ public class something implements IModule {
         TinkerRegistry.addTrait(deathboost);
         TinkerRegistry.addTrait(speed);
         TinkerRegistry.addTrait(TravelStaff);
+
+        levelingdamage = new TraitLevelingDamage();
+        TraitRegistry.REGISTERED_TRAITS.add(levelingdamage);
+        erasecommand = new TraitEraseCommand();
+        TraitRegistry.REGISTERED_TRAITS.add(erasecommand);
     }
 
     @Override

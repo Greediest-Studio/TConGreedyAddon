@@ -3,7 +3,6 @@ package com.smd.tcongreedyaddon.mixin;
 import com.smd.tcongreedyaddon.config.MaterialShaderFixConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Overwrite;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tinkering.PartMaterialType;
 import slimeknights.tconstruct.library.tools.IToolPart;
