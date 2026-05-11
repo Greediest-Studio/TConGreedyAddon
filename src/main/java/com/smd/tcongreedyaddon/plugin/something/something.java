@@ -68,8 +68,10 @@ public class something implements IModule {
         TinkerRegistry.addTrait(TravelStaff);
 
         levelingdamage = new TraitLevelingDamage();
+        levelingdamage.initItem();
         TraitRegistry.REGISTERED_TRAITS.add(levelingdamage);
         erasecommand = new TraitEraseCommand();
+        erasecommand.initItem();
         TraitRegistry.REGISTERED_TRAITS.add(erasecommand);
     }
 
