@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.plugin;
 
-import com.smd.tcongreedyaddon.Tags;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.config.Configuration;
@@ -45,14 +44,18 @@ public class ModuleManager {
                 module.setupModuleConfig(mc);
             }
         }
-        if (config.hasChanged()) config.save();
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     public void reloadConfig() {
         config.load();
         for (String name : activeModules) {
             IModule module = modules.get(name);
-            if (module == null) continue;
+            if (module == null) {
+                continue;
+            }
             if (module.hasDetailedConfig()) {
                 ModuleConfig mc = moduleConfigs.get(module.getModuleName());
                 if (mc != null) {
@@ -76,12 +79,15 @@ public class ModuleManager {
                         module.loadModuleConfig(mc);
                     }
                     module.preInit();
-                    if (isClientSide()) module.preInitClient(event);
-                    else module.preInitServer(event);
+                    if (isClientSide()) {
+                        module.preInitClient(event);
+                    } else {
+                        module.preInitServer(event);
+                    }
                     activeModules.add(module.getModuleName());
                 }
             } catch (Exception e) {
-                logger.error("Failed to preInit module: " + module.getModuleName(), e);
+                logger.error("Failed to preInit module: {}", module.getModuleName(), e);
             }
         }
     }
@@ -91,13 +97,18 @@ public class ModuleManager {
             IModule m = modules.get(name);
             try {
                 m.init();
-                if (isClientSide()) m.initClient(event);
-                else m.initServer(event);
+                if (isClientSide()) {
+                    m.initClient(event);
+                } else {
+                    m.initServer(event);
+                }
             } catch (Exception e) {
-                logger.error("Failed to init module: " + name, e);
+                logger.error("Failed to init module: {}", name, e);
             }
         }
-        if (config.hasChanged()) config.save();
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     public void postInitActiveModules(FMLPostInitializationEvent event) {
@@ -105,13 +116,18 @@ public class ModuleManager {
             IModule m = modules.get(name);
             try {
                 m.postInit();
-                if (isClientSide()) m.postInitClient(event);
-                else m.postInitServer(event);
+                if (isClientSide()) {
+                    m.postInitClient(event);
+                } else {
+                    m.postInitServer(event);
+                }
             } catch (Exception e) {
-                logger.error("Failed to postInit module: " + name, e);
+                logger.error("Failed to postInit module: {}", name, e);
             }
         }
-        if (config.hasChanged()) config.save();
+        if (config.hasChanged()) {
+            config.save();
+        }
     }
 
     public void initItems(RegistryEvent.Register<Item> event) {
@@ -119,7 +135,7 @@ public class ModuleManager {
             try {
                 modules.get(name).initItems(event);
             } catch (Exception e) {
-                logger.error("Failed to register items for module: " + name, e);
+                logger.error("Failed to register items for module: {}", name, e);
             }
         }
     }
@@ -129,7 +145,7 @@ public class ModuleManager {
             try {
                 modules.get(name).registerModels(event);
             } catch (Exception e) {
-                logger.error("Failed to register models for module: " + name, e);
+                logger.error("Failed to register models for module: {}", name, e);
             }
         }
     }

@@ -35,11 +35,6 @@ public class OldWeapons implements IModule {
     public static ModTest test;
 
     @Override
-    public boolean isEnabledByDefault() {
-        return true;
-    }
-
-    @Override
     public boolean isModAvailable() {
         return Loader.isModLoaded("tconstruct");
     }

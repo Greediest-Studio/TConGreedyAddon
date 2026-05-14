@@ -22,6 +22,7 @@ public class TraitSpeed extends AbstractTrait {
     private static final double MAX_SPEED = 0.7;
     private static final double BASE_SPEED = 0.1;
     private static final double MAX_SPEED_PROJECTILE = 40.0;
+    private static final int EFFECT_DURATION_THRESHOLD = 20;
 
     private static final String TAG_LAUNCH_SPEED = "speed_launch_speed";
 
@@ -33,18 +34,24 @@ public class TraitSpeed extends AbstractTrait {
     @Override
     public void onUpdate(ItemStack tool, World world, Entity entity, int itemSlot, boolean isSelected){
 
-        if (world.isRemote || !(entity instanceof EntityPlayer)) return;
+        if (world.isRemote || !(entity instanceof EntityPlayer)) {
+            return;
+        }
 
         EntityPlayer player = (EntityPlayer) entity;
 
-        if (!isSelected) return;
+        if (!isSelected) {
+            return;
+        }
 
         Potion speedPotion = Potion.getPotionById(1);
 
-        if (speedPotion == null) return;
+        if (speedPotion == null) {
+            return;
+        }
 
         PotionEffect existing = player.getActivePotionEffect(speedPotion);
-        if (existing != null && existing.getDuration() > 20) {
+        if (existing != null && existing.getDuration() > EFFECT_DURATION_THRESHOLD) {
             return;
         }
 
@@ -54,16 +61,24 @@ public class TraitSpeed extends AbstractTrait {
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
 
-        if (event.getEntity().getEntityWorld().isRemote) return;
+        if (event.getEntity().getEntityWorld().isRemote) {
+            return;
+        }
 
-        if (!(event.getSource().getTrueSource() instanceof EntityPlayer)) return;
+        if (!(event.getSource().getTrueSource() instanceof EntityPlayer)) {
+            return;
+        }
 
         EntityPlayer attacker = (EntityPlayer) event.getSource().getTrueSource();
         ItemStack tool = attacker.getHeldItemMainhand();
 
-        if (tool.isEmpty()) return;
+        if (tool.isEmpty()) {
+            return;
+        }
 
-        if (!TinkerUtil.hasTrait(tool.getTagCompound(), this.identifier)) return;
+        if (!TinkerUtil.hasTrait(tool.getTagCompound(), this.identifier)) {
+            return;
+        }
 
         IAttributeInstance speedAttr = attacker.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
         double currentSpeed = speedAttr.getAttributeValue();
@@ -78,11 +93,17 @@ public class TraitSpeed extends AbstractTrait {
     public void onProjectileLaunch(ProjectileEvent.OnLaunch event) {
 
         ItemStack launcher = event.launcher;
-        if (launcher.isEmpty()) return;
+        if (launcher.isEmpty()) {
+            return;
+        }
 
-        if (!TinkerUtil.hasTrait(launcher.getTagCompound(), this.identifier)) return;
+        if (!TinkerUtil.hasTrait(launcher.getTagCompound(), this.identifier)) {
+            return;
+        }
 
-        if (!(event.projectileEntity instanceof Entity)) return;
+        if (!(event.projectileEntity instanceof Entity)) {
+            return;
+        }
         Entity projectile = event.projectileEntity;
 
         projectile.motionX *= 1.1;
@@ -101,13 +122,19 @@ public class TraitSpeed extends AbstractTrait {
     @SubscribeEvent
     public void onProjectileHit(LivingHurtEvent event) {
 
-        if (event.getEntity().getEntityWorld().isRemote) return;
+        if (event.getEntity().getEntityWorld().isRemote) {
+            return;
+        }
 
         Entity immediateSource = event.getSource().getImmediateSource();
-        if (immediateSource == null) return;
+        if (immediateSource == null) {
+            return;
+        }
 
         NBTTagCompound data = immediateSource.getEntityData();
-        if (!data.hasKey(TAG_LAUNCH_SPEED)) return;
+        if (!data.hasKey(TAG_LAUNCH_SPEED)) {
+            return;
+        }
 
         double launchSpeed = data.getDouble(TAG_LAUNCH_SPEED);
         float multiplier = computeMultiplier(launchSpeed);

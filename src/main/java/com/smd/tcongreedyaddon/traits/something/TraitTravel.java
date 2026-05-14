@@ -37,11 +37,17 @@ public class TraitTravel extends AbstractTrait {
         EnumHand hand = event.getHand();
         ItemStack heldItem = event.getItemStack();
 
-        if (hand != EnumHand.MAIN_HAND || !player.world.isRemote) return;
+        if (hand != EnumHand.MAIN_HAND || !player.world.isRemote) {
+            return;
+        }
 
-        if (!(heldItem.getItem() instanceof ToolCore)) return;
+        if (!(heldItem.getItem() instanceof ToolCore)) {
+            return;
+        }
         
-        if (!TinkerUtil.hasTrait(heldItem.getTagCompound(), this.identifier)) return;
+        if (!TinkerUtil.hasTrait(heldItem.getTagCompound(), this.identifier)) {
+            return;
+        }
 
         handleTravelToAnchor(player, hand, heldItem, event);
         heldItem.damageItem(2, player);
@@ -53,13 +59,17 @@ public class TraitTravel extends AbstractTrait {
     private void handleTravelToAnchor(EntityPlayer player, EnumHand hand, ItemStack heldItem, PlayerInteractEvent.RightClickItem event) {
         if (player.isSneaking()) {
 
-            if (!TeleportConfig.enableBlink.get()) return;
+            if (!TeleportConfig.enableBlink.get()) {
+                return;
+            }
 
             long lastBlinkTick = getPlayerLastBlinkTick(player);
             long currentTick = EnderIO.proxy.getTickCount();
             long ticksSinceBlink = currentTick - lastBlinkTick;
             
-            if (ticksSinceBlink < TeleportConfig.blinkDelay.get()) return;
+            if (ticksSinceBlink < TeleportConfig.blinkDelay.get()) {
+                return;
+            }
 
             boolean success = TravelController.doBlink(heldItem, hand, player);
             
@@ -71,13 +81,17 @@ public class TraitTravel extends AbstractTrait {
             }
         } else {
             RayTraceResult rayTrace = player.rayTrace(128.0D, 1.0F);
-            if (rayTrace == null || rayTrace.typeOfHit != RayTraceResult.Type.BLOCK) return;
+            if (rayTrace == null || rayTrace.typeOfHit != RayTraceResult.Type.BLOCK) {
+                return;
+            }
 
                     
             BlockPos targetPos = rayTrace.getBlockPos();
             TileEntity te = player.world.getTileEntity(targetPos);
 
-            if (!(te instanceof ITravelAccessable)) return;
+            if (!(te instanceof ITravelAccessable)) {
+                return;
+            }
 
             boolean success = TravelController.activateTravelAccessable(heldItem, hand, player.world, player, TravelSource.STAFF);
 

@@ -6,8 +6,7 @@ import slimeknights.tconstruct.library.tools.IToolPart;
 import slimeknights.tconstruct.library.tools.ToolCore;
 
 public class CommonProxy {
-    public void init() {
-    }
+
     public void initToolGuis() {
     }
 
@@ -15,9 +14,6 @@ public class CommonProxy {
     }
 
     public <T extends Item & IToolPart> void registerToolPartModel(T part) {
-    }
-
-    public void registerSubscriptions() {
     }
 
     public void registerBookData() {

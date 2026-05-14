@@ -27,7 +27,9 @@ public class ClientEventHandler {
         if (event.phase == TickEvent.Phase.END) {
             Minecraft mc = Minecraft.getMinecraft();
             EntityPlayerSP player = mc.player;
-            if (player == null) return;
+            if (player == null) {
+                return;
+            }
 
             ItemStack heldMain = player.getHeldItemMainhand();
             boolean holdingBook = heldMain.getItem() instanceof MagicBook;

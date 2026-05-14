@@ -748,14 +748,13 @@ public final class MagicBookStateHelper {
         List<ItemStack> excess = new ArrayList<>();
 
         if (invTag.hasKey("Left", 10)) {
-            ItemStack[] kept = new ItemStack[leftSlots];
             BookInventory temp = new BookInventory(stack, leftSlots, rightSlots);
             temp.deserializeNBT(invTag);
-            for (int i = 0; i < temp.getLeftSlots(); i++) {
-                if (i < leftSlots) {
-                    kept[i] = temp.getStackInSlot(i);
-                } else if (!temp.getStackInSlot(i).isEmpty()) {
-                    excess.add(temp.getStackInSlot(i));
+            int totalLeftSlots = temp.getLeftSlots();
+            for (int i = leftSlots; i < totalLeftSlots; i++) {
+                ItemStack stackInSlot = temp.getStackInSlot(i);
+                if (!stackInSlot.isEmpty()) {
+                    excess.add(stackInSlot);
                 }
             }
         }

@@ -32,8 +32,12 @@ public class TraitOvercharge extends AbstractTrait {
 
     @Override
     public void onUpdate(ItemStack tool, World world, Entity entity, int itemSlot, boolean isSelected) {
-        if (world.isRemote) return;
-        if (!(entity instanceof EntityPlayer)) return;
+        if (world.isRemote) {
+            return;
+        }
+        if (!(entity instanceof EntityPlayer)) {
+            return;
+        }
         EntityPlayer player = (EntityPlayer) entity;
 
         NBTTagCompound data = getPlayerData(player);
@@ -62,13 +66,21 @@ public class TraitOvercharge extends AbstractTrait {
     @SubscribeEvent
     public void onProjectileLaunch(ProjectileEvent.OnLaunch event) {
         ItemStack launcher = event.launcher;
-        if (launcher.isEmpty() || !(launcher.getItem() instanceof BowCore)) return;
-        if (!TinkerUtil.hasTrait(launcher.getTagCompound(), this.identifier)) return;
+        if (launcher.isEmpty() || !(launcher.getItem() instanceof BowCore)) {
+            return;
+        }
+        if (!TinkerUtil.hasTrait(launcher.getTagCompound(), this.identifier)) {
+            return;
+        }
 
-        if (!(event.projectileEntity instanceof Entity)) return;
+        if (!(event.projectileEntity instanceof Entity)) {
+            return;
+        }
         Entity projectile = event.projectileEntity;
 
-        if (!(event.shooter instanceof EntityPlayer)) return;
+        if (!(event.shooter instanceof EntityPlayer)) {
+            return;
+        }
         EntityPlayer player = (EntityPlayer) event.shooter;
 
         NBTTagCompound data = getPlayerData(player);
@@ -81,10 +93,14 @@ public class TraitOvercharge extends AbstractTrait {
         long currentTick = projectile.getEntityWorld().getTotalWorldTime();
 
         int actualFullTime = (int) (fullTick - startTick);
-        if (actualFullTime <= 0) return;
+        if (actualFullTime <= 0) {
+            return;
+        }
 
         int overchargeTicks = (int) (currentTick - fullTick);
-        if (overchargeTicks <= 0) return;
+        if (overchargeTicks <= 0) {
+            return;
+        }
 
         int maxTicks = (int) (actualFullTime * MAX_OVERCHARGE_FACTOR);
         float multiplier;
@@ -102,15 +118,23 @@ public class TraitOvercharge extends AbstractTrait {
 
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
-        if (event.getEntity().getEntityWorld().isRemote) return;
+        if (event.getEntity().getEntityWorld().isRemote) {
+            return;
+        }
 
-        if (!"arrow".equals(event.getSource().getDamageType())) return;
+        if (!"arrow".equals(event.getSource().getDamageType())) {
+            return;
+        }
 
         Entity immediateSource = event.getSource().getImmediateSource();
-        if (!(immediateSource instanceof Entity)) return;
+        if (!(immediateSource instanceof Entity)) {
+            return;
+        }
 
         NBTTagCompound arrowData = immediateSource.getEntityData();
-        if (!arrowData.hasKey(TAG_MULTIPLIER)) return;
+        if (!arrowData.hasKey(TAG_MULTIPLIER)) {
+            return;
+        }
 
         float multiplier = arrowData.getFloat(TAG_MULTIPLIER);
         event.setAmount(event.getAmount() * multiplier);

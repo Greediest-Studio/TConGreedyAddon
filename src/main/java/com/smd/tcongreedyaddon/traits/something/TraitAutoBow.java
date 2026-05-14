@@ -19,19 +19,31 @@ public class TraitAutoBow extends AbstractTrait {
     @Override
     public void onUpdate(ItemStack tool, World world, Entity entity, int itemSlot, boolean isSelected) {
 
-        if (world.isRemote) return;
+        if (world.isRemote) {
+            return;
+        }
 
-        if (!isSelected) return;
+        if (!isSelected) {
+            return;
+        }
 
-        if (!(entity instanceof EntityLivingBase)) return;
+        if (!(entity instanceof EntityLivingBase)) {
+            return;
+        }
 
         EntityLivingBase holder = (EntityLivingBase) entity;
 
-        if (!holder.isHandActive() || holder.getActiveItemStack() != tool) return;
+        if (!holder.isHandActive() || holder.getActiveItemStack() != tool) {
+            return;
+        }
 
-        if (ToolHelper.isBroken(tool)) return;
+        if (ToolHelper.isBroken(tool)) {
+            return;
+        }
 
-        if (!(tool.getItem() instanceof BowCore)) return;
+        if (!(tool.getItem() instanceof BowCore)) {
+            return;
+        }
 
         BowCore bow = (BowCore) tool.getItem();
 
@@ -42,7 +54,9 @@ public class TraitAutoBow extends AbstractTrait {
 
             holder.stopActiveHand();
 
-            if (ToolHelper.isBroken(tool)) return;
+            if (ToolHelper.isBroken(tool)) {
+                return;
+            }
 
             boolean hasAmmo;
             if (holder instanceof EntityPlayer && ((EntityPlayer) holder).isCreative()) {

@@ -20,12 +20,16 @@ public class TConConfigGui extends GuiConfig {
 
     private static List<IConfigElement> getConfigElements() {
         List<IConfigElement> list = new ArrayList<>();
-        if (TConGreedyAddon.modulemanager == null) return list;
+        if (TConGreedyAddon.modulemanager == null) {
+            return list;
+        }
         Configuration config = TConGreedyAddon.modulemanager.getConfig();
         if (config != null) {
             list.add(new ConfigElement(config.getCategory("modules")));
             for (String category : config.getCategoryNames()) {
-                if (category.equals("modules")) continue;
+                if ("modules".equals(category)) {
+                    continue;
+                }
                 list.add(new ConfigElement(config.getCategory(category)));
             }
         }

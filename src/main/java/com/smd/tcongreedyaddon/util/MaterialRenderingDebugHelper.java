@@ -106,7 +106,7 @@ public class MaterialRenderingDebugHelper {
                 // Log first few material names as examples
                 List<String> examples = entry.getValue().stream()
                     .limit(5)
-                    .map(m -> m.getLocalizedName())
+                    .map(Material::getLocalizedName)
                     .sorted()
                     .collect(Collectors.toList());
                 
@@ -144,7 +144,9 @@ public class MaterialRenderingDebugHelper {
         for (String customType : CUSTOM_STAT_TYPES) {
             boolean has = material.hasStats(customType);
             LOGGER.info("  - {}: {}", customType, has ? "YES" : "NO");
-            if (has) hasAnyCustomStat = true;
+            if (has) {
+                hasAnyCustomStat = true;
+            }
         }
         
         // Check for standard stats
@@ -153,7 +155,9 @@ public class MaterialRenderingDebugHelper {
         for (String standardType : STANDARD_STAT_TYPES) {
             boolean has = material.hasStats(standardType);
             LOGGER.info("  - {}: {}", standardType, has ? "YES" : "NO");
-            if (has) hasAnyStandardStat = true;
+            if (has) {
+                hasAnyStandardStat = true;
+            }
         }
         
         // Determine if fix applies

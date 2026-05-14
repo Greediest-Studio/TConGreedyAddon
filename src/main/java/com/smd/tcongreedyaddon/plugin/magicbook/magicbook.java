@@ -1,4 +1,4 @@
-package com.smd.tcongreedyaddon.plugin.SpecialWeapons;
+package com.smd.tcongreedyaddon.plugin.magicbook;
 
 import com.smd.tcongreedyaddon.client.ClientEventHandler;
 import com.smd.tcongreedyaddon.client.SpellOverlayRenderer;
@@ -30,7 +30,7 @@ import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tools.ToolPart;
 import com.smd.tcongreedyaddon.client.KeyBindings;
 
-public class SpecialWeapons implements IModule {
+public class magicbook implements IModule {
 
     @Override
     public String getModuleName() { return "specialweapons"; }

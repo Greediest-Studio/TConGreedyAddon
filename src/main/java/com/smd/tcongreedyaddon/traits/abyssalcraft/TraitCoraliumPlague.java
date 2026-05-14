@@ -18,8 +18,10 @@ public class TraitCoraliumPlague extends AbstractTrait {
     @Override
     public void afterHit(ItemStack tool,  EntityLivingBase player, EntityLivingBase target, float damageDealt, boolean wasCritical, boolean wasHit) {
 
-        if(wasCritical && wasHit)
-            if(!EntityUtil.isEntityCoralium(target))
+        if(wasCritical && wasHit) {
+            if(!EntityUtil.isEntityCoralium(target)) {
                 target.addPotionEffect(new PotionEffect(AbyssalCraftAPI.coralium_plague, 100));
+            }
+        }
     }
 }

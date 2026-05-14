@@ -1,7 +1,7 @@
 package com.smd.tcongreedyaddon.proxy;
 
 import com.smd.tcongreedyaddon.init.BookTransformerAppendModifiers;
-import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.plugin.magicbook.magicbook;
 import net.minecraft.item.Item;
 import slimeknights.mantle.client.book.repository.BookRepository;
 import slimeknights.mantle.client.book.repository.FileRepository;
@@ -17,6 +17,7 @@ public class ClientProxy extends CommonProxy {
 
     public static final BookRepository TCON_BOOK_REPO = new FileRepository("tconstruct:book");
 
+    @Override
     public void initToolGuis() {
         if (OldWeapons.greatblade != null) {
             ToolBuildGuiInfo greatbladeInfo = new ToolBuildGuiInfo(OldWeapons.greatblade);
@@ -51,8 +52,8 @@ public class ClientProxy extends CommonProxy {
             allinonetoolInfo.addSlotPosition( 33 - 10 - 12, 42); //guard
             TinkerRegistryClient.addToolBuilding(allinonetoolInfo);
         }
-        if (SpecialWeapons.magicbook != null) {
-            ToolBuildGuiInfo magicbookInfo = new ToolBuildGuiInfo(SpecialWeapons.magicbook);
+        if (magicbook.magicbook != null) {
+            ToolBuildGuiInfo magicbookInfo = new ToolBuildGuiInfo(magicbook.magicbook);
             magicbookInfo.addSlotPosition(33 - 10 - 2, 42 + 10); // handle
             magicbookInfo.addSlotPosition(33 + 10 + 16 - 2, 42 - 10 + 16); // head 1
             magicbookInfo.addSlotPosition(33 + 10 - 16 - 2, 42 - 10 - 16); // head 2
@@ -61,6 +62,7 @@ public class ClientProxy extends CommonProxy {
         }
     }
 
+    @Override
     public void registerToolModel(ToolCore tc) {
         ModelRegisterUtil.registerToolModel(tc);
     }
@@ -71,10 +73,6 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public void preInit() {
-        super.preInit();
-    }
-
     public <T extends Item & IToolPart> void registerToolPartModel(T part) {
         ModelRegisterUtil.registerPartModel(part);
     }

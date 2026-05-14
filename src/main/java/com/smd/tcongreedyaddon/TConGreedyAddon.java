@@ -1,11 +1,11 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
-import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.plugin.magicbook.magicbook;
+import com.smd.tcongreedyaddon.plugin.abyssalcraft.abyssalcraft;
 import com.smd.tcongreedyaddon.plugin.something.something;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.MagicBookGuiHandler;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
-import com.smd.tcongreedyaddon.plugin.AbyssalCraft.AbyssalCraft;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
 import net.minecraft.util.SoundEvent;
@@ -55,15 +55,14 @@ public class TConGreedyAddon {
         modulemanager = new ModuleManager(config);
 
         modulemanager.registerModule(new OldWeapons());
-        modulemanager.registerModule(new AbyssalCraft());
+        modulemanager.registerModule(new abyssalcraft());
         modulemanager.registerModule(new something());
-        modulemanager.registerModule(new SpecialWeapons());
+        modulemanager.registerModule(new magicbook());
 
         modulemanager.setupConfig();
 
         modulemanager.preInitActiveModules(event);
 
-        proxy.registerSubscriptions();
         proxy.preInit();
     }
 
@@ -73,7 +72,6 @@ public class TConGreedyAddon {
         modulemanager.initActiveModules(event);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new MagicBookGuiHandler());
         proxy.initToolGuis();
-        proxy.init();
     }
 
     @Mod.EventHandler

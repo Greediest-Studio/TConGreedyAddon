@@ -1,13 +1,14 @@
 package com.smd.tcongreedyaddon.mixin;
 
+import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.config.MaterialShaderFixConfig;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tinkering.PartMaterialType;
 import slimeknights.tconstruct.library.tools.IToolPart;
 import slimeknights.tconstruct.library.tools.ToolCore;
 import slimeknights.tconstruct.library.TinkerRegistry;
+import slimeknights.tconstruct.library.tools.ToolPart;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,14 +41,8 @@ import java.util.Set;
  * @see slimeknights.tconstruct.library.client.CustomTextureCreator
  * @see MaterialShaderFixConfig
  */
-@Mixin(value = slimeknights.tconstruct.library.tools.ToolPart.class, remap = false)
+@Mixin(value = ToolPart.class, remap = false)
 public abstract class MixinToolPart implements IToolPart {
-    
-    /**
-     * Shadow the canUseMaterial method from ToolPart so we can call it.
-     */
-    @Shadow
-    public abstract boolean canUseMaterial(Material mat);
     
     /**
      * Standard TConstruct material stat types that are commonly present in materials.
@@ -74,10 +69,10 @@ public abstract class MixinToolPart implements IToolPart {
     
     /**
      * Override canUseMaterialForRendering from the IToolPart interface.
-     * 
+     *
      * By implementing this method in the Mixin class, it provides a concrete implementation
      * that takes precedence over the interface's default implementation when ToolPart is loaded.
-     * 
+     *
      * This method is called by CustomTextureCreator to determine which materials should have
      * colored textures generated for this tool part.
      * 
@@ -103,15 +98,8 @@ public abstract class MixinToolPart implements IToolPart {
         boolean hasStandard = this.hasAnyStandardStat(mat);
         
         // DEBUG logging if enabled
-        if (MaterialShaderFixConfig.enableDebugLogging) {
-            IToolPart thisPart = (IToolPart)(Object)this;
-            String unlocalizedName = thisPart.toString();
-            
-            // Log for all custom stat type parts
-            if (usesCustom && hasStandard && !canUse) {
-                System.out.println("[MaterialShaderFix] Enabling " + mat.identifier + 
-                    " rendering for custom part: " + unlocalizedName);
-            }
+        if (MaterialShaderFixConfig.enableDebugLogging && usesCustom && hasStandard) {
+            TConGreedyAddon.LOGGER.debug("Enabling {} rendering for custom part: {}", mat.identifier, this);
         }
         
         if (usesCustom) {
@@ -134,7 +122,7 @@ public abstract class MixinToolPart implements IToolPart {
      */
     private boolean usesCustomStatType() {
         Set<String> customTypes = getCustomStatTypes();
-        IToolPart thisPart = (IToolPart)(Object)this;
+        IToolPart thisPart = this;
         
         // Get the part's unlocalized name (e.g., "item.moretcon.explosive_charge.name")
         String unlocalizedName = thisPart.toString();
@@ -148,8 +136,7 @@ public abstract class MixinToolPart implements IToolPart {
             
             if (unlocalizedName.contains(simpleType)) {
                 if (MaterialShaderFixConfig.enableDebugLogging) {
-                    System.out.println("[MaterialShaderFix] Part " + unlocalizedName + 
-                        " identified as custom stat type: " + customType);
+                    TConGreedyAddon.LOGGER.debug("Part {} identified as custom stat type: {}", unlocalizedName, customType);
                 }
                 return true;
             }
@@ -162,8 +149,7 @@ public abstract class MixinToolPart implements IToolPart {
                     for (String customType : customTypes) {
                         if (pmt.usesStat(customType)) {
                             if (MaterialShaderFixConfig.enableDebugLogging) {
-                                System.out.println("[MaterialShaderFix] Part " + unlocalizedName + 
-                                    " found in tool " + tool.getIdentifier() + " using custom stat: " + customType);
+                                TConGreedyAddon.LOGGER.debug("Part {} found in tool {} using custom stat: {}", unlocalizedName, tool.getIdentifier(), customType);
                             }
                             return true;
                         }

@@ -19,7 +19,9 @@ public class SwitchSpellPacketHandler implements IMessageHandler<SwitchSpellPack
             }
 
             ItemStack held = player.getHeldItemMainhand();
-            if (!(held.getItem() instanceof MagicBook)) return;
+            if (!(held.getItem() instanceof MagicBook)) {
+                return;
+            }
 
             MagicBook book = (MagicBook) held.getItem();
             MagicPageItem.SlotType slotType = (message.slot == 0) ? MagicPageItem.SlotType.LEFT : MagicPageItem.SlotType.RIGHT;

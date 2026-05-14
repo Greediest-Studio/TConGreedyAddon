@@ -17,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextComponentString;
 
 import java.util.Map;
 import java.util.UUID;
@@ -48,11 +47,6 @@ public class FreezeRaySpell extends AbstractSpell implements IHoldTriggerSpell {
     @Override
     protected boolean executeInternal(SpellContext context) {
         return false;
-    }
-
-    @Override
-    public int getTriggerStartTicks(SpellContext context) {
-        return  0;
     }
 
     @Override

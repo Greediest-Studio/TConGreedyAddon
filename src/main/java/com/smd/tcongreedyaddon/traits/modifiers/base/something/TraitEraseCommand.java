@@ -36,7 +36,9 @@ public class TraitEraseCommand extends ModifierTrait implements ITraitBookProvid
             if (targetId != null && targetId.toString().contains("witherstorm")) {
                 NBTTagCompound tag = TinkerUtil.getModifierTag(tool, identifier);
                 int level = tag.getInteger("level");
-                if (level <= 0) level = 1;
+                if (level <= 0) {
+                    level = 1;
+                }
 
                 NBTTagCompound stormyTag = TinkerUtil.getModifierTag(tool, "stormy");
                 if (!stormyTag.isEmpty() && stormyTag.getInteger("level") == 1) {

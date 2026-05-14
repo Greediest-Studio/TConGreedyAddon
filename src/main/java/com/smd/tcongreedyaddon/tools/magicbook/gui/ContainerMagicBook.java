@@ -61,15 +61,14 @@ public class ContainerMagicBook extends Container {
         }
 
         int currentItemSlot = playerInv.currentItem;
-        for (int col = 0; col < 9; ++col) {
-            int slotIndex = col;
+        for (int slotIndex = 0; slotIndex < 9; ++slotIndex) {
             ItemStack stackInSlot = playerInv.getStackInSlot(slotIndex);
-            if (col == currentItemSlot && ItemStack.areItemStacksEqual(bookStack, stackInSlot)) {
+            if (slotIndex == currentItemSlot && ItemStack.areItemStacksEqual(bookStack, stackInSlot)) {
                 addSlotToContainer(new LockedSlot(playerInv, slotIndex,
-                        8 + col * SLOT_SPACING, playerInvStartY + 58));
+                        8 + slotIndex * SLOT_SPACING, playerInvStartY + 58));
             } else {
                 addSlotToContainer(new Slot(playerInv, slotIndex,
-                        8 + col * SLOT_SPACING, playerInvStartY + 58));
+                        8 + slotIndex * SLOT_SPACING, playerInvStartY + 58));
             }
         }
     }
@@ -101,11 +100,13 @@ public class ContainerMagicBook extends Container {
             int totalCustomSlots = leftSlots + rightSlots;
 
             if (index < totalCustomSlots) {
-                if (!mergeItemStack(stack, totalCustomSlots, inventorySlots.size(), true))
+                if (!mergeItemStack(stack, totalCustomSlots, inventorySlots.size(), true)) {
                     return ItemStack.EMPTY;
+                }
             } else {
-                if (!mergeItemStack(stack, 0, totalCustomSlots, false))
+                if (!mergeItemStack(stack, 0, totalCustomSlots, false)) {
                     return ItemStack.EMPTY;
+                }
             }
 
             if (stack.isEmpty()) {

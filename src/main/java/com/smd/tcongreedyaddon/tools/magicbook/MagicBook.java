@@ -1,6 +1,6 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
-import com.smd.tcongreedyaddon.plugin.SpecialWeapons.SpecialWeapons;
+import com.smd.tcongreedyaddon.plugin.magicbook.magicbook;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.BookInventory;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindAction;
 import com.smd.tcongreedyaddon.tools.magicbook.keybind.KeybindChannel;
@@ -46,10 +46,10 @@ public class MagicBook extends TinkerToolCore {
 
     public MagicBook() {
         super(
-                PartMaterialType.head(SpecialWeapons.cover),
-                PartMaterialType.handle(SpecialWeapons.hinge),
-                TConGreedyTypes.bookpage(SpecialWeapons.bookpage),
-                TConGreedyTypes.magiccore(SpecialWeapons.magiccore)
+                PartMaterialType.head(magicbook.cover),
+                PartMaterialType.handle(magicbook.hinge),
+                TConGreedyTypes.bookpage(magicbook.bookpage),
+                TConGreedyTypes.magiccore(magicbook.magiccore)
         );
         addCategory(Category.WEAPON);
         setTranslationKey("magicbook").setRegistryName("magicbook");
@@ -151,10 +151,10 @@ public class MagicBook extends TinkerToolCore {
 
     @Override
     protected ToolNBT buildTagData(List<Material> materials) {
-        HeadMaterialStats head = materials.get(0).getStatsOrUnknown(HeadMaterialStats.TYPE);
-        HandleMaterialStats handle = materials.get(1).getStatsOrUnknown(HandleMaterialStats.TYPE);
-        BookPageStats pageStats = materials.get(2).getStatsOrUnknown(BookPageStats.TYPE);
-        MagicCoreStats coreStats = materials.get(3).getStatsOrUnknown(MagicCoreStats.TYPE);
+        HeadMaterialStats head = materials.get(0).getStatsOrUnknown("head");
+        HandleMaterialStats handle = materials.get(1).getStatsOrUnknown("handle");
+        BookPageStats pageStats = materials.get(2).getStatsOrUnknown("bookpage");
+        MagicCoreStats coreStats = materials.get(3).getStatsOrUnknown("magiccore");
 
         MagicBookToolNBT data = new MagicBookToolNBT();
         data.head(head);

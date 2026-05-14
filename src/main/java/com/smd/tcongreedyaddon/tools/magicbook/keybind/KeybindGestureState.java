@@ -51,7 +51,9 @@ public final class KeybindGestureState {
         long pressTick = -1L;
 
         long getDuration(long currentTick) {
-            if (!down || pressTick < 0L) return 0L;
+            if (!down || pressTick < 0L) {
+                return 0L;
+            }
             return currentTick - pressTick + 1L;
         }
     }

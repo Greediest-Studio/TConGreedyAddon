@@ -157,7 +157,7 @@ public final class StrandNodeManager {
     @SubscribeEvent
     public static void onWorldUnload(WorldEvent.Unload event) {
         if (event.getWorld() instanceof World) {
-            WORLD_NODES.remove(((World) event.getWorld()).provider.getDimension());
+            WORLD_NODES.remove(event.getWorld().provider.getDimension());
         }
     }
 

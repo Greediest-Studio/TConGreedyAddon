@@ -17,9 +17,13 @@ public final class SpellTimingManager {
                                        EntityPlayer player,
                                        ItemStack bookStack) {
         int cooldownTicks = spell.getCooldownTicks(player, bookStack);
-        if (cooldownTicks <= 0) return false;
+        if (cooldownTicks <= 0) {
+            return false;
+        }
         NBTTagCompound pageData = pageStack.getTagCompound();
-        if (pageData == null) return false;
+        if (pageData == null) {
+            return false;
+        }
         NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
         long lastUsed = cooldowns.getLong(String.valueOf(rawIndex));
         long now = world.getTotalWorldTime();
@@ -32,9 +36,13 @@ public final class SpellTimingManager {
                                      EntityPlayer player,
                                      ItemStack bookStack) {
         int cooldownTicks = spell.getCooldownTicks(player, bookStack);
-        if (cooldownTicks <= 0) return;
+        if (cooldownTicks <= 0) {
+            return;
+        }
         NBTTagCompound pageData = pageStack.getTagCompound();
-        if (pageData == null) pageData = new NBTTagCompound();
+        if (pageData == null) {
+            pageData = new NBTTagCompound();
+        }
         NBTTagCompound cooldowns = pageData.getCompoundTag(TAG_COOLDOWNS);
         cooldowns.setLong(String.valueOf(rawIndex), world.getTotalWorldTime());
         pageData.setTag(TAG_COOLDOWNS, cooldowns);
@@ -45,7 +53,9 @@ public final class SpellTimingManager {
                                          NBTTagCompound pageData,
                                          long worldTick,
                                          int castActionTicks) {
-        if (castActionTicks <= 0) return false;
+        if (castActionTicks <= 0) {
+            return false;
+        }
         NBTTagCompound locks = pageData.getCompoundTag(TAG_ACTION_LOCKS);
         long lastCast = locks.getLong(String.valueOf(rawIndex));
         return worldTick < lastCast + castActionTicks;
@@ -55,7 +65,9 @@ public final class SpellTimingManager {
                                        NBTTagCompound pageData,
                                        long worldTick,
                                        int castActionTicks) {
-        if (castActionTicks <= 0) return;
+        if (castActionTicks <= 0) {
+            return;
+        }
         NBTTagCompound locks = pageData.getCompoundTag(TAG_ACTION_LOCKS);
         locks.setLong(String.valueOf(rawIndex), worldTick);
         pageData.setTag(TAG_ACTION_LOCKS, locks);

@@ -45,7 +45,7 @@ public final class FreezeRayControlManager {
 
         Map<Integer, TargetState> targetStates = WORLD_TARGET_STATES.computeIfAbsent(
                 target.world.provider.getDimension(), dim -> new HashMap<>());
-        TargetState state = targetStates.computeIfAbsent(target.getEntityId(), id -> new TargetState(id));
+        TargetState state = targetStates.computeIfAbsent(target.getEntityId(), TargetState::new);
         state.hitThisTick = true;
     }
 
@@ -89,7 +89,7 @@ public final class FreezeRayControlManager {
             return;
         }
 
-        World world = (World) event.getWorld();
+        World world = event.getWorld();
         int dimension = world.provider.getDimension();
 
         Map<Integer, TargetState> states = WORLD_TARGET_STATES.remove(dimension);

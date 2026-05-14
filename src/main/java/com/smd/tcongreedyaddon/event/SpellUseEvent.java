@@ -134,6 +134,7 @@ public abstract class SpellUseEvent extends Event {
             return interrupted;
         }
 
+        @Override
         public boolean isCanceled() {
             return canceled;
         }

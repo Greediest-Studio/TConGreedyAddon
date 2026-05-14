@@ -109,7 +109,8 @@ public final class SpellBlueprint {
             return this;
         }
 
-        public Builder listeningEvents(Class<? extends Event>... events) {
+        @SafeVarargs
+        public final Builder listeningEvents(Class<? extends Event>... events) {
             if (events != null) {
                 this.listeningEvents.addAll(Arrays.asList(events));
             }

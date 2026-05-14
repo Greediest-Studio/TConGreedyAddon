@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public interface IModule {
     String getModuleName();
     boolean isModAvailable();
-    default void preInit() {};
+    default void preInit() {}
     default void init() {}
     default void postInit() {}
     void initItems(RegistryEvent.Register<Item> event);

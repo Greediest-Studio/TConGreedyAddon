@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.tools.magicbook;
 
-import com.smd.tcongreedyaddon.Tags;
 import com.smd.tcongreedyaddon.tools.magicbook.materialstats.*;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
@@ -9,8 +8,8 @@ import slimeknights.tconstruct.library.tools.IToolPart;
 
 public class TConGreedyTypes {
 
-    public static final String BOOKPAGE = Tags.MOD_ID + ".bookpage";
-    public static final String MAGICCORE = Tags.MOD_ID + ".magiccore";
+    public static final String BOOKPAGE = "bookpage";
+    public static final String MAGICCORE = "magiccore";
 
     /**
      * 初始化未知材料的默认属性（仅需调用一次）
@@ -39,7 +38,9 @@ public class TConGreedyTypes {
      * @param values     三个整数值，对应 BookPageStats 构造参数
      */
     public static void registerBookPage(String materialId, int... values) {
-        if (values.length < 3) return;
+        if (values.length < 3) {
+            return;
+        }
         Material material = TinkerRegistry.getMaterial(materialId);
         if (material != null && material.getStats(BookPageStats.TYPE) == null) {
             material.addStats(new BookPageStats(values[0], values[1], values[2]));

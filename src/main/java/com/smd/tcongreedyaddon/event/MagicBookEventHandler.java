@@ -20,16 +20,24 @@ public class MagicBookEventHandler {
 
     @SubscribeEvent
     public static void onLivingJump(LivingJumpEvent event) {
-        if (event.getEntity().world.isRemote) return;
-        if (!(event.getEntity() instanceof EntityPlayer)) return;
+        if (event.getEntity().world.isRemote) {
+            return;
+        }
+        if (!(event.getEntity() instanceof EntityPlayer)) {
+            return;
+        }
         EntityPlayer player = (EntityPlayer) event.getEntity();
         handleEvent(player, event);
     }
 
     @SubscribeEvent
     public static void onLivingAttack(LivingAttackEvent event) {
-        if (event.getEntity().world.isRemote) return;
-        if (!(event.getEntity() instanceof EntityPlayer)) return;
+        if (event.getEntity().world.isRemote) {
+            return;
+        }
+        if (!(event.getEntity() instanceof EntityPlayer)) {
+            return;
+        }
         EntityPlayer player = (EntityPlayer) event.getEntity();
         handleEvent(player, event);
     }
@@ -45,12 +53,16 @@ public class MagicBookEventHandler {
     }
 
     private static void processBookEvent(MagicBook book, ItemStack bookStack, EntityPlayer player, Event forgeEvent) {
-        if (ToolHelper.isBroken(bookStack)) return;
+        if (ToolHelper.isBroken(bookStack)) {
+            return;
+        }
 
         BookInventory inv = book.getInventory(bookStack);
         for (int slot = 0; slot < inv.getSlots(); slot++) {
             ItemStack pageStack = inv.getStackInSlot(slot);
-            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) continue;
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) {
+                continue;
+            }
 
             UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
             MagicPageItem.SlotType slotType = (slot < inv.getLeftSlots()) ? MagicPageItem.SlotType.LEFT : MagicPageItem.SlotType.RIGHT;

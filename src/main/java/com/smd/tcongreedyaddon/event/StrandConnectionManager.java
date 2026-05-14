@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.event;
 
-import com.smd.bulletapi.api.Battlefield;
 import com.smd.bulletapi.api.BulletApi;
 import com.smd.bulletapi.api.handle.BulletHandle;
 import com.smd.bulletapi.common.CollisionContext;
@@ -31,9 +30,7 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import slimeknights.tconstruct.library.tools.ToolCore;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,9 +46,6 @@ public final class StrandConnectionManager {
     private static final int TRACTION_MAX_TICKS = 26;
     private static final double TRACTION_DIRECT_SPEED = 0.86D;
     private static final double TRACTION_SPEED_SCALE = 0.08D;
-    private static final double TRACTION_STEER = 0.04D;
-    private static final double TRACTION_MIN_PULL_WEIGHT = 0.15D;
-    private static final double TRACTION_TANGENT_KEEP = 0.78D;
     private static final double TRACTION_BLEND_CURRENT = 0.72D;
     private static final double TRACTION_BLEND_TARGET = 0.28D;
     private static final double GRAVITY_COMPENSATION_BASE = 0.08D;
@@ -324,9 +318,6 @@ public final class StrandConnectionManager {
 
     @SubscribeEvent
     public static void onWorldTick(TickEvent.WorldTickEvent event) {
-        if (event.world.isRemote || event.phase != TickEvent.Phase.END) {
-            return;
-        }
     }
 
     @SubscribeEvent
@@ -350,7 +341,7 @@ public final class StrandConnectionManager {
             return;
         }
 
-        int dimension = ((World) event.getWorld()).provider.getDimension();
+        int dimension = event.getWorld().provider.getDimension();
         ACTIVE_CONNECTIONS.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);
         ACTIVE_MELEE_DASHES.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);
         ACTIVE_MELEE_GRACES.entrySet().removeIf(entry -> entry.getValue().dimension == dimension);

@@ -1,4 +1,4 @@
-package com.smd.tcongreedyaddon.plugin.AbyssalCraft;
+package com.smd.tcongreedyaddon.plugin.abyssalcraft;
 
 import com.shinoow.abyssalcraft.api.item.ACItems;
 import com.smd.tcongreedyaddon.init.TraitRegistry;
@@ -15,10 +15,10 @@ import slimeknights.tconstruct.library.materials.*;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
 import com.smd.tcongreedyaddon.plugin.IModule;
 
-public class AbyssalCraft implements IModule {
+public class abyssalcraft implements IModule {
 
     @Override
-    public String getModuleName() { return "AbyssalCraft"; }
+    public String getModuleName() { return "abyssalcraft"; }
 
     public static Material abyssalnite, coralium, dreadium;
 

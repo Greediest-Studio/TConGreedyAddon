@@ -34,7 +34,7 @@ public class TraitLevelingDamage extends ModifierTrait implements ITraitBookProv
         NBTTagList modifiers = TagUtil.getModifiersTagList(tool);
         for (int i = 0; i < modifiers.tagCount(); i++) {
             NBTTagCompound tag = modifiers.getCompoundTagAt(i);
-            if (tag.getString("identifier").equals("toolleveling")) {
+            if ("toolleveling".equals(tag.getString("identifier"))) {
                 return tag.getInteger("level");
             }
         }

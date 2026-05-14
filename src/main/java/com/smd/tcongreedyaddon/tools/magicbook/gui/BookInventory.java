@@ -87,15 +87,21 @@ public class BookInventory implements IItemHandlerModifiable {
 
     @Override
     public boolean isItemValid(int slot, @Nonnull ItemStack stack) {
-        if (!(stack.getItem() instanceof MagicPageItem)) return false;
+        if (!(stack.getItem() instanceof MagicPageItem)) {
+            return false;
+        }
         MagicPageItem page = (MagicPageItem) stack.getItem();
         MagicPageItem.SlotType targetSlot = slot < leftSlots
                 ? MagicPageItem.SlotType.LEFT
                 : MagicPageItem.SlotType.RIGHT;
 
         // 侧别检查
-        if (!page.supportsSlot(targetSlot)) return false;
-        if (page.isKeybindPage() && hasSideKeybindPage(targetSlot, slot)) return false;
+        if (!page.supportsSlot(targetSlot)) {
+            return false;
+        }
+        if (page.isKeybindPage() && hasSideKeybindPage(targetSlot, slot)) {
+            return false;
+        }
 
         // 重复检查
         return !isDuplicatePage(stack, slot);
@@ -129,7 +135,9 @@ public class BookInventory implements IItemHandlerModifiable {
     }
 
     private void loadHandlerFromNBT(ItemStackHandler handler, NBTTagCompound handlerNBT, int expectedSize) {
-        if (!handlerNBT.hasKey("Items", 9)) return;
+        if (!handlerNBT.hasKey("Items", 9)) {
+            return;
+        }
         NBTTagList items = handlerNBT.getTagList("Items", 10);
         for (int i = 0; i < items.tagCount(); i++) {
             NBTTagCompound slotTag = items.getCompoundTagAt(i);
@@ -151,19 +159,27 @@ public class BookInventory implements IItemHandlerModifiable {
         String newId = ((MagicPageItem) newStack.getItem()).getPageIdentifier();
         // 左槽
         for (int i = 0; i < leftHandler.getSlots(); i++) {
-            if (i == excludeSlot && excludeSlot < leftSlots) continue;
+            if (i == excludeSlot && excludeSlot < leftSlots) {
+                continue;
+            }
             ItemStack stack = leftHandler.getStackInSlot(i);
             if (!stack.isEmpty() && stack.getItem() instanceof MagicPageItem) {
-                if (newId.equals(((MagicPageItem) stack.getItem()).getPageIdentifier())) return true;
+                if (newId.equals(((MagicPageItem) stack.getItem()).getPageIdentifier())) {
+                    return true;
+                }
             }
         }
         // 右槽
         for (int i = 0; i < rightHandler.getSlots(); i++) {
             int globalSlot = leftSlots + i;
-            if (globalSlot == excludeSlot) continue;
+            if (globalSlot == excludeSlot) {
+                continue;
+            }
             ItemStack stack = rightHandler.getStackInSlot(i);
             if (!stack.isEmpty() && stack.getItem() instanceof MagicPageItem) {
-                if (newId.equals(((MagicPageItem) stack.getItem()).getPageIdentifier())) return true;
+                if (newId.equals(((MagicPageItem) stack.getItem()).getPageIdentifier())) {
+                    return true;
+                }
             }
         }
         return false;

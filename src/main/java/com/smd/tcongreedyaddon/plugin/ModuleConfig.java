@@ -49,7 +49,7 @@ public class ModuleConfig {
 
     public boolean getBoolean(String key) {
         Property prop = properties.get(key);
-        return prop != null ? prop.getBoolean() : false;
+        return prop != null && prop.getBoolean();
     }
 
     public int getInteger(String key) {

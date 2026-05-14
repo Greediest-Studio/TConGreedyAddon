@@ -79,14 +79,20 @@ public class SpellOverlayRenderer {
 
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) {
+            return;
+        }
 
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer player = mc.player;
-        if (player == null) return;
+        if (player == null) {
+            return;
+        }
 
         ItemStack mainHand = player.getHeldItemMainhand();
-        if (!(mainHand.getItem() instanceof MagicBook)) return;
+        if (!(mainHand.getItem() instanceof MagicBook)) {
+            return;
+        }
 
         int currentHash = computeStructureHash(mainHand);
 
@@ -161,7 +167,9 @@ public class SpellOverlayRenderer {
     }
 
     private int computeStructureHash(ItemStack bookStack) {
-        if (!(bookStack.getItem() instanceof MagicBook)) return 0;
+        if (!(bookStack.getItem() instanceof MagicBook)) {
+            return 0;
+        }
         MagicBook book = (MagicBook) bookStack.getItem();
         BookInventory inv = book.getInventory(bookStack);
         int hash = 1;
@@ -188,7 +196,9 @@ public class SpellOverlayRenderer {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer player = mc.player;
         NBTTagCompound bookTag = player.getHeldItemMainhand().getTagCompound();
-        if (bookTag == null) bookTag = new NBTTagCompound();
+        if (bookTag == null) {
+            bookTag = new NBTTagCompound();
+        }
         int leftCurrentIndex = bookTag.getInteger(MagicBookKeys.TAG_CUR_LEFT_INDEX);
         int rightCurrentIndex = bookTag.getInteger(MagicBookKeys.TAG_CUR_RIGHT_INDEX);
         long worldTime = player.world.getTotalWorldTime();
@@ -201,7 +211,9 @@ public class SpellOverlayRenderer {
         int rightNonSelectableRows = getRows(rightNonSelectable.size());
         int maxNonSelectableRows = Math.max(leftNonSelectableRows, rightNonSelectableRows);
 
-        if (maxSelectableRows == 0 && maxNonSelectableRows == 0) return;
+        if (maxSelectableRows == 0 && maxNonSelectableRows == 0) {
+            return;
+        }
 
         int screenHeight = event.getResolution().getScaledHeight();
         int screenWidth = event.getResolution().getScaledWidth();
@@ -274,7 +286,9 @@ public class SpellOverlayRenderer {
     private void buildSpellLists(ItemStack bookStack, MagicPageItem.SlotType slotType,
                                  List<SpellRenderInfo> selectableOut,
                                  List<SpellRenderInfo> nonSelectableOut) {
-        if (!(bookStack.getItem() instanceof MagicBook)) return;
+        if (!(bookStack.getItem() instanceof MagicBook)) {
+            return;
+        }
 
         MagicBook book = (MagicBook) bookStack.getItem();
         BookInventory inv = book.getInventory(bookStack);
@@ -284,12 +298,16 @@ public class SpellOverlayRenderer {
 
         for (int slot = start; slot < end; slot++) {
             ItemStack pageStack = inv.getStackInSlot(slot);
-            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) continue;
+            if (pageStack.isEmpty() || !(pageStack.getItem() instanceof UnifiedMagicPage)) {
+                continue;
+            }
 
             UnifiedMagicPage page = (UnifiedMagicPage) pageStack.getItem();
             List<UnifiedMagicPage.SpellDisplayData> allData = page.getAllSpellDisplayData(pageStack, slotType);
             for (UnifiedMagicPage.SpellDisplayData data : allData) {
-                if (!data.renderInOverlay) continue;
+                if (!data.renderInOverlay) {
+                    continue;
+                }
                 SpellRenderInfo info = new SpellRenderInfo(
                         data.name, data.icon, data.pageData, data.internalIndex,
                         page, data.selectable, data.cooldownTicks

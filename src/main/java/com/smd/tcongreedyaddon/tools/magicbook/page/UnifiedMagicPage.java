@@ -11,7 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.translation.I18n;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import slimeknights.tconstruct.library.TinkerRegistry;
@@ -60,17 +60,23 @@ public class UnifiedMagicPage extends MagicPageItem {
 
         List<ISpell> leftSel = new ArrayList<>();
         for (ISpell s : leftSpells) {
-            if (s.isSelectable()) leftSel.add(s);
+            if (s.isSelectable()) {
+                leftSel.add(s);
+            }
         }
         this.leftSelectable = Collections.unmodifiableList(leftSel);
 
         List<ISpell> rightSel = new ArrayList<>();
         for (ISpell s : rightSpells) {
-            if (s.isSelectable()) rightSel.add(s);
+            if (s.isSelectable()) {
+                rightSel.add(s);
+            }
         }
         this.rightSelectable = Collections.unmodifiableList(rightSel);
 
-        if (builder.displayNameKey != null) this.displayNameKey = builder.displayNameKey;
+        if (builder.displayNameKey != null) {
+            this.displayNameKey = builder.displayNameKey;
+        }
 
         buildEventSpellMap(leftSpells);
         buildEventSpellMap(rightSpells);
@@ -156,7 +162,9 @@ public class UnifiedMagicPage extends MagicPageItem {
         if (SpellTimingManager.isOnCooldown(spell, rawIndex, pageStack, context.world, context.player, context.bookStack)) {
             return false;
         }
-        if (!spell.canTrigger(context)) return false;
+        if (!spell.canTrigger(context)) {
+            return false;
+        }
         boolean success = spell.execute(context);
         if (success) {
             SpellTimingManager.applyCooldown(spell, rawIndex, pageStack, context.world, context.player, context.bookStack);
@@ -166,13 +174,17 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     public boolean isRawSpellOnCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
         SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
-        if (selected == null) return false;
+        if (selected == null) {
+            return false;
+        }
         return SpellTimingManager.isOnCooldown(selected.spell, rawIndex, pageStack, world, player, bookStack);
     }
 
     public void applyRawSpellCooldown(ItemStack pageStack, int rawIndex, World world, EntityPlayer player, ItemStack bookStack) {
         SelectedSpell selected = resolveRawSpell(getSlotType(), rawIndex);
-        if (selected == null) return;
+        if (selected == null) {
+            return;
+        }
         SpellTimingManager.applyCooldown(selected.spell, rawIndex, pageStack, world, player, bookStack);
     }
 
@@ -202,14 +214,18 @@ public class UnifiedMagicPage extends MagicPageItem {
     @Override
     public String getSpellDisplayName(int internalIndex, SlotType slotType) {
         List<ISpell> selectable = getSelectableSpells(slotType);
-        if (internalIndex < 0 || internalIndex >= selectable.size()) return "Unknown";
-        return I18n.translateToLocal(selectable.get(internalIndex).getNameKey());
+        if (internalIndex < 0 || internalIndex >= selectable.size()) {
+            return "Unknown";
+        }
+        return I18n.format(selectable.get(internalIndex).getNameKey());
     }
 
     @Override
     public int getSpellCooldownTicks(int internalIndex, SlotType slotType) {
         List<ISpell> selectable = getSelectableSpells(slotType);
-        if (internalIndex < 0 || internalIndex >= selectable.size()) return 0;
+        if (internalIndex < 0 || internalIndex >= selectable.size()) {
+            return 0;
+        }
         return selectable.get(internalIndex).getCooldownTicks();
     }
 
@@ -222,7 +238,9 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     @Override
     public boolean onLeftClick(ItemStack toolStack, EntityPlayer player, Entity target, NBTTagCompound pageData, ItemStack pageStack) {
-        if (player.world.isRemote) return false;
+        if (player.world.isRemote) {
+            return false;
+        }
         SpellContext context = new SpellContext(player.world, player, toolStack, pageStack, pageData, SlotType.LEFT, TriggerSource.leftClick(), target);
         boolean success = executeSelectedSpell(context);
         if (success) {
@@ -233,7 +251,9 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     @Override
     public boolean onRightClick(World world, EntityPlayer player, ItemStack toolStack, NBTTagCompound pageData, ItemStack pageStack) {
-        if (world.isRemote) return false;
+        if (world.isRemote) {
+            return false;
+        }
         SpellContext context = new SpellContext(world, player, toolStack, pageStack, pageData, SlotType.RIGHT, TriggerSource.rightClick(), null);
         boolean success = executeSelectedSpell(context);
         if (success) {
@@ -259,11 +279,15 @@ public class UnifiedMagicPage extends MagicPageItem {
 
     public void onEvent(Event event, EntityPlayer player, ItemStack bookStack, ItemStack pageStack, NBTTagCompound pageData, SlotType slot) {
         List<SpellInfo> spellInfos = eventSpellMap.get(event.getClass());
-        if (spellInfos == null) return;
+        if (spellInfos == null) {
+            return;
+        }
 
         TriggerSource source = TriggerSource.event(event);
         for (SpellInfo info : spellInfos) {
-            if (pageData == null) pageData = new NBTTagCompound();
+            if (pageData == null) {
+                pageData = new NBTTagCompound();
+            }
             SpellContext context = new SpellContext(player.world, player, bookStack, pageStack, pageData, slot, source, null);
 
             info.spell.onEvent(event, context, info.rawIndex);
@@ -281,20 +305,17 @@ public class UnifiedMagicPage extends MagicPageItem {
     }
 
     @Override
-    public int getInitialSpellIndex(ItemStack pageStack) {
-        return 0;
-    }
-
-    @Override
     public String getCurrentSpellDisplayName(NBTTagCompound pageData, ItemStack pageStack) {
         SlotType slot = getSlotType();
         List<ISpell> selectable = getSelectableSpells(slot);
-        if (selectable.isEmpty()) return I18n.translateToLocal(displayNameKey);
+        if (selectable.isEmpty()) {
+            return I18n.format(displayNameKey);
+        }
         int index = pageData.getInteger("spellIndex");
         if (index >= 0 && index < selectable.size()) {
-            return I18n.translateToLocal(selectable.get(index).getNameKey());
+            return I18n.format(selectable.get(index).getNameKey());
         }
-        return I18n.translateToLocal(displayNameKey);
+        return I18n.format(displayNameKey);
     }
 
     @Override
@@ -302,7 +323,7 @@ public class UnifiedMagicPage extends MagicPageItem {
         SlotType slot = getSlotType();
         List<String> names = new ArrayList<>();
         for (ISpell spell : getSelectableSpells(slot)) {
-            names.add(I18n.translateToLocal(spell.getNameKey()));
+            names.add(I18n.format(spell.getNameKey()));
         }
         return names;
     }
@@ -314,38 +335,42 @@ public class UnifiedMagicPage extends MagicPageItem {
         super.addInformation(stack, worldIn, tooltip, flagIn);
 
         if (!leftSelectable.isEmpty()) {
-            tooltip.add(I18n.translateToLocal("tooltip.left_spells") + ":");
+            tooltip.add(I18n.format("tooltip.left_spells") + ":");
             for (ISpell spell : leftSelectable) {
-                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
+                tooltip.add(" - " + I18n.format(spell.getNameKey()));
             }
         }
 
         if (!rightSelectable.isEmpty()) {
-            tooltip.add(I18n.translateToLocal("tooltip.right_spells") + ":");
+            tooltip.add(I18n.format("tooltip.right_spells") + ":");
             for (ISpell spell : rightSelectable) {
-                tooltip.add(" - " + I18n.translateToLocal(spell.getNameKey()));
+                tooltip.add(" - " + I18n.format(spell.getNameKey()));
             }
         }
 
         List<ISpell> leftNonSelectable = new ArrayList<>();
         for (ISpell spell : leftSpells) {
-            if (!spell.isSelectable()) leftNonSelectable.add(spell);
+            if (!spell.isSelectable()) {
+                leftNonSelectable.add(spell);
+            }
         }
         if (!leftNonSelectable.isEmpty()) {
-            tooltip.add(I18n.translateToLocal("tooltip.left_passive") + ":");
+            tooltip.add(I18n.format("tooltip.left_passive") + ":");
             for (ISpell s : leftNonSelectable) {
-                tooltip.add(" - " + I18n.translateToLocal(s.getNameKey()));
+                tooltip.add(" - " + I18n.format(s.getNameKey()));
             }
         }
 
         List<ISpell> rightNonSelectable = new ArrayList<>();
         for (ISpell spell : rightSpells) {
-            if (!spell.isSelectable()) rightNonSelectable.add(spell);
+            if (!spell.isSelectable()) {
+                rightNonSelectable.add(spell);
+            }
         }
         if (!rightNonSelectable.isEmpty()) {
-            tooltip.add(I18n.translateToLocal("tooltip.right_passive") + ":");
+            tooltip.add(I18n.format("tooltip.right_passive") + ":");
             for (ISpell s : rightNonSelectable) {
-                tooltip.add(" - " + I18n.translateToLocal(s.getNameKey()));
+                tooltip.add(" - " + I18n.format(s.getNameKey()));
             }
         }
     }
@@ -414,8 +439,7 @@ public class UnifiedMagicPage extends MagicPageItem {
             if (placementPolicy == PlacementPolicy.RIGHT_ONLY && !leftSpells.isEmpty()) {
                 throw new IllegalStateException("Right page cannot have left spells");
             }
-            UnifiedMagicPage page = new UnifiedMagicPage(this);
-            return page;
+            return new UnifiedMagicPage(this);
         }
     }
 
@@ -429,16 +453,18 @@ public class UnifiedMagicPage extends MagicPageItem {
         List<SpellDisplayData> list = new ArrayList<>();
         List<ISpell> spells = (installedSlotType == SlotType.LEFT) ? leftSpells : rightSpells;
         NBTTagCompound pageData = pageStack.getTagCompound();
-        if (pageData == null) pageData = new NBTTagCompound();
+        if (pageData == null) {
+            pageData = new NBTTagCompound();
+        }
 
         for (int i = 0; i < spells.size(); i++) {
             ISpell spell = spells.get(i);
             list.add(new SpellDisplayData(
-                    I18n.translateToLocal(spell.getNameKey()),
+                    I18n.format(spell.getNameKey()),
                     spell.getDisplayIcon(pageData, i),
                     spell.isSelectable(),
                     spell.shouldRenderInOverlay(),
-                    i, // 使用原始索引
+                    i,
                     spell.getCooldownTicks(),
                     pageData
             ));

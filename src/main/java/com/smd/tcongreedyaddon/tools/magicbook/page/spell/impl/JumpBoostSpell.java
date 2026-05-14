@@ -4,10 +4,7 @@ import com.smd.tcongreedyaddon.tools.magicbook.MagicPageItem;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.AbstractSpell;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.SpellBlueprint;
 import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.SpellContext;
-import com.smd.tcongreedyaddon.tools.magicbook.page.spell.basespell.TriggerSource;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.entity.living.LivingEvent;
 
 public class JumpBoostSpell extends AbstractSpell {
