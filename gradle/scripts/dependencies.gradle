@@ -38,7 +38,7 @@ dependencies {
     implementation rfg.deobf("curse.maven:Mantle-74924:2713386")
     implementation rfg.deobf("curse.maven:TinkersAntique-1242239:8089154")
     implementation rfg.deobf("curse.maven:AbyssalCraft-53686:6711543")
-    implementation rfg.deobf("curse.maven:crafttweaker-239197:6669824")
+    implementation "curse.maven:crafttweaker-239197:6669824"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
