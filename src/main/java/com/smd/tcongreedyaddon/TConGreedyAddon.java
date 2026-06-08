@@ -1,13 +1,10 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
-import com.smd.tcongreedyaddon.plugin.magicbook.magicbook;
-import com.smd.tcongreedyaddon.plugin.abyssalcraft.abyssalcraft;
-import com.smd.tcongreedyaddon.plugin.something.something;
 import com.smd.tcongreedyaddon.tools.magicbook.gui.MagicBookGuiHandler;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
-import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
+import com.smd.tcongreedyaddon.plugin.Modules;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
@@ -54,10 +51,7 @@ public class TConGreedyAddon {
         config = new Configuration(event.getSuggestedConfigurationFile());
         modulemanager = new ModuleManager(config);
 
-        modulemanager.registerModule(new OldWeapons());
-        modulemanager.registerModule(new abyssalcraft());
-        modulemanager.registerModule(new something());
-        modulemanager.registerModule(new magicbook());
+        Modules.registerAll(modulemanager);
 
         modulemanager.setupConfig();
 

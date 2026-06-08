@@ -13,7 +13,7 @@ public interface IModule {
     default void preInit() {}
     default void init() {}
     default void postInit() {}
-    void initItems(RegistryEvent.Register<Item> event);
+    default void initItems(RegistryEvent.Register<Item> event) {}
     default boolean isEnabledByDefault() {return true;}
     default void setupModuleConfig(ModuleConfig config) {}
     default void loadModuleConfig(ModuleConfig config) {}

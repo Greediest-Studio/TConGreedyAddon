@@ -6,8 +6,6 @@ import com.smd.tcongreedyaddon.plugin.ModuleConfig;
 import com.smd.tcongreedyaddon.traits.modifiers.base.something.TraitEraseCommand;
 import com.smd.tcongreedyaddon.traits.modifiers.base.something.TraitLevelingDamage;
 import com.smd.tcongreedyaddon.traits.something.*;
-import net.minecraft.item.Item;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
@@ -17,15 +15,15 @@ public class something implements IModule {
     @Override
     public String getModuleName() { return "something"; }
 
-    public static final AbstractTrait ciallo = new TraitCiallo();
+    public static AbstractTrait ciallo;
     public static final AbstractTrait soundeffects = new TraitSoundEffect();
     public static final AbstractTrait cleverTranslation = new TraitCleverTranslation();
     public static final AbstractTrait connection404 = new TraitConnection404();
     public static final AbstractTrait autobow = new TraitAutoBow();
-    public static final AbstractTrait overcharge = new TraitOvercharge();
+    public static AbstractTrait overcharge;
     public static final AbstractTrait deathboost = new TraitDeathBoost();
-    public static final AbstractTrait speed = new TraitSpeed();
-    public static final AbstractTrait TravelStaff = new TraitTravel();
+    public static AbstractTrait speed;
+    public static AbstractTrait TravelStaff;
 
     public static TraitLevelingDamage levelingdamage;
     public static TraitEraseCommand erasecommand;
@@ -57,6 +55,11 @@ public class something implements IModule {
 
     @Override
     public void init() {
+        ciallo = new TraitCiallo();
+        overcharge = new TraitOvercharge();
+        speed = new TraitSpeed();
+        TravelStaff = new TraitTravel();
+
         TinkerRegistry.addTrait(ciallo);
         TinkerRegistry.addTrait(soundeffects);
         TinkerRegistry.addTrait(cleverTranslation);
@@ -73,9 +76,5 @@ public class something implements IModule {
         erasecommand = new TraitEraseCommand();
         erasecommand.initItem();
         TraitRegistry.REGISTERED_TRAITS.add(erasecommand);
-    }
-
-    @Override
-    public void initItems(RegistryEvent.Register<Item> event) {
     }
 }
