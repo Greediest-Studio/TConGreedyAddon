@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
-import com.smd.tcongreedyaddon.tools.magicbook.gui.MagicBookGuiHandler;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.Modules;
@@ -17,7 +16,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import com.smd.tcongreedyaddon.proxy.CommonProxy;
 
-import net.minecraftforge.fml.common.network.NetworkRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -64,7 +62,6 @@ public class TConGreedyAddon {
     public void init(FMLInitializationEvent event) {
         LOGGER.info("TConGreedyAddon Initialization");
         modulemanager.initActiveModules(event);
-        NetworkRegistry.INSTANCE.registerGuiHandler(this, new MagicBookGuiHandler());
         proxy.initToolGuis();
     }
 

@@ -2,8 +2,7 @@ item.greatblade.name=Greatblade
 item.battleaxe.name=Battleaxe
 item.dagger.name=Dagger
 item.tconstruct:crossbow.name=Crossbow
-item.magicbook.name=Magic Book
-item.allinonetool.name=item.allinonetool.name
+item.allinonetool.name=allinonetool
 
 item.greatbladeCore.name=Greatblade Core
 item.freeze_ray_page.name=Freeze Ray Bookmark
@@ -74,61 +73,6 @@ modifier.levelingdamage.name=等级伤害
 modifier.levelingdamage.desc=§o我要变得更强！§r\n§f随着工具等级的提升获得越来越高的攻击力。
 tooltip.damage_increase=§9武器伤害加成：%s%%
 
-stat.tcongreedyaddon.magiccore.name=TheCoreOfTheTechnique
-stat.magiccore.desc=TheCoreAttributesOfTheTechnique
-stat.critchance.value=SpellCriticalHitRate: %s
-stat.range.value=CastRange: %s
-
-stat.tcongreedyaddon.bookpage.name=Pages
-stat.bookpage.desc=PageAttributes
-stat.spellspeed.value=CastSpeed: %s
-stat.slot.left=LeftKeyway: %s
-stat.slot.right=RightKeyway: %s
-stat.slot.available=allow
-stat.slot.unavailable=prohibited
-stat.mattock.picklevel.name=Pickaxe Level
-tooltip.empty=EmptySlot
-
-spell.large_fire_ball=BigFireball
-spell.small_fire_ball=SmallFireball
-spell.hold_fireball=Charged Fireball Stream
-spell.freeze_ray=Freeze Ray
-spell.strand_grapple=Strand Grapple
-spell.thermal_sunder=Thermal Sunder
-overlay.hold_charge=Charging %s/%s s
-overlay.hold_charge_ready=Charge complete, streaming fireballs
-message.gauss_thermal.mode_heat=Thermal Sunder: Heat
-message.gauss_thermal.mode_cold=Thermal Sunder: Cold
-effect.tcongreedyaddon.gauss_heat=Heat Burn
-
-beam_attack=AoEAttack
-
-default_attack=DefaultAttackMode
-
-tooltip.leftpage=LeftClickEffect
-tooltip.rightpage=RightClickEffect
-tooltip.current=(CurrentlyActive)
-
-tooltip.unavailable=NotAvailable
-message.slot_unavailable=SlotsAreNotAvailable
-
-page.installed=InstalledTo%sBookmarkSlot
-slot.left=Left
-slot.right=Right
-
-container.magicbook.left=LeftBookmarkSlot
-container.magicbook.right=RightBookmarkSlot
-
-spell.6666=TestPassiveSkills
-spell.unknown=Unnamed
-
-key.tcongreedyaddon=Tcongreedyaddon
-key.tcongreedyaddon.leftpage=ToggleLeftClickSpells
-key.tcongreedyaddon.rightpage=ToggleRightClickSpells
-key.tcongreedyaddon.leftskilla=Left Skill Key 1
-key.tcongreedyaddon.leftskillb=Left Skill Key 2
-key.tcongreedyaddon.rightskilla=Right Skill Key 1
-key.tcongreedyaddon.rightskillb=Right Skill Key 2
 gui.jei.trait_overview.title=Trait Overview
 gui.jei.trait_overview.empty=No visible traits on this tool
 gui.jei.trait_overview.page=%s / %s

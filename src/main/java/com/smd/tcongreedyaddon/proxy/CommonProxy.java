@@ -1,6 +1,5 @@
 package com.smd.tcongreedyaddon.proxy;
 
-import com.smd.tcongreedyaddon.network.NetworkHandler;
 import com.smd.tcongreedyaddon.util.TicArmorTraitCache;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
@@ -22,7 +21,6 @@ public class CommonProxy {
     }
 
     public void preInit() {
-        NetworkHandler.register();
         MinecraftForge.EVENT_BUS.register(TicArmorTraitCache.INSTANCE);
     }
 

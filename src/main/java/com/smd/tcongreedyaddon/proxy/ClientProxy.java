@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon.proxy;
 
 import com.smd.tcongreedyaddon.init.BookTransformerAppendModifiers;
-import com.smd.tcongreedyaddon.plugin.magicbook.magicbook;
 import net.minecraft.item.Item;
 import slimeknights.mantle.client.book.repository.BookRepository;
 import slimeknights.mantle.client.book.repository.FileRepository;
@@ -51,14 +50,6 @@ public class ClientProxy extends CommonProxy {
             allinonetoolInfo.addSlotPosition(33 + 10 - 10, 42 + 10 + 6); //core
             allinonetoolInfo.addSlotPosition( 33 - 10 - 12, 42); //guard
             TinkerRegistryClient.addToolBuilding(allinonetoolInfo);
-        }
-        if (magicbook.magicbook != null) {
-            ToolBuildGuiInfo magicbookInfo = new ToolBuildGuiInfo(magicbook.magicbook);
-            magicbookInfo.addSlotPosition(33 - 10 - 2, 42 + 10); // handle
-            magicbookInfo.addSlotPosition(33 + 10 + 16 - 2, 42 - 10 + 16); // head 1
-            magicbookInfo.addSlotPosition(33 + 10 - 16 - 2, 42 - 10 - 16); // head 2
-            magicbookInfo.addSlotPosition(33 + 13 - 2, 42 - 13); // binding
-            TinkerRegistryClient.addToolBuilding(magicbookInfo);
         }
     }
 

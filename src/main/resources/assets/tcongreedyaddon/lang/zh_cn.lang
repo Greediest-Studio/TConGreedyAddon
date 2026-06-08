@@ -3,7 +3,6 @@ item.battleaxe.name=战斧
 item.dagger.name=匕首
 item.tconstruct:crossbow.name=十字弩
 item.allinonetool.name=全能工具
-item.magicbook.name=魔法书
 item.freeze_ray_page.name=冻结射线书签
 item.strand_grapple_page.name=缚丝勾爪书签
 item.thermal_sunder_page.name=热能抽离书签
@@ -67,61 +66,6 @@ modifier.levelingdamage.name=等级伤害
 modifier.levelingdamage.desc=§o我要变得更强！§r\n§f随着工具等级的提升获得越来越高的攻击力。
 tooltip.damage_increase=§9武器伤害加成：%s%%
 
-stat.tcongreedyaddon.magiccore.name=术式核心
-stat.magiccore.desc=术式核心属性
-stat.critchance.value=法术暴击率: %s
-stat.range.value=施法范围: %s
-
-stat.tcongreedyaddon.bookpage.name=书页
-stat.bookpage.desc=书页属性
-stat.spellspeed.value=施法速度: %s
-stat.slot.left=左键槽: %s
-stat.slot.right=右键槽: %s
-stat.slot.available=允许
-stat.slot.unavailable=禁止
-tooltip.empty=空槽位
-
-spell.large_fire_ball=大火球
-spell.small_fire_ball=小火球
-spell.hold_fireball=蓄力烈焰连发
-spell.freeze_ray=冻结射线
-spell.strand_grapple=缚丝勾爪
-spell.thermal_sunder=热能抽离
-overlay.hold_charge=蓄力中 %s/%s 秒
-overlay.hold_charge_ready=蓄力完成，持续释放中
-message.gauss_thermal.mode_heat=热能抽离：火
-message.gauss_thermal.mode_cold=热能抽离：冰
-effect.tcongreedyaddon.gauss_heat=热灼
-
-beam_attack=范围攻击
-
-default_attack=默认攻击模式
-
-tooltip.leftpage=左键效果
-tooltip.rightpage=右键效果
-tooltip.current=(当前激活)
-tooltip.unavailable=不可用
-
-message.slot_unavailable=槽位不可用
-
-page.installed=已安装至%s书签槽
-
-slot.left=左
-slot.right=右
-
-container.magicbook.left=左书签槽
-container.magicbook.right=右书签槽
-
-spell.6666=测试用被动技能
-spell.unknown=未命名
-
-key.tcongreedyaddon=Tcongreedyaddon
-key.tcongreedyaddon.leftpage=切换左键法术
-key.tcongreedyaddon.rightpage=切换右键法术
-key.tcongreedyaddon.leftskilla=左侧按键技能1
-key.tcongreedyaddon.leftskillb=左侧按键技能2
-key.tcongreedyaddon.rightskilla=右侧按键技能1
-key.tcongreedyaddon.rightskillb=右侧按键技能2
 gui.jei.trait_overview.title=词条属性全览
 gui.jei.trait_overview.empty=当前工具没有可显示的词条
 gui.jei.trait_overview.page=%s / %s
