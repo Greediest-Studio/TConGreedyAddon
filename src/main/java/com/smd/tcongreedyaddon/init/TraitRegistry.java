@@ -10,6 +10,13 @@ public class TraitRegistry {
 
     public static final List<ModifierTrait> REGISTERED_TRAITS = new ArrayList<>();
 
+    public static <T extends ModifierTrait> T register(T trait) {
+        if (trait != null && !REGISTERED_TRAITS.contains(trait)) {
+            REGISTERED_TRAITS.add(trait);
+        }
+        return trait;
+    }
+
     public static Stream<ModifierTrait> stream() {
         return REGISTERED_TRAITS.stream();
     }

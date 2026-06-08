@@ -16,12 +16,12 @@ public class something implements IModule {
     public String getModuleName() { return "something"; }
 
     public static AbstractTrait ciallo;
-    public static final AbstractTrait soundeffects = new TraitSoundEffect();
-    public static final AbstractTrait cleverTranslation = new TraitCleverTranslation();
-    public static final AbstractTrait connection404 = new TraitConnection404();
-    public static final AbstractTrait autobow = new TraitAutoBow();
+    public static AbstractTrait soundeffects;
+    public static AbstractTrait cleverTranslation;
+    public static AbstractTrait connection404;
+    public static AbstractTrait autobow;
     public static AbstractTrait overcharge;
-    public static final AbstractTrait deathboost = new TraitDeathBoost();
+    public static AbstractTrait deathboost;
     public static AbstractTrait speed;
     public static AbstractTrait TravelStaff;
 
@@ -56,7 +56,12 @@ public class something implements IModule {
     @Override
     public void init() {
         ciallo = new TraitCiallo();
+        soundeffects = new TraitSoundEffect();
+        cleverTranslation = new TraitCleverTranslation();
+        connection404 = new TraitConnection404();
+        autobow = new TraitAutoBow();
         overcharge = new TraitOvercharge();
+        deathboost = new TraitDeathBoost();
         speed = new TraitSpeed();
         TravelStaff = new TraitTravel();
 
@@ -72,9 +77,9 @@ public class something implements IModule {
 
         levelingdamage = new TraitLevelingDamage();
         levelingdamage.initItem();
-        TraitRegistry.REGISTERED_TRAITS.add(levelingdamage);
+        TraitRegistry.register(levelingdamage);
         erasecommand = new TraitEraseCommand();
         erasecommand.initItem();
-        TraitRegistry.REGISTERED_TRAITS.add(erasecommand);
+        TraitRegistry.register(erasecommand);
     }
 }

@@ -20,9 +20,9 @@ public class abyssalcraft implements IModule {
 
     public static Material abyssalnite, coralium, dreadium;
 
-    public static final AbstractTrait dread_plague = new TraitDreadPlague();
-    public static final AbstractTrait coralium_plague = new TraitCoraliumPlague();
-    public static final AbstractTrait dread_purity = new TraitDreadPurity();
+    public static AbstractTrait dread_plague;
+    public static AbstractTrait coralium_plague;
+    public static AbstractTrait dread_purity;
 
     public static ModLightPierce lightpierce;
 
@@ -33,6 +33,10 @@ public class abyssalcraft implements IModule {
 
     @Override
     public void init() {
+        dread_plague = new TraitDreadPlague();
+        coralium_plague = new TraitCoraliumPlague();
+        dread_purity = new TraitDreadPurity();
+
         abyssalnite.addCommonItems("Abyssalnite");
         abyssalnite.setRepresentativeItem(new ItemStack(ACItems.abyssalnite_ingot));
         abyssalnite.addTrait(dread_purity);
@@ -46,7 +50,7 @@ public class abyssalcraft implements IModule {
         dreadium.addTrait(dread_plague);
 
         lightpierce = new ModLightPierce();
-        TraitRegistry.REGISTERED_TRAITS.add(lightpierce);
+        TraitRegistry.register(lightpierce);
         lightpierce.addItem(ACItems.shadow_gem);
     }
 

@@ -96,7 +96,7 @@ public class OldWeapons implements IModule {
     @Override
     public void init() {
         test = new ModTest();
-        TraitRegistry.REGISTERED_TRAITS.add(test);
+        TraitRegistry.register(test);
         test.addItem("stone", 1, 1);
 
         if (enableBattleAxe && battleaxe != null) {
