@@ -6,10 +6,14 @@ import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.text.TextFormatting;
+import slimeknights.tconstruct.library.TinkerRegistry;
+import slimeknights.tconstruct.library.modifiers.IModifier;
+import slimeknights.tconstruct.library.modifiers.ModifierNBT;
 import slimeknights.tconstruct.library.traits.ITrait;
 import slimeknights.tconstruct.library.utils.TagUtil;
-import slimeknights.tconstruct.library.utils.TinkerUtil;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -94,22 +98,9 @@ class TraitOverviewWrapper implements IRecipeWrapper {
             return false;
         }
 
-        if (left.getItem() != right.getItem() || left.getItemDamage() != right.getItemDamage()) {
-            return false;
-        }
-
-        NBTTagList leftMaterials = TagUtil.getBaseMaterialsTagList(left);
-        NBTTagList rightMaterials = TagUtil.getBaseMaterialsTagList(right);
-        if (leftMaterials.tagCount() != rightMaterials.tagCount()) {
-            return false;
-        }
-
-        for (int i = 0; i < leftMaterials.tagCount(); i++) {
-            if (!leftMaterials.getStringTagAt(i).equals(rightMaterials.getStringTagAt(i))) {
-                return false;
-            }
-        }
-        return true;
+        return left.getItem() == right.getItem()
+            && left.getItemDamage() == right.getItemDamage()
+            && collectVisibleTraits(left).size() == collectVisibleTraits(right).size();
     }
 
     static List<ITrait> collectVisibleTraits(ItemStack stack) {
@@ -118,12 +109,32 @@ class TraitOverviewWrapper implements IRecipeWrapper {
         }
 
         Map<String, ITrait> traitsById = new LinkedHashMap<>();
-        for (ITrait trait : TinkerUtil.getTraitsOrdered(stack)) {
-            if (trait == null || trait.isHidden() || JeiTraitOverviewConfig.isTraitHidden(trait.getIdentifier())) {
+        NBTTagList modifiers = TagUtil.getModifiersTagList(stack);
+        for (int i = 0; i < modifiers.tagCount(); i++) {
+            NBTTagCompound modifierTag = modifiers.getCompoundTagAt(i);
+            ModifierNBT modifierData = ModifierNBT.readTag(modifierTag);
+            IModifier modifier = TinkerRegistry.getModifier(modifierData.identifier);
+            if (!(modifier instanceof ITrait)) {
                 continue;
             }
+
+            ITrait trait = (ITrait) modifier;
+            if (!isVisibleTraitModifier(trait, modifier, modifierTag)) {
+                continue;
+            }
+
             traitsById.putIfAbsent(trait.getIdentifier(), trait);
         }
         return new ArrayList<>(traitsById.values());
+    }
+
+    static boolean isVisibleTraitModifier(ITrait trait, IModifier modifier, NBTTagCompound modifierTag) {
+        if (modifier.isHidden() || trait.isHidden() || JeiTraitOverviewConfig.isTraitHidden(trait.getIdentifier())) {
+            return false;
+        }
+
+        String tooltip = modifier.getTooltip(modifierTag, false);
+        String plainTooltip = TextFormatting.getTextWithoutFormattingCodes(tooltip);
+        return plainTooltip != null && !plainTooltip.trim().isEmpty();
     }
 }
