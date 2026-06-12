@@ -75,4 +75,8 @@ tooltip.damage_increase=§9武器伤害加成：%s%%
 
 gui.jei.trait_overview.title=Trait Overview
 gui.jei.trait_overview.empty=No visible traits on this tool
-gui.jei.trait_overview.page=%s / %s
+gui.jei.trait_overview.empty_focus=Use JEI uses on a real Tinkers tool or armor item to view entries
+gui.jei.trait_overview.source=Source: %s
+gui.jei.trait_overview.kind.trait=Trait
+gui.jei.trait_overview.kind.modifier=Modifier
+gui.jei.trait_overview.scroll=Scroll

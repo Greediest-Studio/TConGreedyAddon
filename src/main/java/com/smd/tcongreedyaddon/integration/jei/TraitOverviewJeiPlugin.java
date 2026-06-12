@@ -2,24 +2,15 @@ package com.smd.tcongreedyaddon.integration.jei;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.IModRegistry;
-import mezz.jei.api.ISubtypeRegistry;
 import mezz.jei.api.JEIPlugin;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
-import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import slimeknights.tconstruct.shared.TinkerCommons;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 
 @JEIPlugin
 public class TraitOverviewJeiPlugin implements IModPlugin {
-
-    @Override
-    public void registerSubtypes(ISubtypeRegistry registry) {
-        TraitOverviewToolSubtypeInterpreter interpreter = new TraitOverviewToolSubtypeInterpreter();
-        for (Item item : TraitOverviewDataProvider.collectRecipeItems()) {
-            registry.registerSubtypeInterpreter(item, interpreter);
-        }
-    }
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
@@ -28,7 +19,7 @@ public class TraitOverviewJeiPlugin implements IModPlugin {
 
     @Override
     public void register(@Nonnull IModRegistry registry) {
-        List<TraitOverviewWrapper> recipes = TraitOverviewDataProvider.createRecipes();
-        registry.addRecipes(recipes, TraitOverviewCategory.UID);
+        registry.addRecipeCatalyst(new ItemStack(TinkerCommons.book), TraitOverviewCategory.UID);
+        registry.addRecipeRegistryPlugin(TraitOverviewRegistryPlugin.INSTANCE);
     }
 }

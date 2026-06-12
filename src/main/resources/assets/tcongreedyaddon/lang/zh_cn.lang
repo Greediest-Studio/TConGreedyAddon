@@ -68,4 +68,8 @@ tooltip.damage_increase=§9武器伤害加成：%s%%
 
 gui.jei.trait_overview.title=词条属性全览
 gui.jei.trait_overview.empty=当前工具没有可显示的词条
-gui.jei.trait_overview.page=%s / %s
+gui.jei.trait_overview.empty_focus=请对真实的匠魂工具或盔甲使用 JEI 用途查询以查看词条信息
+gui.jei.trait_overview.source=来源：%s
+gui.jei.trait_overview.kind.trait=词条
+gui.jei.trait_overview.kind.modifier=强化
+gui.jei.trait_overview.scroll=滚轮滚动

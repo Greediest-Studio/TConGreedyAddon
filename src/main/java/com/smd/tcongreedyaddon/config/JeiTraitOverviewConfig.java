@@ -14,23 +14,24 @@ import java.util.Locale;
 public class JeiTraitOverviewConfig {
 
     @Config.Comment({
-        "Trait visibility rules used by the JEI trait overview.",
-        "Use an exact trait id to hide a single trait, or add '*' at the end to hide a whole prefix.",
+        "Entry visibility rules used by the JEI trait overview.",
+        "Rules apply to both traits and modifiers.",
+        "Use an exact identifier to hide a single entry, or add '*' at the end to hide a whole prefix.",
         "Examples: extratrait* , moretcon.extratrait2* , tconstruct.ecological"
     })
-    @Config.Name("Hidden Trait Rules")
-    public static String[] hiddenTraitRules = {
+    @Config.Name("Hidden Entry Rules")
+    public static String[] hiddenEntryRules = {
         "extratrait*",
         "moretcon.extratrait2*"
     };
 
-    public static boolean isTraitHidden(String traitId) {
-        if (traitId == null || traitId.isEmpty()) {
+    public static boolean isEntryHidden(String identifier) {
+        if (identifier == null || identifier.isEmpty()) {
             return false;
         }
 
-        String normalizedTraitId = traitId.toLowerCase(Locale.ROOT);
-        for (String rule : hiddenTraitRules) {
+        String normalizedIdentifier = identifier.toLowerCase(Locale.ROOT);
+        for (String rule : hiddenEntryRules) {
             if (rule == null) {
                 continue;
             }
@@ -42,13 +43,13 @@ public class JeiTraitOverviewConfig {
 
             if (normalizedRule.endsWith("*")) {
                 String prefix = normalizedRule.substring(0, normalizedRule.length() - 1);
-                if (!prefix.isEmpty() && normalizedTraitId.startsWith(prefix)) {
+                if (!prefix.isEmpty() && normalizedIdentifier.startsWith(prefix)) {
                     return true;
                 }
                 continue;
             }
 
-            if (normalizedTraitId.equals(normalizedRule)) {
+            if (normalizedIdentifier.equals(normalizedRule)) {
                 return true;
             }
         }
