@@ -11,6 +11,7 @@ import slimeknights.tconstruct.library.client.ToolBuildGuiInfo;
 import slimeknights.tconstruct.library.tools.IToolPart;
 import slimeknights.tconstruct.library.tools.ToolCore;
 import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
+import com.smd.tcongreedyaddon.plugin.solidarytinker.solidarytinker;
 
 public class ClientProxy extends CommonProxy {
 
@@ -50,6 +51,15 @@ public class ClientProxy extends CommonProxy {
             allinonetoolInfo.addSlotPosition(33 + 10 - 10, 42 + 10 + 6); //core
             allinonetoolInfo.addSlotPosition( 33 - 10 - 12, 42); //guard
             TinkerRegistryClient.addToolBuilding(allinonetoolInfo);
+        }
+        if (solidarytinker.soulge != null) {
+            ToolBuildGuiInfo soulgeInfo = new ToolBuildGuiInfo(solidarytinker.soulge);
+            soulgeInfo.addSlotPosition(45, 46); // small blade
+            soulgeInfo.addSlotPosition(25, 46); // soulge heart
+            soulgeInfo.addSlotPosition(45, 26); // small blade
+            soulgeInfo.addSlotPosition(25, 26); // broad blade
+            soulgeInfo.addSlotPosition(7, 62);  // tough handle
+            TinkerRegistryClient.addToolBuilding(soulgeInfo);
         }
     }
 

@@ -14,6 +14,7 @@ public class SoundsHandler {
     public static SoundEvent SUCAI_5;
     public static SoundEvent SUCAI_6;
     public static SoundEvent SUCAI_7;
+    public static SoundEvent SOULGE_BEAM_UP;
     public static void register(IForgeRegistry<SoundEvent> registry) {
         CIALLO = registerSound(registry, "player.ciallo");
         SUCAI_1 = registerSound(registry, "player.sucai_1");
@@ -23,6 +24,7 @@ public class SoundsHandler {
         SUCAI_5 = registerSound(registry, "player.sucai_5");
         SUCAI_6 = registerSound(registry, "player.sucai_6");
         SUCAI_7 = registerSound(registry, "player.sucai_7");
+        SOULGE_BEAM_UP = registerSound(registry, "weapon.soulge_beam_up");
     }
 
     public static SoundEvent registerSound(IForgeRegistry<SoundEvent> registry, String soundName) {

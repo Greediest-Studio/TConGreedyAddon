@@ -79,6 +79,15 @@
         "stream": false
       }
     ]
+  },
+  "weapon.soulge_beam_up": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "minecraft:block.fire.ambient",
+        "stream": false
+      }
+    ]
   }
 }
 

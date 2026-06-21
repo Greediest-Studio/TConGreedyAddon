@@ -12,11 +12,14 @@ item.magiccore.name=The Core Of The Technique
 item.cover.name=Book Case
 item.hinge.name=hinged
 item.bookpage.name=Pages
+item.soulge.name=SoulGe
+item.soulge_heart.name=SoulGe Heart
 
 item.greatblade.desc=The Great Equalizer. The heavy Greatblade sacrifices raw damage for enemy percent HP damage, and excels vs bosses. Slow, Requires two hands!
 item.battleaxe.desc=The Battleaxe is a heavy offensive weapon. As a berserker, you deal and take significantly more damage. \n It is capable of bringing down small trees.
 item.tconstruct:crossbow.desc=The Crossbow is a slow but very powerful weapon. It has to be loaded beforehand, but can be fired at any moment afterwards.\nUses Tinkers' Bolts.
 item.allinonetool.desc=item.allinonetool.desc
+item.soulge.desc=Hold right click to bind souls. Single mode focuses heat, multi mode chains executions.
 
 modifier.explosive_range.name=Catalyzing
 modifier.explosive_range.desc=Explosions have additional range due to additional catalyzation efficiency
@@ -52,6 +55,14 @@ tinkers.scimitar.bleed.duration=Bleed duration: §c%1$,.2fs
 
 tooltip.fullGuard=Perhaps your villager friends may help out with this?
 tooltip.greatbladecore=Can be found in end ships
+tooltip.soulge.mode=Current Mode: %s
+tooltip.soulge.mode.single=Single
+tooltip.soulge.mode.multi=Multi
+stat.soulge_heart.desc=The SoulGe heart controls lock range, stack count, attack cadence, and execution threshold.
+stat.soulge.detection_range.name=Detection Range: %s
+stat.soulge.exert_times.name=Mark Stacks: %s
+stat.soulge.attack_frequency.name=Attack Frequency: %s tick
+stat.soulge.kill_threshold.name=Execution Threshold: %s%%
 
 effect.tcongreedyaddon.berserker=Berserker
 effect.tcongreedyaddon.hemorrhage=Hemorrhage

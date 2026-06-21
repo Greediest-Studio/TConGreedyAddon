@@ -1,0 +1,9 @@
+{
+  "textures": {
+    "layer0": "tcongreedyaddon:item/tool/soulge/head1",
+    "layer1": "tcongreedyaddon:item/tool/soulge/head2",
+    "layer2": "tcongreedyaddon:item/tool/soulge/head3",
+    "layer3": "tcongreedyaddon:item/tool/soulge/heart",
+    "layer4": "tcongreedyaddon:item/tool/soulge/handle"
+  }
+}

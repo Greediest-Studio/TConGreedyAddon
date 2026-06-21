@@ -1,0 +1,7 @@
+{
+  "loader": "tconstruct:material",
+  "parent": "forge:item/default",
+  "textures": {
+    "texture": "tcongreedyaddon:item/tool/soulge_heart/soulge_heart"
+  }
+}
