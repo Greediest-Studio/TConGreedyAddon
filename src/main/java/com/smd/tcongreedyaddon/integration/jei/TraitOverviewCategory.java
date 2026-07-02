@@ -145,15 +145,11 @@ class TraitOverviewCategory implements IRecipeCategory<TraitOverviewWrapper> {
         tooltip.add(hoveredEntry.getDisplayName());
         if (GuiScreen.isShiftKeyDown()) {
             String localized = localizeOrFallback(hoveredEntry.getJeiDescriptionKey());
-            for (String line : Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(localized, 220)) {
-                tooltip.add(line);
-            }
+            tooltip.addAll(Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(localized, 220));
             tooltip.add(I18n.format("gui.jei.trait_overview.source", hoveredEntry.getSourceModId()));
         } else {
             String localized = localizeOrFallback(hoveredEntry.getDescriptionKey());
-            for (String line : Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(localized, 220)) {
-                tooltip.add(line);
-            }
+            tooltip.addAll(Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(localized, 220));
         }
 
         return tooltip;

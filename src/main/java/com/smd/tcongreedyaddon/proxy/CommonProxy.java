@@ -1,8 +1,6 @@
 package com.smd.tcongreedyaddon.proxy;
 
-import com.smd.tcongreedyaddon.util.TicArmorTraitCache;
 import net.minecraft.item.Item;
-import net.minecraftforge.common.MinecraftForge;
 import slimeknights.tconstruct.library.tools.IToolPart;
 import slimeknights.tconstruct.library.tools.ToolCore;
 
@@ -21,7 +19,6 @@ public class CommonProxy {
     }
 
     public void preInit() {
-        MinecraftForge.EVENT_BUS.register(TicArmorTraitCache.INSTANCE);
     }
 
 }

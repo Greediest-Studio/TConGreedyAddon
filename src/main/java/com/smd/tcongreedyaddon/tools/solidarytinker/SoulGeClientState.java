@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon.tools.solidarytinker;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;

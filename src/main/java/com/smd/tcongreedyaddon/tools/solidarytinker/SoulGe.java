@@ -413,7 +413,7 @@ public class SoulGe extends SwordCore {
         Vec3d look = player.getLook(1.0f);
         Vec3d reach = eye.add(look.scale(distance));
 
-        Entity pointed = null;
+        EntityLivingBase pointed = null;
         double closest = distance;
 
         RayTraceResult blockHit = player.world.rayTraceBlocks(eye, reach, false, true, false);
@@ -445,7 +445,7 @@ public class SoulGe extends SwordCore {
             }
         }
 
-        return pointed instanceof EntityLivingBase ? (EntityLivingBase) pointed : null;
+        return pointed instanceof EntityLivingBase ? pointed : null;
     }
 
     @Nullable
@@ -461,7 +461,7 @@ public class SoulGe extends SwordCore {
 
     @SideOnly(Side.CLIENT)
     private List<EntityLivingBase> collectVisualTargets(EntityPlayer player, int detectionRange, @Nullable EntityLivingBase pointed) {
-        return new ArrayList<EntityLivingBase>(collectLinkableMobs(player, detectionRange, pointed));
+        return new ArrayList<>(collectLinkableMobs(player, detectionRange, pointed));
     }
 
     private List<EntityMob> collectOwnedMarkedTargets(EntityPlayer player, int detectionRange) {
