@@ -101,13 +101,13 @@ public class AllInOneTool extends AoeToolCore {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
 
-        if (block == Blocks.GRASS || block == net.minecraft.init.Blocks.DIRT) {
-            world.setBlockState(pos, net.minecraft.init.Blocks.FARMLAND.getDefaultState());
+        if (block == Blocks.GRASS || block == Blocks.DIRT) {
+            world.setBlockState(pos, Blocks.FARMLAND.getDefaultState());
             return EnumActionResult.SUCCESS;
         }
 
-        if (player.isSneaking() && block == net.minecraft.init.Blocks.GRASS) {
-            world.setBlockState(pos, net.minecraft.init.Blocks.GRASS_PATH.getDefaultState());
+        if (player.isSneaking() && block == Blocks.GRASS) {
+            world.setBlockState(pos, Blocks.GRASS_PATH.getDefaultState());
             return EnumActionResult.SUCCESS;
         }
 

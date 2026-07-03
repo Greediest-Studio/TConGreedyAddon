@@ -33,9 +33,6 @@ public class TConGreedyAddon {
 
     public static ModuleManager modulemanager;
 
-    @Mod.Instance(Tags.MOD_ID)
-    public static TConGreedyAddon instance;
-
     @SidedProxy(serverSide = "com.smd.tcongreedyaddon.proxy.CommonProxy",
                 clientSide = "com.smd.tcongreedyaddon.proxy.ClientProxy")
 

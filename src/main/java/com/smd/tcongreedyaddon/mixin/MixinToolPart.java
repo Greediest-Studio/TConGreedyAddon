@@ -69,10 +69,8 @@ public abstract class MixinToolPart implements IToolPart {
     
     /**
      * Override canUseMaterialForRendering from the IToolPart interface.
-     *
      * By implementing this method in the Mixin class, it provides a concrete implementation
      * that takes precedence over the interface's default implementation when ToolPart is loaded.
-     *
      * This method is called by CustomTextureCreator to determine which materials should have
      * colored textures generated for this tool part.
      * 
@@ -113,7 +111,6 @@ public abstract class MixinToolPart implements IToolPart {
     /**
      * Determines if this tool part requires any custom (non-vanilla) stat type.
      * Uses the custom stat types defined in the config.
-     * 
      * IMPORTANT: This method checks if the part's unlocalized name contains any custom stat type identifier.
      * This is more reliable than checking registered tools because some tools may not be registered
      * depending on config settings (e.g., Moar-TCon's Bomb tool depends on enableBomb config).

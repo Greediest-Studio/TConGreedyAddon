@@ -1,5 +1,6 @@
 package com.smd.tcongreedyaddon.plugin;
 
+import com.smd.tcongreedyaddon.TConGreedyAddon;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.config.Configuration;
@@ -9,16 +10,13 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
-import org.apache.logging.log4j.Logger;
 
 public class ModuleManager {
     private final Map<String, IModule> modules = new LinkedHashMap<>();
     private final Set<String> activeModules = new LinkedHashSet<>();
     private final Configuration config;
-    private final Logger logger = LogManager.getLogger("ModuleManager");
 
     public ModuleManager(Configuration config) {
         this.config = config;
@@ -61,7 +59,7 @@ public class ModuleManager {
 
     public void preInitActiveModules(FMLPreInitializationEvent event) {
         List<IModule> sorted = new ArrayList<>(modules.values());
-        sorted.sort(Comparator.comparingInt(IModule::priority).reversed()); // 可以自定义顺序
+        sorted.sort(Comparator.comparingInt(IModule::priority).reversed());
         for (IModule module : sorted) {
             try {
                 boolean enabled = config.get("modules", module.getModuleName(),
@@ -77,7 +75,7 @@ public class ModuleManager {
                     activeModules.add(module.getModuleName());
                 }
             } catch (Exception e) {
-                logger.error("Failed to preInit module: {}", module.getModuleName(), e);
+                TConGreedyAddon.LOGGER.error("Failed to preInit module: {}", module.getModuleName(), e);
             }
         }
     }
@@ -93,7 +91,7 @@ public class ModuleManager {
                     m.initServer(event);
                 }
             } catch (Exception e) {
-                logger.error("Failed to init module: {}", name, e);
+                TConGreedyAddon.LOGGER.error("Failed to init module: {}", name, e);
             }
         }
         if (config.hasChanged()) {
@@ -112,7 +110,7 @@ public class ModuleManager {
                     m.postInitServer(event);
                 }
             } catch (Exception e) {
-                logger.error("Failed to postInit module: {}", name, e);
+                TConGreedyAddon.LOGGER.error("Failed to postInit module: {}", name, e);
             }
         }
         if (config.hasChanged()) {
@@ -125,7 +123,7 @@ public class ModuleManager {
             try {
                 modules.get(name).initItems(event);
             } catch (Exception e) {
-                logger.error("Failed to register items for module: {}", name, e);
+                TConGreedyAddon.LOGGER.error("Failed to register items for module: {}", name, e);
             }
         }
     }
@@ -135,7 +133,7 @@ public class ModuleManager {
             try {
                 modules.get(name).registerModels(event);
             } catch (Exception e) {
-                logger.error("Failed to register models for module: {}", name, e);
+                TConGreedyAddon.LOGGER.error("Failed to register models for module: {}", name, e);
             }
         }
     }
