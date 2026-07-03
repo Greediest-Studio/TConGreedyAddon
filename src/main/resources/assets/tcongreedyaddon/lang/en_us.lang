@@ -5,13 +5,6 @@ item.tconstruct:crossbow.name=Crossbow
 item.allinonetool.name=allinonetool
 
 item.greatbladeCore.name=Greatblade Core
-item.freeze_ray_page.name=Freeze Ray Bookmark
-item.strand_grapple_page.name=Strand Grapple Bookmark
-item.thermal_sunder_page.name=Thermal Sunder Bookmark
-item.magiccore.name=The Core Of The Technique
-item.cover.name=Book Case
-item.hinge.name=hinged
-item.bookpage.name=Pages
 item.soulge.name=SoulGe
 item.soulge_heart.name=SoulGe Heart
 

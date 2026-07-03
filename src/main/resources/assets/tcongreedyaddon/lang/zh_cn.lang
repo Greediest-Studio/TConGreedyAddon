@@ -3,15 +3,8 @@ item.battleaxe.name=战斧
 item.dagger.name=匕首
 item.tconstruct:crossbow.name=十字弩
 item.allinonetool.name=全能工具
-item.freeze_ray_page.name=冻结射线书签
-item.strand_grapple_page.name=缚丝勾爪书签
-item.thermal_sunder_page.name=热能抽离书签
 
 item.greatbladeCore.name=组装核心
-item.magiccore.name=术式核心
-item.cover.name=书壳
-item.hinge.name=铰链
-item.bookpage.name=书页
 item.soulge.name=魂戈
 item.soulge_heart.name=魂珠
 
