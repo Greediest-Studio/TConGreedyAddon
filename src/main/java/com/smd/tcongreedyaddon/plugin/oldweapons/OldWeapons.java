@@ -18,7 +18,6 @@ import com.smd.tcongreedyaddon.TConGreedyAddon;
 import com.smd.tcongreedyaddon.init.TotalTinkersRegister;
 
 public class OldWeapons implements IModule {
-
     private boolean enabledrag;
     private boolean enableBattleAxe;
     private boolean enableGreatblade;
@@ -40,24 +39,11 @@ public class OldWeapons implements IModule {
     }
 
     @Override
-    public boolean hasDetailedConfig() {
-        return true;
-    }
-
-    @Override
     public void setupModuleConfig(ModuleConfig config) {
-        config.addBoolean("enabledrag", true, "是否启用短剑");
-        config.addBoolean("enableBattleAxe", true, "是否启用战斧");
-        config.addBoolean("enableGreatblade", true, "是否启用巨剑");
-        config.addBoolean("enableAllInOneTool", true, "是否启用多功能工具");
-    }
-
-    @Override
-    public void loadModuleConfig(ModuleConfig config) {
-        enabledrag = config.getBoolean("enabledrag");
-        enableBattleAxe = config.getBoolean("enableBattleAxe");
-        enableGreatblade = config.getBoolean("enableGreatblade");
-        enableAllInOneTool = config.getBoolean("enableAllInOneTool");
+        enabledrag = config.bool("enabledrag", true, "是否启用短剑");
+        enableBattleAxe = config.bool("enableBattleAxe", true, "是否启用战斧");
+        enableGreatblade = config.bool("enableGreatblade", true, "是否启用巨剑");
+        enableAllInOneTool = config.bool("enableAllInOneTool", true, "是否启用多功能工具");
     }
 
     @Override

@@ -11,7 +11,6 @@ import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
 
 public class something implements IModule {
-
     @Override
     public String getModuleName() { return "something"; }
 
@@ -37,20 +36,9 @@ public class something implements IModule {
     }
 
     @Override
-    public boolean hasDetailedConfig() {
-        return true;
-    }
-
-    @Override
     public void setupModuleConfig(ModuleConfig config) {
-        config.addString("baiduAppId", "", "Baidu Translate APP ID");
-        config.addString("baiduAppKey", "", "Baidu Translate APP Key");
-    }
-
-    @Override
-    public void loadModuleConfig(ModuleConfig config) {
-        baiduAppId = config.getString("baiduAppId");
-        baiduAppKey = config.getString("baiduAppKey");
+        baiduAppId = config.string("baiduAppId", "", "Baidu Translate APP ID");
+        baiduAppKey = config.string("baiduAppKey", "", "Baidu Translate APP Key");
     }
 
     @Override

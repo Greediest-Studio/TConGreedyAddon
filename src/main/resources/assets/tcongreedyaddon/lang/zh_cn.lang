@@ -20,7 +20,6 @@ item.battleaxe.desc=战斧是种重型攻击类武器。手持这把武器，化
 item.tconstruct:crossbow.desc=十字弩是一个装填速度缓慢但威力强大的武器。它必须事先装填好弹药，但装填完毕后就可以随时发射。\n使用匠魂的弩箭。
 item.dagger.desc=匕首剑刃较小。
 item.allinonetool.desc=这是一种更加全面的工具，同时拥有镐斧铲锄的功能，但是代价是造价更高和无法用于战斗
-item.magicbook.desc=新类型的武器
 item.soulge.desc=持续右键锁定灵魂，单头聚焦灼烧，多头连锁处决。
 
 tooltip.greatbladecore=可以在末地船中找到
@@ -61,7 +60,7 @@ modifier.connection_404.desc=§oConnection ERROR§r\n每120秒异步检测一次
 modifier.autobow.name=自动射击
 modifier.autobow.desc=射手的灵魂
 modifier.overcharge.name=超蓄力
-modifier.overcharge.desc=潜伏弓这一块
+modifier.overcharge.desc=潜伏攻击这一块
 
 
 modifier.dreadplague.name=恐惧疫染

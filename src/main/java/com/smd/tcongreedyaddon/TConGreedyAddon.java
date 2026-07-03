@@ -43,8 +43,6 @@ public class TConGreedyAddon {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        LOGGER.info("TConGreedyAddon Pre-Initialization");
-        LOGGER.info("Material Shader Fix Mixin is active!");
 
         config = new Configuration(event.getSuggestedConfigurationFile());
         modulemanager = new ModuleManager(config);
@@ -60,14 +58,12 @@ public class TConGreedyAddon {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        LOGGER.info("TConGreedyAddon Initialization");
         modulemanager.initActiveModules(event);
         proxy.initToolGuis();
     }
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        LOGGER.info("TConGreedyAddon Post-Initialization");
         modulemanager.postInitActiveModules(event);
         proxy.registerBookData();
         proxy.initToolGuis();

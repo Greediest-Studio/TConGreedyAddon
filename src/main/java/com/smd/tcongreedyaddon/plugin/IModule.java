@@ -16,8 +16,6 @@ public interface IModule {
     default void initItems(RegistryEvent.Register<Item> event) {}
     default boolean isEnabledByDefault() {return true;}
     default void setupModuleConfig(ModuleConfig config) {}
-    default void loadModuleConfig(ModuleConfig config) {}
-    default boolean hasDetailedConfig() { return false; }
     default void registerModels(ModelRegistryEvent event) {}
     default void preInitClient(FMLPreInitializationEvent event) {}
     default void preInitServer(FMLPreInitializationEvent event) {}

@@ -18,7 +18,6 @@ public class ModuleManager {
     private final Map<String, IModule> modules = new LinkedHashMap<>();
     private final Set<String> activeModules = new LinkedHashSet<>();
     private final Configuration config;
-    private final Map<String, ModuleConfig> moduleConfigs = new HashMap<>();
     private final Logger logger = LogManager.getLogger("ModuleManager");
 
     public ModuleManager(Configuration config) {
@@ -38,11 +37,7 @@ public class ModuleManager {
                     "Enable " + module.getModuleName() + " integration");
         }
         for (IModule module : modules.values()) {
-            if (module.hasDetailedConfig()) {
-                ModuleConfig mc = new ModuleConfig(module.getModuleName(), config);
-                moduleConfigs.put(module.getModuleName(), mc);
-                module.setupModuleConfig(mc);
-            }
+            module.setupModuleConfig(new ModuleConfig(module.getModuleName(), config));
         }
         if (config.hasChanged()) {
             config.save();
@@ -56,13 +51,11 @@ public class ModuleManager {
             if (module == null) {
                 continue;
             }
-            if (module.hasDetailedConfig()) {
-                ModuleConfig mc = moduleConfigs.get(module.getModuleName());
-                if (mc != null) {
-                    module.loadModuleConfig(mc);
-                    module.onConfigReload();
-                }
-            }
+            module.setupModuleConfig(new ModuleConfig(module.getModuleName(), config));
+            module.onConfigReload();
+        }
+        if (config.hasChanged()) {
+            config.save();
         }
     }
 
@@ -74,10 +67,7 @@ public class ModuleManager {
                 boolean enabled = config.get("modules", module.getModuleName(),
                         module.isEnabledByDefault()).getBoolean() && module.isModAvailable();
                 if (enabled) {
-                    if (module.hasDetailedConfig()) {
-                        ModuleConfig mc = moduleConfigs.get(module.getModuleName());
-                        module.loadModuleConfig(mc);
-                    }
+                    module.setupModuleConfig(new ModuleConfig(module.getModuleName(), config));
                     module.preInit();
                     if (isClientSide()) {
                         module.preInitClient(event);

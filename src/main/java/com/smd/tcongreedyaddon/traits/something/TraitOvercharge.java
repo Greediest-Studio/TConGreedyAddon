@@ -1,4 +1,4 @@
-package com.smd.tcongreedyaddon.traits.something; // 请替换为您的包名
+package com.smd.tcongreedyaddon.traits.something;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
