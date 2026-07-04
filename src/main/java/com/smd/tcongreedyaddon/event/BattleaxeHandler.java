@@ -6,6 +6,7 @@ import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
 
 public class BattleaxeHandler {
     public static final BattleaxeHandler INSTANCE = new BattleaxeHandler();
+
     @SubscribeEvent
     public void bonusAxeToSelf(LivingHurtEvent event) {
         if (event.getEntityLiving().getHeldItemMainhand().getItem().equals(OldWeapons.battleaxe)) {

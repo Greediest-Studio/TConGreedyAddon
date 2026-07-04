@@ -2,6 +2,7 @@ package com.smd.tcongreedyaddon.proxy;
 
 import com.smd.tcongreedyaddon.init.BookTransformerAppendModifiers;
 import net.minecraft.item.Item;
+import net.minecraftforge.fml.common.Loader;
 import slimeknights.mantle.client.book.repository.BookRepository;
 import slimeknights.mantle.client.book.repository.FileRepository;
 import slimeknights.tconstruct.common.ModelRegisterUtil;
@@ -70,7 +71,7 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void registerBookData() {
-        TinkerBook.INSTANCE.addTransformer(new BookTransformerAppendModifiers());
+            TinkerBook.INSTANCE.addTransformer(new BookTransformerAppendModifiers());
     }
 
     @Override

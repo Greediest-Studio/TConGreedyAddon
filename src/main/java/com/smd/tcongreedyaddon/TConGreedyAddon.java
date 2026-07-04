@@ -4,10 +4,13 @@ import com.smd.tcongreedyaddon.init.SoundsHandler;
 import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.Modules;
+import net.minecraft.item.Item;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -24,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 @Mod(name = Tags.MOD_NAME,
      modid = Tags.MOD_ID,
      version = Tags.VERSION,
-     dependencies = "after:tconstruct;after:plustic;after:tconevo",
+     dependencies = "after:tconstruct",
      guiFactory = "com.smd.tcongreedyaddon.gui.TConGuiFactory")
 public class TConGreedyAddon {
 
@@ -38,10 +41,11 @@ public class TConGreedyAddon {
 
     public static CommonProxy proxy;
 
-    @Mod.EventHandler
+    @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
 
         config = new Configuration(event.getSuggestedConfigurationFile());
+
         modulemanager = new ModuleManager(config);
 
         Modules.registerAll(modulemanager);
@@ -53,17 +57,20 @@ public class TConGreedyAddon {
         proxy.preInit();
     }
 
-    @Mod.EventHandler
+    @EventHandler
     public void init(FMLInitializationEvent event) {
         modulemanager.initActiveModules(event);
-        proxy.initToolGuis();
     }
 
-    @Mod.EventHandler
+    @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
+
         modulemanager.postInitActiveModules(event);
-        proxy.registerBookData();
-        proxy.initToolGuis();
+
+        if(Loader.isModLoaded("tconstruct")) {
+            proxy.registerBookData();
+            proxy.initToolGuis();
+        }
 
         MaterialRenderingDebugHelper.logMaterialShaderFixSummary();
     }

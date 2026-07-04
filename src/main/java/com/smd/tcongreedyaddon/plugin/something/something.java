@@ -11,8 +11,11 @@ import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
 
 public class something implements IModule {
+
     @Override
-    public String getModuleName() { return "something"; }
+    public String getModuleName() {
+        return "something";
+    }
 
     public static AbstractTrait ciallo;
     public static AbstractTrait soundeffects;
