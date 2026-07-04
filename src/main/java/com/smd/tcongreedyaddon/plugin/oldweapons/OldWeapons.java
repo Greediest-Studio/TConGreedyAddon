@@ -8,7 +8,6 @@ import com.smd.tcongreedyaddon.traits.modifiers.base.ModTest;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tools.ToolPart;
@@ -32,11 +31,6 @@ public class OldWeapons implements IModule {
     public static WeaponGreatblade greatblade;
     public static AllInOneTool allinonetool;
     public static ModTest test;
-
-    @Override
-    public boolean isModAvailable() {
-        return Loader.isModLoaded("tconstruct");
-    }
 
     @Override
     public void setupModuleConfig(ModuleConfig config) {

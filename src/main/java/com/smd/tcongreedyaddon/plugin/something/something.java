@@ -6,7 +6,6 @@ import com.smd.tcongreedyaddon.plugin.ModuleConfig;
 import com.smd.tcongreedyaddon.traits.modifiers.base.something.TraitEraseCommand;
 import com.smd.tcongreedyaddon.traits.modifiers.base.something.TraitLevelingDamage;
 import com.smd.tcongreedyaddon.traits.something.*;
-import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
 
@@ -32,11 +31,6 @@ public class something implements IModule {
 
     public static String baiduAppId = "";
     public static String baiduAppKey = "";
-
-    @Override
-    public boolean isModAvailable() {
-        return Loader.isModLoaded("tconstruct");
-    }
 
     @Override
     public void setupModuleConfig(ModuleConfig config) {

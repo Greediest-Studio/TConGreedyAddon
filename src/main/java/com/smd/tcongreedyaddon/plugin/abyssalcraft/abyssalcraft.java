@@ -7,7 +7,6 @@ import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitDreadPlague;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitDreadPurity;
 import com.smd.tcongreedyaddon.traits.modifiers.base.abyssalcraft.ModLightPierce;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.materials.*;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
@@ -25,11 +24,6 @@ public class abyssalcraft implements IModule {
     public static AbstractTrait dread_purity;
 
     public static ModLightPierce lightpierce;
-
-    @Override
-    public boolean isModAvailable() {
-        return Loader.isModLoaded("tconstruct") && Loader.isModLoaded("abyssalcraft");
-    }
 
     @Override
     public void init() {

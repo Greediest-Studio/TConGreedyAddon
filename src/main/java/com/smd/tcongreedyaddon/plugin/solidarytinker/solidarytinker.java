@@ -9,7 +9,6 @@ import com.smd.tcongreedyaddon.tools.solidarytinker.SoulGeTypes;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Loader;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tools.ToolPart;
 
@@ -21,11 +20,6 @@ public class solidarytinker implements IModule {
     @Override
     public String getModuleName() {
         return "solidarytinker";
-    }
-
-    @Override
-    public boolean isModAvailable() {
-        return Loader.isModLoaded("tconstruct");
     }
 
     @Override

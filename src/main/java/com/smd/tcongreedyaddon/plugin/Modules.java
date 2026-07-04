@@ -4,6 +4,7 @@ import com.smd.tcongreedyaddon.plugin.abyssalcraft.abyssalcraft;
 import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
 import com.smd.tcongreedyaddon.plugin.solidarytinker.solidarytinker;
 import com.smd.tcongreedyaddon.plugin.something.something;
+import net.minecraftforge.fml.common.Loader;
 
 public final class Modules {
 
@@ -11,9 +12,14 @@ public final class Modules {
     }
 
     public static void registerAll(ModuleManager manager) {
-        manager.registerModule(new OldWeapons());
-        manager.registerModule(new abyssalcraft());
-        manager.registerModule(new something());
-        manager.registerModule(new solidarytinker());
+        if (Loader.isModLoaded("tconstruct")) {
+            manager.registerModule(new OldWeapons());
+            manager.registerModule(new something());
+            manager.registerModule(new solidarytinker());
+
+            if (Loader.isModLoaded("abyssalcraft")) {
+                manager.registerModule(new abyssalcraft());
+            }
+        }
     }
 }

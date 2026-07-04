@@ -63,7 +63,7 @@ public class ModuleManager {
         for (IModule module : sorted) {
             try {
                 boolean enabled = config.get("modules", module.getModuleName(),
-                        module.isEnabledByDefault()).getBoolean() && module.isModAvailable();
+                        module.isEnabledByDefault()).getBoolean();
                 if (enabled) {
                     module.setupModuleConfig(new ModuleConfig(module.getModuleName(), config));
                     module.preInit();
