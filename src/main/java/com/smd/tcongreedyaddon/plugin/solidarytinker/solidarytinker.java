@@ -46,6 +46,13 @@ public class solidarytinker implements IModule {
     }
 
     @Override
+    public void initItems(RegistryEvent.Register<Item> event) {
+        soulgeHeart = TotalTinkersRegister.registerToolPart(event, "soulge_heart", Material.VALUE_Ingot * 8);
+        soulge = new SoulGe();
+        TotalTinkersRegister.initForgeTool(soulge, event);
+    }
+
+    @Override
     public void postInitClient(FMLPostInitializationEvent event) {
         if (solidarytinker.soulge != null) {
             ToolBuildGuiInfo soulgeInfo = new ToolBuildGuiInfo(solidarytinker.soulge);
@@ -56,12 +63,5 @@ public class solidarytinker implements IModule {
             soulgeInfo.addSlotPosition(7, 62);  // tough handle
             TinkerRegistryClient.addToolBuilding(soulgeInfo);
         }
-    }
-
-    @Override
-    public void initItems(RegistryEvent.Register<Item> event) {
-        soulgeHeart = TotalTinkersRegister.registerToolPart(event, "soulge_heart", Material.VALUE_Ingot * 8);
-        soulge = new SoulGe();
-        TotalTinkersRegister.initForgeTool(soulge, event);
     }
 }

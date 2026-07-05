@@ -23,6 +23,7 @@ public class oldweapons implements IModule {
     private boolean enableBattleAxe;
     private boolean enableGreatblade;
     private boolean enableAllInOneTool;
+    private boolean enablecrossbowoveride;
 
     @Override
     public String getModuleName() {
@@ -42,6 +43,7 @@ public class oldweapons implements IModule {
         enableBattleAxe = config.bool("enableBattleAxe", true, "是否启用战斧");
         enableGreatblade = config.bool("enableGreatblade", true, "是否启用巨剑");
         enableAllInOneTool = config.bool("enableAllInOneTool", true, "是否启用多功能工具");
+        enablecrossbowoveride = config.bool("enablecrossbowoveride",true,"是否启用十字弩自动装填");
     }
 
     @Override
@@ -64,9 +66,10 @@ public class oldweapons implements IModule {
             TotalTinkersRegister.initBaseForgeTool(dagger,event);
         }
 
-        TinkerRangedWeapons.crossBow = new WeaponCrossbowOveride();
-        TotalTinkersRegister.initForgeTool(TinkerRangedWeapons.crossBow, event);
-
+        if(enablecrossbowoveride) {
+            TinkerRangedWeapons.crossBow = new WeaponCrossbowOveride();
+            TotalTinkersRegister.initForgeTool(TinkerRangedWeapons.crossBow, event);
+        }
 
         if (enableGreatblade) {
             greatblade = new WeaponGreatblade();
@@ -76,6 +79,7 @@ public class oldweapons implements IModule {
 
     @Override
     public void init() {
+
         test = new ModTest();
         TraitRegistry.register(test);
         test.addItem("stone", 1, 1);
@@ -110,7 +114,6 @@ public class oldweapons implements IModule {
             daggerInfo.addSlotPosition(33 + 20 - 5, 42 - 20 + 4); // blade
             daggerInfo.addSlotPosition(33 - 2 - 1, 42 + 2); // guard
             TinkerRegistryClient.addToolBuilding(daggerInfo);
-
         }
         if (enableAllInOneTool) {
             ToolBuildGuiInfo allinonetoolInfo = new ToolBuildGuiInfo(allinonetool);

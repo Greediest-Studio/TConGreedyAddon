@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
-import com.smd.tcongreedyaddon.util.MaterialRenderingDebugHelper;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.Modules;
 import net.minecraft.item.Item;
@@ -68,8 +67,6 @@ public class TConGreedyAddon {
         if(Loader.isModLoaded("tconstruct")) {
             proxy.registerBookData();
         }
-
-        MaterialRenderingDebugHelper.logMaterialShaderFixSummary();
     }
 
     @SubscribeEvent
