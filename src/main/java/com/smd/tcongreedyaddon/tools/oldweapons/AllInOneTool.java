@@ -1,7 +1,7 @@
 package com.smd.tcongreedyaddon.tools.oldweapons;
 
 import com.google.common.collect.ImmutableSet;
-import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
+import com.smd.tcongreedyaddon.plugin.oldweapons.oldweapons;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -53,7 +53,7 @@ public class AllInOneTool extends AoeToolCore {
                 PartMaterialType.head(TinkerTools.pickHead),
                 PartMaterialType.head(TinkerTools.broadAxeHead),
                 PartMaterialType.head(TinkerTools.shovelHead),
-                PartMaterialType.extra(OldWeapons.greatbladeCore));
+                PartMaterialType.extra(oldweapons.greatbladeCore));
 
         addCategory(Category.HARVEST);
         this.setHarvestLevel("pickaxe", 0);

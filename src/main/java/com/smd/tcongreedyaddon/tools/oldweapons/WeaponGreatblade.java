@@ -14,7 +14,7 @@ import slimeknights.tconstruct.library.tinkering.PartMaterialType;
 import slimeknights.tconstruct.library.tools.SwordCore;
 import slimeknights.tconstruct.library.tools.ToolNBT;
 import slimeknights.tconstruct.tools.TinkerTools;
-import com.smd.tcongreedyaddon.plugin.oldweapons.OldWeapons;
+import com.smd.tcongreedyaddon.plugin.oldweapons.oldweapons;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -25,7 +25,7 @@ public class WeaponGreatblade extends SwordCore {
         super(PartMaterialType.handle(TinkerTools.toughToolRod),
                 PartMaterialType.head(TinkerTools.largeSwordBlade),
                 PartMaterialType.head(TinkerTools.largeSwordBlade),
-                PartMaterialType.extra(OldWeapons.greatbladeCore),
+                PartMaterialType.extra(oldweapons.greatbladeCore),
                 PartMaterialType.extra(TinkerTools.wideGuard));
 
         this.addCategory(Category.WEAPON);

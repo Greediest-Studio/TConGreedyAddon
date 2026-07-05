@@ -53,8 +53,6 @@ public class TConGreedyAddon {
         modulemanager.setupConfig();
 
         modulemanager.preInitActiveModules(event);
-
-        proxy.preInit();
     }
 
     @EventHandler
@@ -69,7 +67,6 @@ public class TConGreedyAddon {
 
         if(Loader.isModLoaded("tconstruct")) {
             proxy.registerBookData();
-            proxy.initToolGuis();
         }
 
         MaterialRenderingDebugHelper.logMaterialShaderFixSummary();
@@ -78,5 +75,10 @@ public class TConGreedyAddon {
     @SubscribeEvent
     public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
         SoundsHandler.register(event.getRegistry());
+    }
+
+    @SubscribeEvent
+    public static void initItems(RegistryEvent.Register<Item> event) {
+        TConGreedyAddon.modulemanager.initItems(event);
     }
 }

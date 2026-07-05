@@ -9,6 +9,9 @@ import com.smd.tcongreedyaddon.tools.solidarytinker.SoulGeTypes;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import slimeknights.tconstruct.library.TinkerRegistryClient;
+import slimeknights.tconstruct.library.client.ToolBuildGuiInfo;
 import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.tools.ToolPart;
 
@@ -40,6 +43,19 @@ public class solidarytinker implements IModule {
     @Override
     public void initClient(net.minecraftforge.fml.common.event.FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(SoulGeRenderHandler.INSTANCE);
+    }
+
+    @Override
+    public void postInitClient(FMLPostInitializationEvent event) {
+        if (solidarytinker.soulge != null) {
+            ToolBuildGuiInfo soulgeInfo = new ToolBuildGuiInfo(solidarytinker.soulge);
+            soulgeInfo.addSlotPosition(45, 46); // small blade
+            soulgeInfo.addSlotPosition(25, 46); // soulge heart
+            soulgeInfo.addSlotPosition(45, 26); // small blade
+            soulgeInfo.addSlotPosition(25, 26); // broad blade
+            soulgeInfo.addSlotPosition(7, 62);  // tough handle
+            TinkerRegistryClient.addToolBuilding(soulgeInfo);
+        }
     }
 
     @Override

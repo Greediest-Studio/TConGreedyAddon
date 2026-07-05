@@ -3,8 +3,6 @@ package com.smd.tcongreedyaddon.init;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import slimeknights.tconstruct.library.TinkerRegistry;
 import slimeknights.tconstruct.library.tools.Pattern;
 import slimeknights.tconstruct.library.tools.ToolCore;
@@ -12,18 +10,17 @@ import com.smd.tcongreedyaddon.TConGreedyAddon;
 import slimeknights.tconstruct.library.tools.ToolPart;
 import slimeknights.tconstruct.tools.TinkerTools;
 
-@Mod.EventBusSubscriber
 public class TotalTinkersRegister {
-
-    @SubscribeEvent
-    public static void initItems(RegistryEvent.Register<Item> event) {
-        TConGreedyAddon.modulemanager.initItems(event);
-    }
 
     public static void initForgeTool(ToolCore core, RegistryEvent.Register<Item> event) {
         event.getRegistry().register(core);
         TinkerRegistry.registerToolForgeCrafting(core);
         TConGreedyAddon.proxy.registerToolModel(core);
+    }
+
+    public static void initBaseForgeTool(ToolCore core, RegistryEvent.Register<Item> event){
+        initForgeTool(core,event);
+        TinkerRegistry.registerToolStationCrafting(core);
     }
 
     public static ToolPart registerToolPart(RegistryEvent.Register<Item> event,
