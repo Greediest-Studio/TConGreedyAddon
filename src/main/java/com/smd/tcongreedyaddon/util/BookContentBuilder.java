@@ -51,6 +51,14 @@ public class BookContentBuilder {
         return this;
     }
 
+    public BookContentBuilder withBowTools() {
+        return addDemoTools(
+                "tconstruct:shortbow",
+                "tconstruct:longbow",
+                "tconstruct:crossbow"
+        );
+    }
+
     public BookContentBuilder withDefaultDemoTools() {
         return addDemoTools(
                 "tconstruct:pickaxe",

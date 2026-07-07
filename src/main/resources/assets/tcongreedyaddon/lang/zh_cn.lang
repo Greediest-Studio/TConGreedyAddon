@@ -1,3 +1,5 @@
+itemGroup.tcongreedyaddon=贪婪匠魂
+
 item.greatblade.name=巨剑
 item.battleaxe.name=战斧
 item.dagger.name=匕首
@@ -7,6 +9,8 @@ item.allinonetool.name=全能工具
 item.greatbladeCore.name=组装核心
 item.soulge.name=魂戈
 item.soulge_heart.name=魂珠
+
+item.tcongreedyaddon.bow_clicker.name=响片
 
 item.greatblade.desc=这一武器的性能平衡且出色。沉重的巨剑牺牲了高攻击力,换取了更多的槽位，攻击速度慢，需要两只手挥动！
 item.battleaxe.desc=战斧是种重型攻击类武器。手持这把武器，化身为狂战士的你可以造成比平常大得多的伤害，但受到的伤害也会变为2倍。\n它还可以用于砍伐一些小型树木。

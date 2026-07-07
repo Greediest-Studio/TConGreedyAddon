@@ -3,7 +3,10 @@ package com.smd.tcongreedyaddon;
 import com.smd.tcongreedyaddon.init.SoundsHandler;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.Modules;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
@@ -39,6 +42,15 @@ public class TConGreedyAddon {
                 clientSide = "com.smd.tcongreedyaddon.proxy.ClientProxy")
 
     public static CommonProxy proxy;
+
+    public static final CreativeTabs TAB = new CreativeTabs(Tags.MOD_ID)
+    {
+        @Override
+        public ItemStack createIcon()
+        {
+            return new ItemStack(Items.NETHER_STAR);
+        }
+    };
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
