@@ -13,6 +13,7 @@ import java.util.UUID;
 public class SoulGeEventHandler {
 
     public static final SoulGeEventHandler INSTANCE = new SoulGeEventHandler();
+
     private static final double EXECUTION_LIFT_HEIGHT = 3.5d;
     private static final double EXECUTION_LIFT_STEP = 1.25d;
     private static final double EXECUTION_DROP_SPEED = -3.2d;

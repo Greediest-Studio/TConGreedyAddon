@@ -5,6 +5,7 @@ item.battleaxe.name=Battleaxe
 item.dagger.name=Dagger
 item.tconstruct:crossbow.name=Crossbow
 item.allinonetool.name=allinonetool
+item.fishingrod.name=Fishing Rod
 
 item.greatbladeCore.name=Greatblade Core
 item.soulge.name=SoulGe
@@ -17,6 +18,7 @@ item.battleaxe.desc=The Battleaxe is a heavy offensive weapon. As a berserker, y
 item.tconstruct:crossbow.desc=The Crossbow is a slow but very powerful weapon. It has to be loaded beforehand, but can be fired at any moment afterwards.\nUses Tinkers' Bolts.
 item.allinonetool.desc=item.allinonetool.desc
 item.soulge.desc=Hold right click to bind souls. Single mode focuses heat, multi mode chains executions.
+item.fishingrod.desc=A constructable Tinkers' fishing rod. Right click to cast or retrieve; hooked mobs take material-based damage and are pulled in.
 
 modifier.explosive_range.name=Catalyzing
 modifier.explosive_range.desc=Explosions have additional range due to additional catalyzation efficiency

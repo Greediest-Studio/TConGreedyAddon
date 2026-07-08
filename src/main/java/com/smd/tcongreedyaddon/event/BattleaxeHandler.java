@@ -5,6 +5,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import com.smd.tcongreedyaddon.plugin.oldweapons.oldweapons;
 
 public class BattleaxeHandler {
+
     public static final BattleaxeHandler INSTANCE = new BattleaxeHandler();
 
     @SubscribeEvent

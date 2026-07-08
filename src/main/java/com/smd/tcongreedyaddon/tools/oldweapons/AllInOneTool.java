@@ -143,14 +143,13 @@ public class AllInOneTool extends AoeToolCore {
         if (StringUtils.isNullOrEmpty(toolClass)) {
             return -1;
         }
-        if (toolClass.equals("pickaxe")) {
-            return this.getPickLevel(stack);
-        }
-        if (toolClass.equals("axe")) {
-            return this.getAxeLevel(stack);
-        }
-        if (toolClass.equals("shovel")) {
-            return this.getShovelLevel(stack);
+        switch (toolClass) {
+            case "pickaxe":
+                return this.getPickLevel(stack);
+            case "axe":
+                return this.getAxeLevel(stack);
+            case "shovel":
+                return this.getShovelLevel(stack);
         }
         return super.getHarvestLevel(stack, toolClass, player, blockState);
     }

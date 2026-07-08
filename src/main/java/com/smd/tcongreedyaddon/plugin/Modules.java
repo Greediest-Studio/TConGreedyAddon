@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.plugin;
 
 import com.smd.tcongreedyaddon.plugin.abyssalcraft.abyssalcraft;
+import com.smd.tcongreedyaddon.plugin.fishingrod.fishingrod;
 import com.smd.tcongreedyaddon.plugin.oldweapons.oldweapons;
 import com.smd.tcongreedyaddon.plugin.solidarytinker.solidarytinker;
 import com.smd.tcongreedyaddon.plugin.something.something;
@@ -16,6 +17,7 @@ public final class Modules {
             manager.registerModule(new oldweapons());
             manager.registerModule(new something());
             manager.registerModule(new solidarytinker());
+            manager.registerModule(new fishingrod());
 
             if (Loader.isModLoaded("abyssalcraft")) {
                 manager.registerModule(new abyssalcraft());

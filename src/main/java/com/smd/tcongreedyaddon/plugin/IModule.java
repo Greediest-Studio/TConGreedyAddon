@@ -6,6 +6,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 
 public interface IModule {
     String getModuleName();
@@ -13,6 +14,7 @@ public interface IModule {
     default void init() {}
     default void postInit() {}
     default void initItems(RegistryEvent.Register<Item> event) {}
+    default void initEntities(RegistryEvent.Register<EntityEntry> event) {}
     default boolean isEnabledByDefault() {return true;}
     default void setupModuleConfig(ModuleConfig config) {}
     default void registerModels(ModelRegistryEvent event) {}

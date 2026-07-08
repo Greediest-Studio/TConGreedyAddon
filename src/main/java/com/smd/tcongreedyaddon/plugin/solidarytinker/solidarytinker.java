@@ -9,6 +9,7 @@ import com.smd.tcongreedyaddon.tools.solidarytinker.SoulGeTypes;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import slimeknights.tconstruct.library.TinkerRegistryClient;
 import slimeknights.tconstruct.library.client.ToolBuildGuiInfo;
@@ -41,7 +42,7 @@ public class solidarytinker implements IModule {
     }
 
     @Override
-    public void initClient(net.minecraftforge.fml.common.event.FMLInitializationEvent event) {
+    public void initClient(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(SoulGeRenderHandler.INSTANCE);
     }
 

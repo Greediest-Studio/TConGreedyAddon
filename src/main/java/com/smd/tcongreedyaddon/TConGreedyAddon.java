@@ -8,6 +8,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
@@ -18,9 +19,12 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 
 import com.smd.tcongreedyaddon.proxy.CommonProxy;
 
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -89,5 +93,16 @@ public class TConGreedyAddon {
     @SubscribeEvent
     public static void initItems(RegistryEvent.Register<Item> event) {
         TConGreedyAddon.modulemanager.initItems(event);
+    }
+
+    @SubscribeEvent
+    public static void initEntities(RegistryEvent.Register<EntityEntry> event) {
+        TConGreedyAddon.modulemanager.initEntities(event);
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public static void registerModels(ModelRegistryEvent event) {
+        TConGreedyAddon.modulemanager.onModelRegistry(event);
     }
 }

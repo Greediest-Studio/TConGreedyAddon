@@ -9,6 +9,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.*;
@@ -124,6 +125,16 @@ public class ModuleManager {
                 modules.get(name).initItems(event);
             } catch (Exception e) {
                 TConGreedyAddon.LOGGER.error("Failed to register items for module: {}", name, e);
+            }
+        }
+    }
+
+    public void initEntities(RegistryEvent.Register<EntityEntry> event) {
+        for (String name : activeModules) {
+            try {
+                modules.get(name).initEntities(event);
+            } catch (Exception e) {
+                TConGreedyAddon.LOGGER.error("Failed to register entities for module: {}", name, e);
             }
         }
     }
