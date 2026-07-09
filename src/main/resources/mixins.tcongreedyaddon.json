@@ -1,16 +1,15 @@
 {
-  "package": "com.smd.tcongreedyaddon.mixin.vanilla",
-  "plugin": "com.smd.tcongreedyaddon.mixin.MixinPlugin",
+  "package": "com.smd.tcongreedyaddon.mixin",
   "required": true,
   "refmap": "mixins.tcongreedyaddon.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8.5",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MixinEntityFishHook"
+    "vanilla.MixinEntityFishHook"
   ],
   "server": [],
   "client": [
-    "MixinRenderFish"
+    "vanilla.MixinRenderFish"
   ]
 }

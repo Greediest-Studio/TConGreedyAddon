@@ -50,6 +50,11 @@ public class TinkerFishingRod extends ProjectileLauncherCore {
     private final boolean combatDamage;
     private final double hookInitialSpeedMultiplier;
 
+    @Override
+    public boolean onLeftClickEntity(ItemStack stack, EntityPlayer player, Entity entity) {
+        return true;
+    }
+
     public TinkerFishingRod(boolean combatDamage, double hookInitialSpeedMultiplier) {
         super(PartMaterialType.bow(TinkerTools.bowLimb),
               PartMaterialType.bowstring(TinkerTools.bowString),

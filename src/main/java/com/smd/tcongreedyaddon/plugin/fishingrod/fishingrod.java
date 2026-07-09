@@ -6,9 +6,7 @@ import com.smd.tcongreedyaddon.plugin.ModuleConfig;
 import com.smd.tcongreedyaddon.tools.fishingrod.TinkerFishingRod;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
 import slimeknights.tconstruct.library.TinkerRegistryClient;
 import slimeknights.tconstruct.library.client.ToolBuildGuiInfo;
 
