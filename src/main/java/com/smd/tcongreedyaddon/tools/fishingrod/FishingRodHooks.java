@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityFishHook;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
 import slimeknights.tconstruct.library.modifiers.IModifier;
 import slimeknights.tconstruct.library.traits.ITrait;
 import slimeknights.tconstruct.library.utils.TinkerUtil;
@@ -30,12 +31,29 @@ public final class FishingRodHooks {
         return isFishingRod(offhand) ? offhand : ItemStack.EMPTY;
     }
 
+    /**
+     * 每 tick 调用，处理鱼钩钩住实体时的逻辑。
+     * 现在首先发布 Forge 事件，然后仍执行旧的回调接口（用于兼容）。
+     * 注意：仅服务端执行，客户端不触发。
+     */
     public static void onHookedEntityTick(ItemStack tool, EntityPlayer player, EntityFishHook hook, Entity target) {
+        if (player.world.isRemote) {
+            return;
+        }
+
+        FishingRodHookedEntityTickEvent event = new FishingRodHookedEntityTickEvent(player, tool, hook, target, hook.ticksExisted);
+        if (MinecraftForge.EVENT_BUS.post(event)) {
+            return;
+        }
+
         for (IFishingRodHook callback : callbacks(tool)) {
             callback.onFishingRodHookedEntityTick(tool, player, hook, target);
         }
     }
 
+    /**
+     * 钓鱼收获战利品时的回调
+     */
     public static void onLoot(ItemStack tool, EntityPlayer player, EntityFishHook hook, List<ItemStack> loot) {
         for (IFishingRodHook callback : callbacks(tool)) {
             callback.onFishingRodLoot(tool, player, hook, loot);

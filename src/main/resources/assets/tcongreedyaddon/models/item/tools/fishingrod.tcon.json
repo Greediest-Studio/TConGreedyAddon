@@ -33,7 +33,8 @@
         "cast": 1
       },
       "textures": {
-        "layer1": "tcongreedyaddon:item/fishingrod/blank"
+        "layer1": "tcongreedyaddon:item/fishingrod/blank",
+        "layer2": "tcongreedyaddon:item/fishingrod/hook_broken"
       }
     }
   ]
