@@ -39,15 +39,14 @@ public abstract class MixinEntityFishHook {
         }
     }
 
-    @Inject(method = "onUpdate", at = @At("HEAD"))
+    @Inject(method = "onUpdate", at = @At("HEAD"), cancellable = true)
     private void tcongreedyaddon$onHookedEntityTick(CallbackInfo ci) {
         EntityFishHook hook = (EntityFishHook) (Object) this;
         Entity target = hook.caughtEntity;
 
         if (hook.world.isRemote
                 || hook.currentState != EntityFishHook.State.HOOKED_IN_ENTITY
-                || target == null
-                || target.isDead) {
+                || target == null) {
             return;
         }
 
@@ -58,7 +57,17 @@ public abstract class MixinEntityFishHook {
 
         ItemStack rod = FishingRodHooks.findRod(angler);
         if (!rod.isEmpty()) {
+            if (target.isDead || !target.isEntityAlive()) {
+                hook.setDead();
+                ci.cancel();
+                return;
+            }
+
             FishingRodHooks.onHookedEntityTick(rod, angler, hook, target);
+            if (target.isDead || !target.isEntityAlive()) {
+                hook.setDead();
+                ci.cancel();
+            }
         }
     }
 

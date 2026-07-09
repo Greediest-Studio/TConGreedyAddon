@@ -210,7 +210,7 @@ public class TinkerFishingRod extends ProjectileLauncherCore {
         }
 
         double drawSpeed = Math.max(0.01D, data.drawSpeed);
-        double targetBlocksPerSecond = hookInitialSpeedMultiplier * 120 / drawSpeed / 3.0D;
+        double targetBlocksPerSecond = hookInitialSpeedMultiplier * 20 / drawSpeed / 3.0D;
         double targetBlocksPerTick = targetBlocksPerSecond / 20.0D;
         double velocityMultiplier = targetBlocksPerTick / currentSpeed;
 
