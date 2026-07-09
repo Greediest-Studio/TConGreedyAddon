@@ -18,6 +18,7 @@ public class fishingrod implements IModule {
 
     private boolean enableFishingRod;
     private boolean enableCombatDamage;
+    private double hookInitialSpeedMultiplier;
 
     @Override
     public String getModuleName() {
@@ -28,12 +29,14 @@ public class fishingrod implements IModule {
     public void setupModuleConfig(ModuleConfig config) {
         enableFishingRod = config.bool("enableFishingRod", true, "是否启用匠魂钓鱼竿");
         enableCombatDamage = config.bool("enableCombatDamage", true, "是否启用钓鱼竿收竿时对钩中实体造成伤害");
+        hookInitialSpeedMultiplier = config.doubleValue("hookInitialSpeedMultiplier", 2.0D, 0.0D, 100.0D,
+                "吊钩初始速度配置参数。实际初始速度 = (该参数 / 拉弓速度) / 3 格/秒");
     }
 
     @Override
     public void initItems(RegistryEvent.Register<Item> event) {
         if (enableFishingRod) {
-            fishingRod = new TinkerFishingRod(enableCombatDamage);
+            fishingRod = new TinkerFishingRod(enableCombatDamage, hookInitialSpeedMultiplier);
             TotalTinkersRegister.initForgeTool(fishingRod, event);
         }
     }

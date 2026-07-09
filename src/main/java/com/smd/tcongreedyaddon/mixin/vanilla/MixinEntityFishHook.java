@@ -58,6 +58,15 @@ public abstract class MixinEntityFishHook {
         }
     }
 
+    @Inject(method = "setHookedEntity", at = @At("HEAD"))
+    private void tcongreedyaddon$recordHookHitSpeed(CallbackInfo ci) {
+        EntityFishHook hook = (EntityFishHook) (Object) this;
+
+        if (!hook.world.isRemote && hook.caughtEntity != null) {
+            FishingRodHooks.recordHitSpeed(hook);
+        }
+    }
+
     private static boolean isUsableFishingRod(ItemStack stack) {
         return !stack.isEmpty()
                 && (stack.getItem() instanceof ItemFishingRod || FishingRodHooks.isFishingRod(stack));

@@ -1,7 +1,6 @@
 package com.smd.tcongreedyaddon.tools.fishingrod;
 
 import com.smd.tcongreedyaddon.util.ToolAttackHelper;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
@@ -17,6 +16,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -27,10 +27,13 @@ import slimeknights.tconstruct.library.materials.Material;
 import slimeknights.tconstruct.library.materials.MaterialTypes;
 import slimeknights.tconstruct.library.tinkering.Category;
 import slimeknights.tconstruct.library.tinkering.PartMaterialType;
+import slimeknights.tconstruct.library.modifiers.ModifierNBT;
 import slimeknights.tconstruct.library.tools.ProjectileLauncherNBT;
 import slimeknights.tconstruct.library.tools.ranged.ProjectileLauncherCore;
 import slimeknights.tconstruct.library.utils.TagUtil;
 import slimeknights.tconstruct.library.utils.ToolHelper;
+import slimeknights.tconstruct.library.utils.TinkerUtil;
+import slimeknights.tconstruct.tools.TinkerModifiers;
 import slimeknights.tconstruct.tools.TinkerTools;
 
 import javax.annotation.Nullable;
@@ -40,15 +43,20 @@ public class TinkerFishingRod extends ProjectileLauncherCore {
 
     private static final ResourceLocation CAST_PROPERTY = new ResourceLocation("cast");
     private static final float BASE_HOOK_DAMAGE = 1.0F;
+    private static final float VANILLA_HOOK_SPEED = 1.1F;
+    private static final float MIN_HOOK_SPEED_MULTIPLIER = 0.25F;
+    private static final float MAX_HOOK_SPEED_MULTIPLIER = 3.0F;
 
     private final boolean combatDamage;
+    private final double hookInitialSpeedMultiplier;
 
-    public TinkerFishingRod(boolean combatDamage) {
+    public TinkerFishingRod(boolean combatDamage, double hookInitialSpeedMultiplier) {
         super(PartMaterialType.bow(TinkerTools.bowLimb),
               PartMaterialType.bowstring(TinkerTools.bowString),
               PartMaterialType.arrowHead(TinkerTools.arrowHead));
 
         this.combatDamage = combatDamage;
+        this.hookInitialSpeedMultiplier = hookInitialSpeedMultiplier;
 
         addCategory(Category.PROJECTILE);
         addCategory(Category.LAUNCHER);
@@ -136,6 +144,7 @@ public class TinkerFishingRod extends ProjectileLauncherCore {
                 int luck = getLuck(stack);
 
                 EntityFishHook hook = new EntityFishHook(worldIn, playerIn);
+                applyHookVelocity(stack, hook);
                 if (lure > 0) {
                     hook.setLureSpeed(lure);
                 }
@@ -177,7 +186,8 @@ public class TinkerFishingRod extends ProjectileLauncherCore {
         }
         Entity target = hook.caughtEntity;
         DamageSource damageSource = DamageSource.causeThrownDamage(hook, player);
-        ToolAttackHelper.attackEntityRight(stack, this, player, target, 1.5F, damageSource);
+        ToolAttackHelper.attackEntityRight(stack, this, player, target,
+                1.5F * getHookSpeedDamageMultiplier(hook), damageSource);
     }
 
     private float getHookDamage(ItemStack stack) {
@@ -185,17 +195,48 @@ public class TinkerFishingRod extends ProjectileLauncherCore {
         return Math.max(BASE_HOOK_DAMAGE, data.attack + data.bonusDamage);
     }
 
-    private int getLureSpeed(ItemStack stack) {
-        int enchantmentBonus = EnchantmentHelper.getFishingSpeedBonus(stack);
+    private void applyHookVelocity(ItemStack stack, EntityFishHook hook) {
         ProjectileLauncherNBT data = new ProjectileLauncherNBT(TagUtil.getToolTag(stack));
-        int materialBonus = data.drawSpeed > 1.0F ? 1 : 0;
-        return Math.max(0, enchantmentBonus + materialBonus);
+        double currentSpeed = Math.sqrt(hook.motionX * hook.motionX
+                + hook.motionY * hook.motionY
+                + hook.motionZ * hook.motionZ);
+        if (currentSpeed <= 1.0E-7D) {
+            return;
+        }
+
+        double drawSpeed = Math.max(0.01D, data.drawSpeed);
+        double targetBlocksPerSecond = hookInitialSpeedMultiplier * 120 / drawSpeed / 3.0D;
+        double targetBlocksPerTick = targetBlocksPerSecond / 20.0D;
+        double velocityMultiplier = targetBlocksPerTick / currentSpeed;
+
+        hook.motionX *= velocityMultiplier;
+        hook.motionY *= velocityMultiplier;
+        hook.motionZ *= velocityMultiplier;
+    }
+
+    private float getHookSpeedDamageMultiplier(EntityFishHook hook) {
+        double speed = FishingRodHooks.getHitSpeed(hook);
+        if (speed <= 0.0D) {
+            speed = VANILLA_HOOK_SPEED;
+        }
+
+        return MathHelper.clamp((float) (speed / VANILLA_HOOK_SPEED),
+                MIN_HOOK_SPEED_MULTIPLIER, MAX_HOOK_SPEED_MULTIPLIER);
+    }
+
+    private int getLureSpeed(ItemStack stack) {
+        return getModifierLevel(stack, TinkerModifiers.modHaste == null ? null : TinkerModifiers.modHaste.getIdentifier());
     }
 
     private int getLuck(ItemStack stack) {
-        int enchantmentBonus = EnchantmentHelper.getFishingLuckBonus(stack);
-        ProjectileLauncherNBT data = new ProjectileLauncherNBT(TagUtil.getToolTag(stack));
-        int materialBonus = data.range > 1.1F ? 1 : 0;
-        return Math.max(0, enchantmentBonus + materialBonus);
+        return TinkerModifiers.modLuck == null ? 0 : Math.max(0, TinkerModifiers.modLuck.getLuckLevel(stack));
+    }
+
+    private int getModifierLevel(ItemStack stack, @Nullable String modifier) {
+        if (modifier == null || modifier.isEmpty()) {
+            return 0;
+        }
+
+        return Math.max(0, ModifierNBT.readTag(TinkerUtil.getModifierTag(stack, modifier)).level);
     }
 }

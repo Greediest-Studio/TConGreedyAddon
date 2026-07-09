@@ -14,6 +14,8 @@ import java.util.List;
 
 public final class FishingRodHooks {
 
+    private static final String TAG_HOOK_HIT_SPEED = "tcongreedyaddon_hook_hit_speed";
+
     private FishingRodHooks() {
     }
 
@@ -29,6 +31,20 @@ public final class FishingRodHooks {
 
         ItemStack offhand = player.getHeldItemOffhand();
         return isFishingRod(offhand) ? offhand : ItemStack.EMPTY;
+    }
+
+    public static void recordHitSpeed(EntityFishHook hook) {
+        hook.getEntityData().setDouble(TAG_HOOK_HIT_SPEED, getMotionSpeed(hook));
+    }
+
+    public static double getHitSpeed(EntityFishHook hook) {
+        return hook.getEntityData().getDouble(TAG_HOOK_HIT_SPEED);
+    }
+
+    private static double getMotionSpeed(Entity entity) {
+        return Math.sqrt(entity.motionX * entity.motionX
+                + entity.motionY * entity.motionY
+                + entity.motionZ * entity.motionZ);
     }
 
     /**
