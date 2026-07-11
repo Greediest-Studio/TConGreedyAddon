@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -21,6 +22,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraftforge.common.IShearable;
 import slimeknights.tconstruct.library.Util;
 import slimeknights.tconstruct.library.materials.ExtraMaterialStats;
 import slimeknights.tconstruct.library.materials.HandleMaterialStats;
@@ -32,9 +34,11 @@ import slimeknights.tconstruct.library.tinkering.PartMaterialType;
 import slimeknights.tconstruct.library.tools.AoeToolCore;
 import slimeknights.tconstruct.library.tools.ToolNBT;
 import slimeknights.tconstruct.library.utils.*;
+import slimeknights.tconstruct.tools.TinkerModifiers;
 import slimeknights.tconstruct.tools.TinkerTools;
 
 import java.util.List;
+import java.util.Random;
 
 public class AllInOneTool extends AoeToolCore {
 
@@ -138,6 +142,18 @@ public class AllInOneTool extends AoeToolCore {
     }
 
     @Override
+    public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer player, EntityLivingBase target, EnumHand hand) {
+        if (target instanceof IShearable) {
+            int fortune = getLuck(stack);
+            if (shearEntity(stack, player.getEntityWorld(), player, target, fortune)) {
+                swingTool(player, hand);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public int getHarvestLevel(ItemStack stack, String toolClass, @Nullable EntityPlayer player,
                                @Nullable IBlockState blockState) {
         if (StringUtils.isNullOrEmpty(toolClass)) {
@@ -216,6 +232,41 @@ public class AllInOneTool extends AoeToolCore {
         data.shovelLevel = shovel.harvestLevel;
 
         return data;
+    }
+
+    private int getLuck(ItemStack stack) {
+        return TinkerModifiers.modLuck == null ? 0 : Math.max(0, TinkerModifiers.modLuck.getLuckLevel(stack));
+    }
+
+    private boolean shearEntity(ItemStack stack, World world, EntityPlayer player, Entity entity, int fortune) {
+        if(!(entity instanceof IShearable)) {
+            return false;
+        }
+
+        IShearable shearable = (IShearable) entity;
+        if(shearable.isShearable(stack, world, entity.getPosition())) {
+            if(!world.isRemote) {
+                List<ItemStack> drops = shearable.onSheared(stack, world, entity.getPosition(), fortune);
+                Random rand = world.rand;
+                for(ItemStack drop : drops) {
+                    EntityItem entityItem = entity.entityDropItem(drop, 1.0F);
+                    if(entityItem != null) {
+                        entityItem.motionY += rand.nextFloat() * 0.05F;
+                        entityItem.motionX += (rand.nextFloat() - rand.nextFloat()) * 0.1F;
+                        entityItem.motionZ += (rand.nextFloat() - rand.nextFloat()) * 0.1F;
+                    }
+                }
+            }
+            ToolHelper.damageTool(stack, 1, player);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected void swingTool(EntityPlayer player, EnumHand hand) {
+        player.swingArm(hand);
     }
 
     public static class AllInOneToolNBT extends ToolNBT {
