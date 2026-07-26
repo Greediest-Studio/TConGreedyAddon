@@ -1,5 +1,9 @@
 itemGroup.tcongreedyaddon=Tcongreedyaddon
 
+fluid.tcongreedyaddon.abyssalnite.name=Molten Abyssalnite
+fluid.tcongreedyaddon.liquified_coralium.name=Molten Refined Coralium
+fluid.tcongreedyaddon.dreadium.name=Molten Dreadium
+
 item.greatblade.name=Greatblade
 item.battleaxe.name=Battleaxe
 item.dagger.name=Dagger

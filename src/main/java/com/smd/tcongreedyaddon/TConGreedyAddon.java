@@ -9,6 +9,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
@@ -104,5 +105,14 @@ public class TConGreedyAddon {
     @SideOnly(Side.CLIENT)
     public static void registerModels(ModelRegistryEvent event) {
         TConGreedyAddon.modulemanager.onModelRegistry(event);
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public static void registerFluidTextures(TextureStitchEvent.Pre event) {
+        if (modulemanager != null && modulemanager.isModuleActive("abyssalcraft")) {
+            event.getMap().registerSprite(com.smd.tcongreedyaddon.plugin.abyssalcraft.abyssalcraft.FLUID_STILL);
+            event.getMap().registerSprite(com.smd.tcongreedyaddon.plugin.abyssalcraft.abyssalcraft.FLUID_FLOWING);
+        }
     }
 }

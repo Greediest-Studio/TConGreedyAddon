@@ -1,13 +1,18 @@
 package com.smd.tcongreedyaddon.plugin.abyssalcraft;
 
 import com.shinoow.abyssalcraft.api.item.ACItems;
+import com.smd.tcongreedyaddon.Tags;
 import com.smd.tcongreedyaddon.init.TraitRegistry;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitCoraliumPlague;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitDreadPlague;
 import com.smd.tcongreedyaddon.traits.abyssalcraft.TraitDreadPurity;
 import com.smd.tcongreedyaddon.traits.modifiers.base.abyssalcraft.ModLightPierce;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
 import slimeknights.tconstruct.library.TinkerRegistry;
+import slimeknights.tconstruct.library.fluid.FluidMolten;
 import slimeknights.tconstruct.library.materials.*;
 import slimeknights.tconstruct.library.traits.AbstractTrait;
 import com.smd.tcongreedyaddon.plugin.IModule;
@@ -18,6 +23,11 @@ public class abyssalcraft implements IModule {
     public String getModuleName() { return "abyssalcraft"; }
 
     public static Material abyssalnite, coralium, dreadium;
+
+    public static Fluid abyssalniteFluid, liquifiedCoraliumFluid, dreadiumFluid;
+
+    public static final ResourceLocation FLUID_STILL = new ResourceLocation("base", "fluids/molten");
+    public static final ResourceLocation FLUID_FLOWING = new ResourceLocation("base", "fluids/molten_flowing");
 
     public static AbstractTrait dread_plague;
     public static AbstractTrait coralium_plague;
@@ -55,25 +65,47 @@ public class abyssalcraft implements IModule {
         coralium = new Material("refined_coralium", 0x169265);
         dreadium = new Material("dreadium", 0x880101);
 
+        abyssalniteFluid = registerFluid("abyssalnite", 0x4a1c89);
+        liquifiedCoraliumFluid = registerFluid("liquified_coralium", 0x169265);
+        dreadiumFluid = registerFluid("dreadium", 0x880101);
+
         TinkerRegistry.addMaterialStats(abyssalnite,
                 new HeadMaterialStats(630, 10.00f, 6.00f, 4),
                 new HandleMaterialStats(0.90f, 60),
                 new ExtraMaterialStats(100),
                 new BowMaterialStats(0.85f, 1.1f, 1.5f));
-        TinkerRegistry.integrate(abyssalnite, "Abyssalnite").toolforge().preInit();
+        TinkerRegistry.integrate(abyssalnite, abyssalniteFluid, "Abyssalnite")
+                .toolforge().preInit();
 
         TinkerRegistry.addMaterialStats(coralium,
                 new HeadMaterialStats(900, 12.00f, 7.00f, 5),
                 new HandleMaterialStats(0.90f, 60),
                 new ExtraMaterialStats(100),
                 new BowMaterialStats(0.75f, 1.2f, 2.5f));
-        TinkerRegistry.integrate(coralium, "LiquifiedCoralium").toolforge().preInit();
+        TinkerRegistry.integrate(coralium, liquifiedCoraliumFluid, "LiquifiedCoralium")
+                .toolforge().preInit();
 
         TinkerRegistry.addMaterialStats(dreadium,
                 new HeadMaterialStats(1150, 14.00f, 8.00f, 6),
                 new HandleMaterialStats(0.90f, 60),
                 new ExtraMaterialStats(100),
                 new BowMaterialStats(0.65f, 1.3f, 3.5f));
-        TinkerRegistry.integrate(dreadium, "Dreadium").toolforge().preInit();
+        TinkerRegistry.integrate(dreadium, dreadiumFluid, "Dreadium")
+                .toolforge().preInit();
+    }
+
+    private static Fluid registerFluid(String name, int color) {
+        Fluid registered = FluidRegistry.getFluid(name);
+        if (registered != null) {
+            return registered;
+        }
+
+        FluidMolten fluid = new FluidMolten(name, color, FLUID_STILL, FLUID_FLOWING);
+        fluid.setUnlocalizedName(Tags.MOD_ID + "." + name);
+        if (!FluidRegistry.registerFluid(fluid)) {
+            registered = FluidRegistry.getFluid(name);
+            return registered == null ? fluid : registered;
+        }
+        return fluid;
     }
 }

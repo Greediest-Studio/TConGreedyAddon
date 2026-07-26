@@ -41,6 +41,10 @@ material.abyssalnite.name=渊素
 material.refined_coralium.name=精炼珊瑚
 material.dreadium.name=惧质
 
+fluid.tcongreedyaddon.abyssalnite.name=熔融渊素
+fluid.tcongreedyaddon.liquified_coralium.name=熔融精炼珊瑚
+fluid.tcongreedyaddon.dreadium.name=熔融惧质
+
 
 modifier.ciallo.name=Ciallo～(∠・ω< )⌒★
 modifier.ciallo.desc=你说的对但这就是Ciallo～(∠・ω< )⌒★
