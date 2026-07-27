@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
+import com.smd.tcongreedyaddon.client.AbyssalFluidModelRegistrar;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.Modules;
 import net.minecraft.creativetab.CreativeTabs;
@@ -19,6 +20,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 
@@ -105,6 +107,14 @@ public class TConGreedyAddon {
     @SideOnly(Side.CLIENT)
     public static void registerModels(ModelRegistryEvent event) {
         TConGreedyAddon.modulemanager.onModelRegistry(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SideOnly(Side.CLIENT)
+    public static void registerFluidModels(ModelRegistryEvent event) {
+        if (modulemanager != null && modulemanager.isModuleActive("abyssalcraft")) {
+            AbyssalFluidModelRegistrar.registerModels();
+        }
     }
 
     @SubscribeEvent
