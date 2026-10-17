@@ -80,11 +80,3 @@ modifier.erase_command.desc=§o以命令主宰万物！\n§r对凋灵风暴造�
 modifier.levelingdamage.name=等级伤害
 modifier.levelingdamage.desc=§o我要变得更强！§r\n§f随着工具等级的提升获得越来越高的攻击力。
 tooltip.damage_increase=§9武器伤害加成：%s%%
-
-gui.jei.trait_overview.title=词条属性全览
-gui.jei.trait_overview.empty=当前工具没有可显示的词条
-gui.jei.trait_overview.empty_focus=请对真实的匠魂工具或盔甲使用 JEI 用途查询以查看词条信息
-gui.jei.trait_overview.source=来源：%s
-gui.jei.trait_overview.kind.trait=词条
-gui.jei.trait_overview.kind.modifier=强化
-gui.jei.trait_overview.scroll=滚轮滚动
