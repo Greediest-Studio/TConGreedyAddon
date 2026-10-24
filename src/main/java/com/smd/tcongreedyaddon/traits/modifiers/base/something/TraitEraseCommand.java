@@ -2,13 +2,7 @@ package com.smd.tcongreedyaddon.traits.modifiers.base.something;
 
 import com.smd.tcongreedyaddon.traits.ITraitBookProvider;
 import com.smd.tcongreedyaddon.util.BookContentBuilder;
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraft.item.Item;
@@ -23,43 +17,21 @@ public class TraitEraseCommand extends ModifierTrait implements ITraitBookProvid
     }
 
     public void initItem() {
-        Item commandCore = ForgeRegistries.ITEMS.getValue(new ResourceLocation("gct_ores", "command_core"));
+        Item commandCore = ForgeRegistries.ITEMS.getValue(new ResourceLocation("gct_additions", "command_core"));
         if (commandCore != null) {
             addItem(commandCore);
         }
     }
 
-    @Override
-    public void onHit(ItemStack tool, EntityLivingBase player, EntityLivingBase target, float damage, boolean isCritical) {
-        if (player instanceof EntityPlayer) {
-            ResourceLocation targetId = EntityList.getKey(target);
-            if (targetId != null && targetId.toString().contains("witherstorm")) {
-                NBTTagCompound tag = TinkerUtil.getModifierTag(tool, identifier);
-                int level = tag.getInteger("level");
-                if (level <= 0) {
-                    level = 1;
-                }
-
-                NBTTagCompound stormyTag = TinkerUtil.getModifierTag(tool, "stormy");
-                if (!stormyTag.isEmpty() && stormyTag.getInteger("level") == 1) {
-                    level *= 2;
-                }
-
-                if (target.getHealth() > 100 * level) {
-                    target.setHealth(target.getHealth() - (100 * level));
-                } else {
-                    DamageSource dmg = new EntityDamageSource("chaos", player).setDamageIsAbsolute();
-                    target.attackEntityFrom(dmg, 100.0f);
-                }
-            }
-        }
+    public static boolean isCommandBlockTool(ItemStack tool) {
+        return !tool.isEmpty() && tool.hasTagCompound() && TinkerUtil.hasTrait(tool.getTagCompound(), "erase_command");
     }
 
     @Override
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
-                .addText("测试用强化")
-                .addEffect("第一行")
+                .addText("权限核心使工具具备挑战资格，可参与凋灵风暴战斗。")
+                .addEffect("对凋零风暴造成有效伤害")
                 .withDefaultDemoTools()
                 .build();
     }

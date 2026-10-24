@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
 @Mod(name = Tags.MOD_NAME,
      modid = Tags.MOD_ID,
      version = Tags.VERSION,
-     dependencies = "after:tconstruct",
+     dependencies = "after:tconstruct;after:witherstormmod",
      guiFactory = "com.smd.tcongreedyaddon.gui.TConGuiFactory")
 public class TConGreedyAddon {
 
@@ -85,6 +85,9 @@ public class TConGreedyAddon {
 
         if(Loader.isModLoaded("tconstruct")) {
             proxy.registerBookData();
+        }
+        if (Loader.isModLoaded("witherstormmod")) {
+            com.smd.tcongreedyaddon.plugin.WitherStormBridge.register();
         }
     }
 
