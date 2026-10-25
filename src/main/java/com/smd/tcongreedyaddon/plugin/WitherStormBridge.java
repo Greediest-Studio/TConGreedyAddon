@@ -13,7 +13,7 @@ public final class WitherStormBridge {
                     .getMethod("register", Predicate.class)
                     .invoke(null, (Predicate<ItemStack>) TraitEraseCommand::isCommandBlockTool);
         } catch (ReflectiveOperationException exception) {
-            throw new IllegalStateException("无法注册权限核心的命令工具资格", exception);
+            throw new IllegalStateException("无法注册凋灵风暴命令工具资格", exception);
         }
     }
 }

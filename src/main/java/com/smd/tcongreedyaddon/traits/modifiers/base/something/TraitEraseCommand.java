@@ -13,13 +13,14 @@ import slimeknights.tconstruct.library.utils.TinkerUtil;
 public class TraitEraseCommand extends ModifierTrait implements ITraitBookProvider {
 
     public TraitEraseCommand() {
-        super("erase_command", 0xf64700, 5, 1);
+        super("erase_command", 0xf64700, 1, 1);
     }
 
     public void initItem() {
-        Item commandCore = ForgeRegistries.ITEMS.getValue(new ResourceLocation("gct_additions", "command_core"));
-        if (commandCore != null) {
-            addItem(commandCore);
+        Item commandBlockBook = ForgeRegistries.ITEMS.getValue(
+                new ResourceLocation("witherstormmod", "command_block_book"));
+        if (commandBlockBook != null) {
+            addItem(commandBlockBook, 1, 1);
         }
     }
 
@@ -30,7 +31,7 @@ public class TraitEraseCommand extends ModifierTrait implements ITraitBookProvid
     @Override
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
-                .addText("权限核心使工具具备挑战资格，可参与凋灵风暴战斗。")
+                .addText("命令附魔书使工具具备挑战资格，可参与凋灵风暴战斗。")
                 .addEffect("对凋零风暴造成有效伤害")
                 .withDefaultDemoTools()
                 .build();
