@@ -32,7 +32,7 @@ public class TraitEraseCommand extends ModifierTrait implements ITraitBookProvid
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
                 .addText("命令附魔书使工具具备挑战资格，可参与凋灵风暴战斗。")
-                .addEffect("对凋零风暴造成有效伤害")
+                .addEffect("对凋灵风暴造成有效伤害")
                 .withDefaultDemoTools()
                 .build();
     }
