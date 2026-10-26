@@ -4,6 +4,7 @@ import com.smd.tcongreedyaddon.init.SoundsHandler;
 import com.smd.tcongreedyaddon.client.AbyssalFluidModelRegistrar;
 import com.smd.tcongreedyaddon.plugin.ModuleManager;
 import com.smd.tcongreedyaddon.plugin.Modules;
+import com.smd.tcongreedyaddon.plugin.WitherStormBridge;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -87,7 +88,7 @@ public class TConGreedyAddon {
             proxy.registerBookData();
         }
         if (Loader.isModLoaded("witherstormmod")) {
-            com.smd.tcongreedyaddon.plugin.WitherStormBridge.register();
+            WitherStormBridge.register();
         }
     }
 
