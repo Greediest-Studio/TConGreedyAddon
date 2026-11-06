@@ -1,17 +1,27 @@
-package com.smd.tcongreedyaddon.traits.something;
+package com.smd.tcongreedyaddon.traits.modifiers.base.something;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
+import com.smd.tcongreedyaddon.traits.ITraitBookProvider;
+import com.smd.tcongreedyaddon.util.BookContentBuilder;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import slimeknights.tconstruct.library.traits.AbstractTrait;
+import slimeknights.tconstruct.library.book.content.ContentModifier;
+import slimeknights.tconstruct.library.modifiers.ModifierTrait;
 
-public class TraitSoundEffect extends AbstractTrait {
+public class TraitSoundEffect extends ModifierTrait implements ITraitBookProvider {
+
     public TraitSoundEffect() {
-        super("soundeffects", 0xffffff);
+        super("soundeffects", 0xffffff,1,1);
+    }
+
+    public void initItem() {
+        addItem(Item.getItemFromBlock(Blocks.JUKEBOX), 1, 1);
     }
 
     SoundEvent[] sounds = {
@@ -48,4 +58,13 @@ public class TraitSoundEffect extends AbstractTrait {
         );
     }
 
+    @Override
+    public ContentModifier getBookContent() {
+        return BookContentBuilder.create(this.getIdentifier())
+                .addText("人声鼎沸啊")
+                .addEffect("攻击或受到攻击时播放随机音效")
+                .addEffect("在强化台中消耗 1 个唱片机进行强化")
+                .withDefaultDemoTools()
+                .build();
+    }
 }

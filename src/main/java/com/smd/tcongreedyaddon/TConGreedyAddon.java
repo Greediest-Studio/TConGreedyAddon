@@ -9,6 +9,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -100,6 +101,11 @@ public class TConGreedyAddon {
     @SubscribeEvent
     public static void initItems(RegistryEvent.Register<Item> event) {
         TConGreedyAddon.modulemanager.initItems(event);
+    }
+
+    @SubscribeEvent
+    public static void initRecipes(RegistryEvent.Register<IRecipe> event) {
+        TConGreedyAddon.modulemanager.initRecipes(event);
     }
 
     @SubscribeEvent

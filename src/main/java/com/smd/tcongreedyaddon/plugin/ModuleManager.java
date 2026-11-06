@@ -2,6 +2,7 @@ package com.smd.tcongreedyaddon.plugin;
 
 import com.smd.tcongreedyaddon.TConGreedyAddon;
 import net.minecraft.item.Item;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
@@ -125,6 +126,16 @@ public class ModuleManager {
                 modules.get(name).initItems(event);
             } catch (Exception e) {
                 TConGreedyAddon.LOGGER.error("Failed to register items for module: {}", name, e);
+            }
+        }
+    }
+
+    public void initRecipes(RegistryEvent.Register<IRecipe> event) {
+        for (String name : activeModules) {
+            try {
+                modules.get(name).initRecipes(event);
+            } catch (Exception e) {
+                TConGreedyAddon.LOGGER.error("Failed to register recipes for module: {}", name, e);
             }
         }
     }

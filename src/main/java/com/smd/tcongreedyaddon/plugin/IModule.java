@@ -1,6 +1,7 @@
 package com.smd.tcongreedyaddon.plugin;
 
 import net.minecraft.item.Item;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -14,6 +15,7 @@ public interface IModule {
     default void init() {}
     default void postInit() {}
     default void initItems(RegistryEvent.Register<Item> event) {}
+    default void initRecipes(RegistryEvent.Register<IRecipe> event) {}
     default void initEntities(RegistryEvent.Register<EntityEntry> event) {}
     default boolean isEnabledByDefault() {return true;}
     default void setupModuleConfig(ModuleConfig config) {}

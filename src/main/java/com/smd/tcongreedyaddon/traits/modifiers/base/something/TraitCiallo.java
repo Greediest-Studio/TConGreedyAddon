@@ -1,6 +1,9 @@
-package com.smd.tcongreedyaddon.traits.something;
+package com.smd.tcongreedyaddon.traits.modifiers.base.something;
 
 import com.smd.tcongreedyaddon.init.SoundsHandler;
+import com.smd.tcongreedyaddon.plugin.something.something;
+import com.smd.tcongreedyaddon.traits.ITraitBookProvider;
+import com.smd.tcongreedyaddon.util.BookContentBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.EntityLivingBase;
@@ -14,14 +17,18 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
-import slimeknights.tconstruct.library.traits.AbstractTrait;
+import slimeknights.tconstruct.library.book.content.ContentModifier;
+import slimeknights.tconstruct.library.modifiers.ModifierTrait;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class TraitCiallo extends AbstractTrait {
+/**
+ * Ciallo～(∠・ω< )⌒★
+ */
+public class TraitCiallo extends ModifierTrait implements ITraitBookProvider {
 
     private static final Random RANDOM = new Random();
     private static final String TEXT = "Ciallo～(∠・ω< )⌒☆";
@@ -29,8 +36,14 @@ public class TraitCiallo extends AbstractTrait {
     private final List<RenderInstance> renderInstances = new ArrayList<>();
 
     public TraitCiallo() {
-        super("ciallo", 0xffffff);
+        super("ciallo", 0xffffff,1,1);
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    public void initItem() {
+        if (something.cialloRecord != null) {
+            addItem(something.cialloRecord, 1, 1);
+        }
     }
 
     @Override
@@ -134,6 +147,16 @@ public class TraitCiallo extends AbstractTrait {
         
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
+    }
+
+    @Override
+    public ContentModifier getBookContent() {
+        return BookContentBuilder.create(this.getIdentifier())
+                .addText("你说的对但这就是Ciallo～(∠・ω< )⌒★")
+                .addEffect("攻击或受到攻击时播放 Ciallo 音效并在屏幕上显示文字")
+                .addEffect("在强化台中消耗 1 张 ciallo 唱片进行强化")
+                .withDefaultDemoTools()
+                .build();
     }
 
     private static class RenderInstance {
