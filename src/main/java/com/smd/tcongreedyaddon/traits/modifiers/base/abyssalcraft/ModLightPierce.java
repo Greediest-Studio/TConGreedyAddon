@@ -3,6 +3,8 @@ package com.smd.tcongreedyaddon.traits.modifiers.base.abyssalcraft;
 import com.smd.tcongreedyaddon.traits.ITraitBookProvider;
 import com.shinoow.abyssalcraft.api.AbyssalCraftAPI;
 import com.smd.tcongreedyaddon.util.BookContentBuilder;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import slimeknights.tconstruct.library.book.content.ContentModifier;
 import slimeknights.tconstruct.tools.modifiers.ModAntiMonsterType;
 
@@ -13,6 +15,7 @@ public class ModLightPierce extends ModAntiMonsterType implements ITraitBookProv
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
                 .addText("阴影克星")

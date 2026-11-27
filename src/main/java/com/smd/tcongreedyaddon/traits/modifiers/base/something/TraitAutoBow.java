@@ -9,6 +9,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import slimeknights.tconstruct.library.book.content.ContentModifier;
 import slimeknights.tconstruct.library.modifiers.ModifierTrait;
 import slimeknights.tconstruct.library.tools.ranged.BowCore;
@@ -81,6 +83,7 @@ public class TraitAutoBow extends ModifierTrait implements ITraitBookProvider {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
                 .addText("自动拉弓")

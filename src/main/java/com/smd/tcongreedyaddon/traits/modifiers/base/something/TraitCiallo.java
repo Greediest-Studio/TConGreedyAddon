@@ -150,6 +150,7 @@ public class TraitCiallo extends ModifierTrait implements ITraitBookProvider {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
                 .addText("你说的对但这就是Ciallo～(∠・ω< )⌒★")

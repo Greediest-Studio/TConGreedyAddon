@@ -11,6 +11,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import slimeknights.tconstruct.library.book.content.ContentModifier;
 import slimeknights.tconstruct.library.modifiers.ModifierTrait;
 
@@ -59,6 +61,7 @@ public class TraitSoundEffect extends ModifierTrait implements ITraitBookProvide
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
                 .addText("人声鼎沸啊")
