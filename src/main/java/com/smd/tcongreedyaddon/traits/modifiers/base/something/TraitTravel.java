@@ -48,9 +48,9 @@ public class TraitTravel extends ModifierTrait implements ITraitBookProvider {
     public ContentModifier getBookContent() {
         return BookContentBuilder.create(this.getIdentifier())
                 .addText("将 EIO 旅行手杖的能力附加到工具上。")
+                .addEffect("旅行手杖免费啦")
                 .addEffect("右键使用旅行锚")
                 .addEffect("潜行右键进行瞬移")
-                .addEffect("消耗 1 个旅行手杖进行强化")
                 .withDefaultDemoTools()
                 .build();
     }
