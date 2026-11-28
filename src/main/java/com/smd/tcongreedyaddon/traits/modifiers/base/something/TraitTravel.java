@@ -1,34 +1,58 @@
-package com.smd.tcongreedyaddon.traits.something;
+package com.smd.tcongreedyaddon.traits.modifiers.base.something;
 
+import com.smd.tcongreedyaddon.traits.ITraitBookProvider;
+import com.smd.tcongreedyaddon.util.BookContentBuilder;
 import crazypants.enderio.api.teleport.ITravelAccessable;
 import crazypants.enderio.api.teleport.TravelSource;
 import crazypants.enderio.base.EnderIO;
 import crazypants.enderio.base.config.config.TeleportConfig;
 import crazypants.enderio.base.teleport.TravelController;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import slimeknights.tconstruct.library.book.content.ContentModifier;
+import slimeknights.tconstruct.library.modifiers.ModifierTrait;
 import slimeknights.tconstruct.library.tools.ToolCore;
-import slimeknights.tconstruct.library.traits.AbstractTrait;
 import slimeknights.tconstruct.library.utils.TinkerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class TraitTravel extends AbstractTrait {
+public class TraitTravel extends ModifierTrait implements ITraitBookProvider {
 
     private static final Map<String, Long> playerBlinkCooldowns = new HashMap<>();
 
     public TraitTravel() {
-        super("travel", 0xffffff);
+        super("travel", 0xffffff, 1, 1);
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    public void initItem() {
+        Item travelStaff = ForgeRegistries.ITEMS.getValue(new ResourceLocation("enderio", "item_travel_staff"));
+        if (travelStaff != null) {
+            addItem(travelStaff, 1, 1);
+        }
+    }
+
+    @Override
+    public ContentModifier getBookContent() {
+        return BookContentBuilder.create(this.getIdentifier())
+                .addText("将 EIO 旅行手杖的能力附加到工具上。")
+                .addEffect("右键使用旅行锚")
+                .addEffect("潜行右键进行瞬移")
+                .addEffect("消耗 1 个旅行手杖进行强化")
+                .withDefaultDemoTools()
+                .build();
     }
 
     @SubscribeEvent

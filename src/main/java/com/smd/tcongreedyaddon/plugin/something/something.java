@@ -41,7 +41,7 @@ public class something implements IModule {
     public static AbstractTrait overcharge;
     public static AbstractTrait deathboost;
     public static AbstractTrait speed;
-    public static AbstractTrait TravelStaff;
+    public static TraitTravel TravelStaff;
 
     public static TraitAutoBow autobow;
     public static TraitLevelingDamage levelingdamage;
@@ -87,12 +87,14 @@ public class something implements IModule {
         autobow.initItem();
         levelingdamage.initItem();
         erasecommand.initItem();
+        TravelStaff.initItem();
 
         TraitRegistry.register(autobow);
         TraitRegistry.register(soundeffects);
         TraitRegistry.register(levelingdamage);
         TraitRegistry.register(erasecommand);
         TraitRegistry.register(ciallo);
+        TraitRegistry.register(TravelStaff);
     }
 
     @Override
